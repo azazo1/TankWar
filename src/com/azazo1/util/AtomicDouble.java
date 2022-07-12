@@ -6,7 +6,7 @@ import static java.lang.Double.doubleToLongBits;
 import static java.lang.Double.longBitsToDouble;
 
 public class AtomicDouble {
-    private AtomicLong bits;
+    private final AtomicLong bits;
     
     public AtomicDouble(double initialValue) {
         bits = new AtomicLong(doubleToLongBits(initialValue));

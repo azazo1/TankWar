@@ -17,11 +17,11 @@ public class WallGroup {
     }
     
     /**
-     * 将 0 1 \n 组成的字符串(墙图表达式)解析为 com.azazo1.wall.WallGroup
+     * 将 0 1 \n 组成的字符串(墙图表达式)解析为 {@link WallGroup}
      * 如:
-     * 010
-     * 101
-     * 010
+     * 010<br>
+     * 101<br>
+     * 010<br>
      */
     @Contract("_, _, _ -> new")
     public static @NotNull WallGroup parseFromWallExpression(@NotNull String wallExpression, int screenWidth, int screenHeight) {

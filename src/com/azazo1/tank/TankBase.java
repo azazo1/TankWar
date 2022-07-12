@@ -35,6 +35,7 @@ public class TankBase {
     protected final AtomicBoolean rightTurningKeyPressed = new AtomicBoolean(false);
     protected final AtomicBoolean forwardGoingKeyPressed = new AtomicBoolean(false);
     protected final AtomicBoolean backwardGoingKeyPressed = new AtomicBoolean(false);
+    protected final AtomicBoolean firingKeyPressed = new AtomicBoolean(false); // 当对应按键按下后停止开火动作
     protected final OrientationModule orientationModule = new OrientationModule(); // 用于将方向校准于坐标轴
     protected final AtomicDouble goingSpeed = new AtomicDouble(6); // 行动速度 pixels/帧
     protected final AtomicDouble turningSpeed = new AtomicDouble(Math.toRadians(7)); // 转向速度 rad/帧
@@ -65,7 +66,7 @@ public class TankBase {
             case LEFT_TURNING -> leftTurningKeyPressed.set(true);
             case RIGHT_TURNING -> rightTurningKeyPressed.set(true);
             case BACKWARD_GOING -> backwardGoingKeyPressed.set(true);
-            case FIRE -> fire(); // 开火不需要对应的松开按键的事件
+            case FIRE -> toggleTrigger(true); // 开火在每次按下对应键时只会启动一次
         }
     }
     
@@ -84,6 +85,7 @@ public class TankBase {
             case LEFT_TURNING -> leftTurningKeyPressed.set(false);
             case RIGHT_TURNING -> rightTurningKeyPressed.set(false);
             case BACKWARD_GOING -> backwardGoingKeyPressed.set(false);
+            case FIRE -> toggleTrigger(false);
         }
     }
     
@@ -102,6 +104,17 @@ public class TankBase {
      */
     public void clearTankGroup() {
         this.tankGroup = null;
+    }
+    
+    /**
+     * @param state true: 扣下开火扳机, 若原来已经按下则不会开火<br>
+     *              false: 松开扳机
+     */
+    private void toggleTrigger(boolean state) {
+        if (state && !firingKeyPressed.get()) {
+            fire();
+        }
+        firingKeyPressed.set(state);
     }
     
     /**
@@ -124,12 +137,7 @@ public class TankBase {
         orientationModule.setOrientation(orientationModule.getOrientation() + theta);
     }
     
-    /**
-     * 坦克开火
-     * 子代科技城
-     */
-    public void fire(Class<? extends BulletBase> T) {
-        // todo
+    public void fire(@NotNull Class<? extends BulletBase> T) {
         try {
             Constructor<? extends BulletBase> constructor = T.getConstructor(int.class, int.class, double.class);
             double orientation = orientationModule.getOrientation();
@@ -139,13 +147,16 @@ public class TankBase {
             BulletBase bullet = constructor.newInstance(cx, cy, orientation);
             
             tankGroup.getGameMap().getBulletGroup().addBullet(bullet);
-        } catch (NoSuchMethodException e) {
+        } catch (NoSuchMethodException | InvocationTargetException | InstantiationException |
+                 IllegalAccessException e) {
             throw new RuntimeException(e); // 一般不会到达此处
-        } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
-            throw new RuntimeException(e);
         }
     }
     
+    /**
+     * 坦克开火
+     * 子代可以继承来修改子弹的类型
+     */
     public void fire() {
         fire(BulletBase.class);
     }
@@ -261,7 +272,8 @@ public class TankBase {
             var r = img.getAlphaRaster();
             for (int x = 0; x < img.getWidth(); x++) {
                 for (int y = 0; y < img.getHeight(); y++) {
-                    r.setPixel(x, y, new int[]{(int) (r.getPixel(x, y, (int[]) null)[0] * bias)}); // 调整透明度 todo 有问题
+                    // 采用相乘的方式设置透明度
+                    r.setPixel(x, y, new int[]{(int) (r.getPixel(x, y, (int[]) null)[0] * bias)});
                 }
             }
             return img;

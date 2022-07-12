@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class BulletBase {
-    protected final static int EXISTING_DURATION_IN_MILLIS = 10000; // 子弹飞行时长
+    protected final static int EXISTING_DURATION_IN_MILLIS = 5000; // 子弹飞行时长
     protected final static int MAX_REFLECTION_TIMES = 10; // 子弹最大反弹次数
     protected static BufferedImage img;
     
@@ -107,7 +107,7 @@ public class BulletBase {
         protected final long createdTime = Tools.getFrameTimeInMillis();
         
         public void updateLife() {
-            if (reflectionModule.getReflectionTimes() > MAX_REFLECTION_TIMES && Tools.getFrameTimeInMillis() > EXISTING_DURATION_IN_MILLIS + createdTime) {
+            if (reflectionModule.getReflectionTimes() > MAX_REFLECTION_TIMES || Tools.getFrameTimeInMillis() > EXISTING_DURATION_IN_MILLIS + createdTime) {
                 finish();
             }
         }
@@ -148,20 +148,29 @@ public class BulletBase {
         }
         
         /**
-         * 反射
+         * 反射, 法线只有水平和垂直两种<br>
+         * 通过判断 重叠中心点(intersectionCenterPoint) 处在子弹矩形的四个方位 (U R D L) 中的一个方位来判断法线<br>
+         * 四个方位划分如下(1为分界线):<br>
+         * \_U_/<br>
+         * _\_/_<br>
+         * L_·_R<br>
+         * _/_\_<br>
+         * /_D_\<br>
+         * todo 子弹仍有穿墙的bug
          *
          * @param intersectionCenterPoint 参阅 {@link #getIntersectionCenterPoint(Wall)} 返回值
          */
-        protected void reflect(Point intersectionCenterPoint) {
+        protected void reflect(@NotNull Point intersectionCenterPoint) {
             double tx = rect.getCenterX();
             double ty = rect.getCenterY();
             double dx = intersectionCenterPoint.getX();
             double dy = intersectionCenterPoint.getY();
-            // 类法线: intersectionCenterPoint 和 本子弹中心点连线
-            double theta = Math.atan2(dy - ty, dx - tx); // 类法线所在角度
-            theta -= Math.PI / 2; // 该角度垂直于类法线
+            double X = dx - tx, Y = dy - ty;
+            boolean horizontal = Math.abs(X) < Math.abs(Y); // 法线是否是水平的, 当重叠中心点在 U D 区域时法线就是水平的
             double orientation = BulletBase.this.orientation.get();
-            double dstOrientation = theta - (orientation - theta);
+            double theta = horizontal ? 0 : Math.PI / 2;
+            
+            double dstOrientation = theta - (orientation - theta); // 反向
             BulletBase.this.orientation.set(dstOrientation % (2 * Math.PI));
         }
         
