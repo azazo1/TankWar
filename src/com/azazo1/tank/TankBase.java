@@ -1,0 +1,300 @@
+package com.azazo1.tank;
+
+import com.azazo1.base.Config;
+import com.azazo1.base.TankAction;
+import com.azazo1.bullet.BulletBase;
+import com.azazo1.util.AtomicDouble;
+import com.azazo1.util.Tools;
+import com.azazo1.wall.Wall;
+import org.jetbrains.annotations.NotNull;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+
+public class TankBase {
+    
+    protected static final BufferedImage rawImg;
+    
+    static {
+        try {
+            rawImg = ImageIO.read(new File("res/Tank.png"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    protected final AtomicBoolean leftTurningKeyPressed = new AtomicBoolean(false);
+    protected final AtomicBoolean rightTurningKeyPressed = new AtomicBoolean(false);
+    protected final AtomicBoolean forwardGoingKeyPressed = new AtomicBoolean(false);
+    protected final AtomicBoolean backwardGoingKeyPressed = new AtomicBoolean(false);
+    protected final OrientationModule orientationModule = new OrientationModule(); // 用于将方向校准于坐标轴
+    protected final AtomicDouble goingSpeed = new AtomicDouble(6); // 行动速度 pixels/帧
+    protected final AtomicDouble turningSpeed = new AtomicDouble(Math.toRadians(7)); // 转向速度 rad/帧
+    protected final EnduranceModule enduranceModule = new EnduranceModule();
+    protected Rectangle rect = new Rectangle(0, 0, rawImg.getWidth(), rawImg.getHeight());
+    protected TankGroup tankGroup; // 用于统一处理数据和显示
+    
+    public TankBase() {
+        super();
+    }
+    
+    public Rectangle getRect() {
+        return new Rectangle(rect);
+    }
+    
+    /**
+     * 激发坦克对应运动状态: {@link TankAction}
+     *
+     * @param keyCode 按下的按键对应的 code
+     */
+    public void pressKey(int keyCode) {
+        TankAction motion = Config.TANK_MOTION_KEY_MAP_1_ST.get(keyCode);
+        if (motion == null) {
+            return;
+        }
+        switch (motion) {
+            case FORWARD_GOING -> forwardGoingKeyPressed.set(true);
+            case LEFT_TURNING -> leftTurningKeyPressed.set(true);
+            case RIGHT_TURNING -> rightTurningKeyPressed.set(true);
+            case BACKWARD_GOING -> backwardGoingKeyPressed.set(true);
+            case FIRE -> fire(); // 开火不需要对应的松开按键的事件
+        }
+    }
+    
+    /**
+     * 解除坦克对应运动状态: {@link TankAction}
+     *
+     * @param keyCode 松开的按键对应的 code
+     */
+    public void releaseKey(int keyCode) {
+        TankAction motion = Config.TANK_MOTION_KEY_MAP_1_ST.get(keyCode);
+        if (motion == null) {
+            return;
+        }
+        switch (motion) {
+            case FORWARD_GOING -> forwardGoingKeyPressed.set(false);
+            case LEFT_TURNING -> leftTurningKeyPressed.set(false);
+            case RIGHT_TURNING -> rightTurningKeyPressed.set(false);
+            case BACKWARD_GOING -> backwardGoingKeyPressed.set(false);
+        }
+    }
+    
+    
+    /**
+     * 设置本坦克所属的 group,本操作不保证真的从 group 对象中添加本坦克
+     * <br>本方法应由 {@link com.azazo1.tank.TankGroup#addTank(TankBase)} 调用
+     */
+    public void setTankGroup(TankGroup tankGroup) {
+        this.tankGroup = tankGroup;
+    }
+    
+    /**
+     * 将本坦克所属的 group 设置为 null,本操作不保证真的从 group 对象中移除本坦克
+     * <br>本方法应由 {@link com.azazo1.tank.TankGroup#removeTank(TankBase)} 调用
+     */
+    public void clearTankGroup() {
+        this.tankGroup = null;
+    }
+    
+    /**
+     * 向坦克面朝方向运动
+     *
+     * @param length 运动长度 pixels,正数则前进,负数则后退
+     */
+    public void go(double length) {
+        orientationModule.adjust();
+        // 移动
+        rect.translate((int) (length * Math.cos(orientationModule.getOrientation())), (int) (length * Math.sin(orientationModule.getOrientation())));
+    }
+    
+    /**
+     * 坦克转弯
+     *
+     * @param theta 转弯角度 rad,正数顺时针,负数逆时针
+     */
+    public void turn(double theta) {
+        orientationModule.setOrientation(orientationModule.getOrientation() + theta);
+    }
+    
+    /**
+     * 坦克开火
+     * 子代科技城
+     */
+    public void fire(Class<? extends BulletBase> T) {
+        // todo
+        try {
+            Constructor<? extends BulletBase> constructor = T.getConstructor(int.class, int.class, double.class);
+            double orientation = orientationModule.getOrientation();
+            // rect.width 是坦克炮筒所在边
+            int cx = (int) (rect.getCenterX() + Math.cos(orientation) * rect.width);
+            int cy = (int) (rect.getCenterY() + Math.sin(orientation) * rect.width);
+            BulletBase bullet = constructor.newInstance(cx, cy, orientation);
+            
+            tankGroup.getGameMap().getBulletGroup().addBullet(bullet);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e); // 一般不会到达此处
+        } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    public void fire() {
+        fire(BulletBase.class);
+    }
+    
+    public boolean detectCollision(Rectangle rect) {
+        // todo 更合理的碰撞检测
+        return this.rect.intersects(rect);
+    }
+    
+    public void update(Graphics g) {
+        if (enduranceModule.isDead()) {
+            throw new IllegalStateException(this + " has died.");
+        }
+        // 位置备份
+        Rectangle rectBak = getRect();
+        double orientationBak = orientationModule.getOrientation();
+        
+        if (forwardGoingKeyPressed.get()) {
+            go(goingSpeed.get());
+        } else if (backwardGoingKeyPressed.get()) {
+            go(-goingSpeed.get());
+        }
+        if (leftTurningKeyPressed.get()) {
+            turn(-turningSpeed.get());
+        }
+        if (rightTurningKeyPressed.get()) {
+            turn(turningSpeed.get());
+        }
+        // 与墙进行碰撞检测
+        for (Wall w : tankGroup.getGameMap().getWallGroup().getWalls()) {
+            if (detectCollision(w.getRect())) {
+                // 发生碰撞了, 取消变换
+                rect = rectBak;
+                orientationModule.setOrientation(orientationBak);
+            }
+        }
+        // 与子弹进行碰撞检测
+        for (BulletBase b : tankGroup.getGameMap().getBulletGroup().getBullets()) {
+            if (detectCollision(b.getRect())) {
+                // 碰撞到了, 使受到伤害
+                if (getEnduranceManager().makeAttack()) {
+                    b.finish();
+                }
+            }
+        }
+        paint(g);
+    }
+    
+    protected void paint(@NotNull Graphics g) {
+        Graphics2D g2d = (Graphics2D) g;
+        double dx = rect.getCenterX();
+        double dy = rect.getCenterY();
+        g2d.translate(dx, dy); // 移动初始位置
+        g2d.rotate(orientationModule.getOrientation());
+        // 注意负值使图像中点落在初始位置上,使旋转锚点正常
+        g.drawImage(enduranceModule.adjustEnduranceImage(), -rect.width / 2, -rect.height / 2, rect.width, rect.height, null);
+    }
+    
+    public EnduranceModule getEnduranceManager() {
+        return enduranceModule;
+    }
+    
+    /**
+     * 坦克生命模块
+     */
+    protected static class EnduranceModule {
+        protected AtomicLong lastInjuredTime = new AtomicLong(0);
+        protected AtomicInteger endurance = new AtomicInteger(Config.TANK_MAX_ENDURANCE); // 一般此数值不会小于零
+        
+        public EnduranceModule() {
+        }
+        
+        /**
+         * 尝试使坦克受伤, 血量低于 1 时自动调用 {@link #makeDie()}
+         *
+         * @return 是否造成了伤害
+         */
+        public boolean makeAttack() {
+            if (endurance.get() <= 0) {
+                makeDie();
+            }
+            if (Tools.getFrameTimeInMillis() > Config.TANK_INJURED_INTERVAL_MILLIS + lastInjuredTime.get()) { // 过了受伤间隔
+                endurance.getAndDecrement();
+                lastInjuredTime.set(Tools.getFrameTimeInMillis());
+                return true;
+            }
+            return false;
+        }
+        
+        /**
+         * 使坦克死亡(无视其血量), 本操作不保证坦克从 {@link TankGroup} 中移除
+         * <br>但死亡的坦克会自动被处在事件调度时的 {@link TankGroup} 清除
+         *
+         * @see TankGroup#update(Graphics)
+         */
+        public void makeDie() {
+            endurance.set(0);
+        }
+        
+        /**
+         * 查看坦克是否死亡
+         */
+        public boolean isDead() {
+            return endurance.get() <= 0;
+        }
+        
+        /**
+         * 返回坦克当前生命值对应的图片 (血量越低越透明)
+         */
+        public Image adjustEnduranceImage() { // 临时生成图片
+            double bias = endurance.get() * 1.0 / Config.TANK_MAX_ENDURANCE;
+            BufferedImage img = Tools.deepCopy(rawImg);
+            var r = img.getAlphaRaster();
+            for (int x = 0; x < img.getWidth(); x++) {
+                for (int y = 0; y < img.getHeight(); y++) {
+                    r.setPixel(x, y, new int[]{(int) (r.getPixel(x, y, (int[]) null)[0] * bias)}); // 调整透明度 todo 有问题
+                }
+            }
+            return img;
+        }
+    }
+    
+    /**
+     * 自动校准坦克朝向，防止 orientation 小角度的偏离坐标轴却平行坐标轴行驶
+     */
+    protected class OrientationModule {
+        protected static double ignoredRad = Math.toRadians(10); // 将被忽略的距离坐标轴的偏差
+        protected static int intervalFrames = 10; // 每隔一定帧就尝试校准一次
+        protected final AtomicDouble orientation = new AtomicDouble(0); // 0 向右,顺时针为正向
+        
+        public void adjust() {
+            if (Tools.getFrameCounts() % intervalFrames != 0 || leftTurningKeyPressed.get() || rightTurningKeyPressed.get()) {
+                return;
+            }
+            // 尝试去贴近水平轴或竖直轴 todo 等真的碰撞检测做好后可能会有一定副作用
+            double delta = orientation.get() % (Math.PI / 2);
+            if (delta < ignoredRad) { // 距离上一个九十度不远
+                orientation.set(orientation.get() - delta);
+            } else if (delta > Math.PI / 2 - ignoredRad) { // 要接近下一个九十度
+                orientation.set(orientation.get() + Math.PI / 2 - delta);
+            }
+        }
+        
+        public double getOrientation() {
+            return orientation.get();
+        }
+        
+        public void setOrientation(double orientation) {
+            this.orientation.set(orientation % (Math.PI * 2));
+        }
+    }
+}
