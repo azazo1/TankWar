@@ -3,6 +3,7 @@ package com.azazo1.bullet;
 import com.azazo1.util.AtomicDouble;
 import com.azazo1.util.Tools;
 import com.azazo1.wall.Wall;
+import com.azazo1.wall.WallGroup;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -11,6 +12,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -65,18 +67,18 @@ public class BulletBase {
     }
     
     public void update(Graphics graphics) {
+        lifeModule.updateLife();
         if (!finished.get()) {
-            lifeModule.updateLife();
             reflectionModule.updateReflection();
             rect.translate((int) (speed.get() * Math.cos(orientation.get())), (int) (speed.get() * Math.sin(orientation.get())));
             paint(graphics);
-        } else {
-            throw new IllegalStateException(this + " has finished.");
         }
     }
     
     protected void paint(@NotNull Graphics graphics) {
-        graphics.drawImage(img, rect.x, rect.y, rect.width, rect.height, null); // 通常子弹是圆的,不需要旋转
+        graphics.translate(rect.x, rect.y);
+        ((Graphics2D) graphics).rotate(orientation.get());
+        graphics.drawImage(img, -rect.width / 2, -rect.height / 2, rect.width, rect.height, null);
     }
     
     public boolean isFinished() {
@@ -107,7 +109,13 @@ public class BulletBase {
         protected final long createdTime = Tools.getFrameTimeInMillis();
         
         public void updateLife() {
-            if (reflectionModule.getReflectionTimes() > MAX_REFLECTION_TIMES || Tools.getFrameTimeInMillis() > EXISTING_DURATION_IN_MILLIS + createdTime) {
+            int width = bulletGroup.getGameMap().getWidth();
+            int height = bulletGroup.getGameMap().getHeight();
+            double cx = rect.getCenterX();
+            double cy = rect.getCenterY();
+            if (reflectionModule.getReflectionTimes() > MAX_REFLECTION_TIMES // 反射过多
+                    || Tools.getFrameTimeInMillis() > EXISTING_DURATION_IN_MILLIS + createdTime // 存在过久
+                    || cx > width || cx < 0 || cy > height || cy < 0) { // 超出边界
                 finish();
             }
         }
@@ -130,7 +138,13 @@ public class BulletBase {
          */
         @Nullable
         protected Wall detectCollision() {
-            for (Wall w : bulletGroup.getGameMap().getWallGroup().getWalls()) {
+            WallGroup wg = bulletGroup.getGameMap().getWallGroup();
+            Vector<Wall> walls = wg.getWalls((int) rect.getCenterX(), (int) rect.getCenterY());
+            if (walls == null) { // 四叉树查找不到则全局检测
+                walls = wg.getWalls();
+                System.out.println("all");
+            }
+            for (Wall w : walls) {
                 if (rect.intersects(w.getRect())) {
                     return w;
                 }

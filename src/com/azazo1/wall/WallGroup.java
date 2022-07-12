@@ -3,6 +3,7 @@ package com.azazo1.wall;
 import com.azazo1.GameMap;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -11,6 +12,8 @@ import java.util.Vector;
 
 public class WallGroup {
     protected Vector<Wall> walls = new Vector<>();
+    protected Vector<Wall> wallsToDispatch = new Vector<>();
+    protected QTreeWallStorage tree;
     protected GameMap map;
     
     public WallGroup() {
@@ -71,7 +74,8 @@ public class WallGroup {
      * @param _throws             是否报错
      * @param wallExpressionLines 由读取的 wallExpression 将每行分割后形成的字符串组
      */
-    protected static boolean checkWallExpression(String[] wallExpressionLines, boolean _throws) {
+    @SuppressWarnings({"UnusedReturnValue", "SameParameterValue"})
+    protected static boolean checkWallExpression(@NotNull String[] wallExpressionLines, boolean _throws) {
         boolean valid = true;
         int length = -1;
         if (!(wallExpressionLines.length == 0)) {
@@ -99,40 +103,68 @@ public class WallGroup {
     }
     
     /**
-     * 不保证真的能从 map 中添加,本方法应由 com.azazo1.GameMap 调用
+     * 不保证真的能从 map 中添加,本方法应由 {@link GameMap} 调用
+     * <p>
+     * 此方法会将之前 ({@link #addSingleWall(Wall)}) 没有分配到四叉树内的墙进行分配
      */
-    public void setGameMap(GameMap map) {
+    public void setGameMap(@NotNull GameMap map) {
         this.map = map;
+        tree = new QTreeWallStorage(map.getWidth(), map.getHeight());
+        for (Wall w : wallsToDispatch) {
+            tree.dispatch(w);
+        }
+        wallsToDispatch.clear();
     }
     
     /**
-     * 不保证真的能从 map 中去除,本方法应由 com.azazo1.GameMap 调用
+     * 不保证真的能从 map 中去除,本方法应由 {@link GameMap} 调用
      */
     public void clearGameMap() {
         this.map = null;
+        tree.dispose();
+        tree = null;
     }
     
+    /**
+     * 将墙添加到列表和四叉树(尝试)中<br>
+     * 如果未能成功添加到四叉树上则将墙加入等待列表 {@link #wallsToDispatch}
+     */
     public void addSingleWall(Wall wall) {
-        getWalls().add(wall);
+        walls.add(wall);
+        if (tree != null) {
+            tree.dispatch(wall);
+        } else {
+            wallsToDispatch.add(wall);
+        }
     }
     
     public void update(Graphics graphics) {
         if (walls.isEmpty()) {
             return;
         }
-        for (Wall wall : getWalls()) {
+        for (Wall wall : walls) {
             wall.update(graphics.create());
         }
     }
     
     public Vector<Wall> getWalls() {
-        return walls;
+        return new Vector<>(walls);
     }
     
     /**
      * 通过四叉树筛选出一部分墙，用于减少计算量
      */
+    @Nullable
     public Vector<Wall> getWalls(int x, int y) {
-        return walls; // todo complete it.
+        try {
+            QNode leave = tree.switchLeave(new Point(x, y));
+            if (leave == null) {
+                return null;
+            } else {
+                return leave.getWalls();
+            }
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

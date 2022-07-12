@@ -6,6 +6,7 @@ import com.azazo1.bullet.BulletBase;
 import com.azazo1.util.AtomicDouble;
 import com.azazo1.util.Tools;
 import com.azazo1.wall.Wall;
+import com.azazo1.wall.WallGroup;
 import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
@@ -15,6 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -186,7 +188,13 @@ public class TankBase {
             turn(turningSpeed.get());
         }
         // 与墙进行碰撞检测
-        for (Wall w : tankGroup.getGameMap().getWallGroup().getWalls()) {
+        WallGroup wg = tankGroup.getGameMap().getWallGroup();
+        Vector<Wall> walls = wg.getWalls((int) rect.getCenterX(), (int) rect.getCenterY());
+        if (walls == null) {
+            walls = wg.getWalls();
+            System.out.println("all");
+        }
+        for (Wall w : walls) {
             if (detectCollision(w.getRect())) {
                 // 发生碰撞了, 取消变换
                 rect = rectBak;

@@ -15,7 +15,7 @@ public class BulletGroup {
     }
     
     public Vector<BulletBase> getBullets() {
-        return bullets;
+        return new Vector<>(bullets);
     }
     
     public void update(Graphics graphics) {

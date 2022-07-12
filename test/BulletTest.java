@@ -41,7 +41,7 @@ class BulletTest {
         map.setBulletGroup(bulletG);
         
         JFrame frame = new JFrame();
-        // com.azazo1.GameMap 居中
+        // GameMap 居中
         Box hBox = Box.createHorizontalBox();
         Box vBox = Box.createVerticalBox();
         vBox.add(Box.createHorizontalStrut(Config.MAP_WIDTH));
