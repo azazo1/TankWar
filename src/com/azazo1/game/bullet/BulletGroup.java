@@ -1,6 +1,6 @@
-package com.azazo1.bullet;
+package com.azazo1.game.bullet;
 
-import com.azazo1.GameMap;
+import com.azazo1.game.GameMap;
 
 import java.awt.*;
 import java.util.Vector;

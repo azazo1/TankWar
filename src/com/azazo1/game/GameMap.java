@@ -1,31 +1,21 @@
-package com.azazo1;
+package com.azazo1.game;
 
-import com.azazo1.base.Config;
-import com.azazo1.bullet.BulletGroup;
-import com.azazo1.tank.TankGroup;
+import com.azazo1.Config;
+import com.azazo1.game.bullet.BulletGroup;
+import com.azazo1.game.tank.TankGroup;
 import com.azazo1.util.Tools;
-import com.azazo1.wall.WallGroup;
+import com.azazo1.game.wall.WallGroup;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class GameMap extends Canvas {
-    protected AtomicBoolean firstFocused = new AtomicBoolean(false); // 是否被聚焦过(用于提示用户点击来聚焦)
     protected TankGroup tankGroup;
     protected WallGroup wallGroup;
     protected BulletGroup bulletGroup;
     
     public GameMap() {
         super();
-        addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                firstFocused.set(true);
-            }
-        });
     }
     
     @Override
@@ -48,7 +38,7 @@ public class GameMap extends Canvas {
         getTankGroup().update(bufferGraphics.create()); // 传入副本
         getWallGroup().update(bufferGraphics.create()); // 传入副本
         getBulletGroup().update(bufferGraphics.create()); // 传入副本
-        if (!firstFocused.get()) {
+        if (!hasFocus()) {
             bufferGraphics.setColor(Config.TEXT_COLOR);
             char[] c = "Click Here To Focus".toCharArray();
             bufferGraphics.drawChars(c, 0, c.length, 30, 30);

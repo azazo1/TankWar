@@ -1,8 +1,10 @@
 package com.azazo1.util;
 
-import com.azazo1.base.Config;
+import com.azazo1.Config;
 import org.jetbrains.annotations.NotNull;
 
+import javax.swing.*;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.util.Calendar;
@@ -48,5 +50,25 @@ public final class Tools {
         ColorModel cm = src.getColorModel();
         boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
         return new BufferedImage(cm, src.copyData(null), isAlphaPremultiplied, null);
+    }
+    
+    /**
+     * 尝试重置 {@link JFrame} 大小使内容得到全部显示
+     */
+    public static void resizeFrame(JFrame frame, int width, int height) {
+        Timer timer = new Timer((int) (1000.0 / Config.FPS), null);
+        timer.addActionListener((action) -> {
+            if (frame == null) {
+                timer.stop();
+                return;
+            }
+            Insets insets = frame.getInsets();
+            if (insets.top != 0 || insets.bottom != 0 || insets.left != 0 || insets.right != 0) {
+                frame.setSize(width + insets.left + insets.right, height + insets.top + insets.bottom);
+                timer.stop();
+            }
+        });
+        timer.setRepeats(true);
+        timer.start();
     }
 }

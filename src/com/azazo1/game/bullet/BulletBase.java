@@ -1,9 +1,9 @@
-package com.azazo1.bullet;
+package com.azazo1.game.bullet;
 
 import com.azazo1.util.AtomicDouble;
 import com.azazo1.util.Tools;
-import com.azazo1.wall.Wall;
-import com.azazo1.wall.WallGroup;
+import com.azazo1.game.wall.Wall;
+import com.azazo1.game.wall.WallGroup;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

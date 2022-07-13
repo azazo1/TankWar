@@ -1,4 +1,4 @@
-import com.azazo1.wall.WallGroup;
+import com.azazo1.game.wall.WallGroup;
 
 import javax.imageio.ImageIO;
 import java.io.File;

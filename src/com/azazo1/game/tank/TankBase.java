@@ -1,12 +1,12 @@
-package com.azazo1.tank;
+package com.azazo1.game.tank;
 
-import com.azazo1.base.Config;
+import com.azazo1.Config;
 import com.azazo1.base.TankAction;
-import com.azazo1.bullet.BulletBase;
+import com.azazo1.game.bullet.BulletBase;
 import com.azazo1.util.AtomicDouble;
 import com.azazo1.util.Tools;
-import com.azazo1.wall.Wall;
-import com.azazo1.wall.WallGroup;
+import com.azazo1.game.wall.Wall;
+import com.azazo1.game.wall.WallGroup;
 import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -44,6 +45,7 @@ public class TankBase {
     protected final EnduranceModule enduranceModule = new EnduranceModule();
     protected Rectangle rect = new Rectangle(0, 0, rawImg.getWidth(), rawImg.getHeight());
     protected TankGroup tankGroup; // 用于统一处理数据和显示
+    private HashMap<Integer, TankAction> actionKeyMap = Config.TANK_ACTION_KEY_MAP_1_ST; // 默认按键映射
     
     public TankBase() {
         super();
@@ -55,11 +57,12 @@ public class TankBase {
     
     /**
      * 激发坦克对应运动状态: {@link TankAction}
+     * 值得注意的是按键映射的选择应由子代继承后实现
      *
      * @param keyCode 按下的按键对应的 code
      */
     public void pressKey(int keyCode) {
-        TankAction motion = Config.TANK_MOTION_KEY_MAP_1_ST.get(keyCode);
+        TankAction motion = actionKeyMap.get(keyCode);
         if (motion == null) {
             return;
         }
@@ -74,11 +77,12 @@ public class TankBase {
     
     /**
      * 解除坦克对应运动状态: {@link TankAction}
+     * 值得注意的是按键映射的选择应由子代继承后实现
      *
      * @param keyCode 松开的按键对应的 code
      */
     public void releaseKey(int keyCode) {
-        TankAction motion = Config.TANK_MOTION_KEY_MAP_1_ST.get(keyCode);
+        TankAction motion = actionKeyMap.get(keyCode);
         if (motion == null) {
             return;
         }
@@ -91,10 +95,17 @@ public class TankBase {
         }
     }
     
+    /**
+     * 选择按键映射
+     */
+    public void setActionKeyMap(HashMap<Integer, TankAction> keyMap) {
+        this.actionKeyMap = keyMap;
+    }
+    
     
     /**
      * 设置本坦克所属的 group,本操作不保证真的从 group 对象中添加本坦克
-     * <br>本方法应由 {@link com.azazo1.tank.TankGroup#addTank(TankBase)} 调用
+     * <br>本方法应由 {@link com.azazo1.game.tank.TankGroup#addTank(TankBase)} 调用
      */
     public void setTankGroup(TankGroup tankGroup) {
         this.tankGroup = tankGroup;
@@ -102,7 +113,7 @@ public class TankBase {
     
     /**
      * 将本坦克所属的 group 设置为 null,本操作不保证真的从 group 对象中移除本坦克
-     * <br>本方法应由 {@link com.azazo1.tank.TankGroup#removeTank(TankBase)} 调用
+     * <br>本方法应由 {@link com.azazo1.game.tank.TankGroup#removeTank(TankBase)} 调用
      */
     public void clearTankGroup() {
         this.tankGroup = null;

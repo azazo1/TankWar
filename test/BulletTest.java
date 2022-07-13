@@ -1,16 +1,17 @@
-import com.azazo1.GameMap;
-import com.azazo1.base.Config;
-import com.azazo1.bullet.BulletBase;
-import com.azazo1.bullet.BulletGroup;
-import com.azazo1.tank.TankBase;
-import com.azazo1.tank.TankGroup;
-import com.azazo1.wall.WallGroup;
+import com.azazo1.Config;
+import com.azazo1.game.GameMap;
+import com.azazo1.game.bullet.BulletBase;
+import com.azazo1.game.bullet.BulletGroup;
+import com.azazo1.game.tank.TankBase;
+import com.azazo1.game.tank.TankGroup;
+import com.azazo1.game.wall.WallGroup;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+
+import static com.azazo1.util.Tools.resizeFrame;
 
 class BulletTest {
     public static void main(String[] args) {
@@ -18,11 +19,13 @@ class BulletTest {
         map.setSize(Config.MAP_WIDTH, Config.MAP_HEIGHT);
         
         TankBase tank = new TankBase();
+        tank.setActionKeyMap(Config.TANK_ACTION_KEY_MAP_1_ST);
         TankBase tank2 = new TankBase();
         tank2.turn(Math.toRadians(45));
         tank2.go(50);
         tank2.turn(Math.toRadians(-45));
         tank2.go(50);
+        tank2.setActionKeyMap(Config.TANK_ACTION_KEY_MAP_2_ND);
         TankGroup tankG = new TankGroup();
         
         WallGroup wallG;
@@ -54,9 +57,7 @@ class BulletTest {
         t.setRepeats(true);
         t.start();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        // setBounds 设置的尺寸有偏差,因此直接最大化
-        frame.setExtendedState(Frame.MAXIMIZED_BOTH);
-        frame.setSize(Config.MAP_WIDTH, Config.MAP_HEIGHT);
+        resizeFrame(frame, Config.MAP_WIDTH, Config.MAP_HEIGHT);
         map.requestFocus();
         frame.setVisible(true);
     }

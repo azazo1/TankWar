@@ -1,4 +1,4 @@
-package com.azazo1.wall;
+package com.azazo1.game.wall;
 
 import org.junit.jupiter.api.Test;
 

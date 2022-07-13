@@ -1,6 +1,6 @@
-package com.azazo1.wall;
+package com.azazo1.game.wall;
 
-import com.azazo1.GameMap;
+import com.azazo1.game.GameMap;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -95,7 +95,7 @@ public class WallGroup {
         }
         if (!valid) {
             if (_throws) {
-                throw new IllegalArgumentException("Invalid com.azazo1.wall expression.");
+                throw new IllegalArgumentException("Invalid com.azazo1.game.wall expression.");
             }
         }
         

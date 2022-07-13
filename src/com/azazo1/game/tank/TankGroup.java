@@ -1,6 +1,6 @@
-package com.azazo1.tank;
+package com.azazo1.game.tank;
 
-import com.azazo1.GameMap;
+import com.azazo1.game.GameMap;
 
 import java.awt.*;
 import java.awt.event.KeyAdapter;

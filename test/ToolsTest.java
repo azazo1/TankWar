@@ -17,7 +17,7 @@ class ToolsTest {
     void deepCopy() {
         BufferedImage img;
         try {
-            img = ImageIO.read(new File("res/com.azazo1.tank.png"));
+            img = ImageIO.read(new File("res/com.azazo1.game.tank.png"));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
