@@ -23,7 +23,7 @@ public class BulletBase {
     
     static {
         try {
-            img = ImageIO.read(new File("res/Bullet.png"));
+            img = ImageIO.read(new File("res/Bullet.png")); // 为了保证子弹反射正常进行, 建议子弹图像为方形
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -142,7 +142,6 @@ public class BulletBase {
             Vector<Wall> walls = wg.getWalls((int) rect.getCenterX(), (int) rect.getCenterY());
             if (walls == null) { // 四叉树查找不到则全局检测
                 walls = wg.getWalls();
-                System.out.println("all");
             }
             for (Wall w : walls) {
                 if (rect.intersects(w.getRect())) {

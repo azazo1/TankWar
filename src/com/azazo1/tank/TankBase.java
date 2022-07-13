@@ -192,7 +192,6 @@ public class TankBase {
         Vector<Wall> walls = wg.getWalls((int) rect.getCenterX(), (int) rect.getCenterY());
         if (walls == null) {
             walls = wg.getWalls();
-            System.out.println("all");
         }
         for (Wall w : walls) {
             if (detectCollision(w.getRect())) {
@@ -301,11 +300,16 @@ public class TankBase {
                 return;
             }
             // 尝试去贴近水平轴或竖直轴 todo 等真的碰撞检测做好后可能会有一定副作用
-            double delta = orientation.get() % (Math.PI / 2);
+            double _orientation = getOrientation();
+            double positiveOrientation = _orientation; // 将 orientation 调整到正数区间内
+            while (positiveOrientation < 0) {
+                positiveOrientation += Math.PI / 2;
+            }
+            double delta = positiveOrientation % (Math.PI / 2);
             if (delta < ignoredRad) { // 距离上一个九十度不远
-                orientation.set(orientation.get() - delta);
+                orientation.set(_orientation - delta);
             } else if (delta > Math.PI / 2 - ignoredRad) { // 要接近下一个九十度
-                orientation.set(orientation.get() + Math.PI / 2 - delta);
+                orientation.set(_orientation + Math.PI / 2 - delta);
             }
         }
         
