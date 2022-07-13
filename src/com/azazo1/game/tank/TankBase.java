@@ -3,10 +3,10 @@ package com.azazo1.game.tank;
 import com.azazo1.Config;
 import com.azazo1.base.TankAction;
 import com.azazo1.game.bullet.BulletBase;
-import com.azazo1.util.AtomicDouble;
-import com.azazo1.util.Tools;
 import com.azazo1.game.wall.Wall;
 import com.azazo1.game.wall.WallGroup;
+import com.azazo1.util.AtomicDouble;
+import com.azazo1.util.Tools;
 import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -43,12 +44,20 @@ public class TankBase {
     protected final AtomicDouble goingSpeed = new AtomicDouble(6); // 行动速度 pixels/帧
     protected final AtomicDouble turningSpeed = new AtomicDouble(Math.toRadians(7)); // 转向速度 rad/帧
     protected final EnduranceModule enduranceModule = new EnduranceModule();
+    private final int seq;
     protected Rectangle rect = new Rectangle(0, 0, rawImg.getWidth(), rawImg.getHeight());
     protected TankGroup tankGroup; // 用于统一处理数据和显示
-    private HashMap<Integer, TankAction> actionKeyMap = Config.TANK_ACTION_KEY_MAP_1_ST; // 默认按键映射
+    private HashMap<Integer, TankAction> actionKeyMap; // 默认按键映射
     
     public TankBase() {
+        this(SeqModule.next());
+    }
+    
+    public TankBase(int seq) {
         super();
+        SeqModule.use(seq); // 若序号已经在使用会报错
+        this.seq = seq;
+        setActionKeyMap(Config.TANK_ACTION_KEY_MAPS.get(seq));
     }
     
     public Rectangle getRect() {
@@ -215,7 +224,7 @@ public class TankBase {
         for (BulletBase b : tankGroup.getGameMap().getBulletGroup().getBullets()) {
             if (detectCollision(b.getRect())) {
                 // 碰撞到了, 使受到伤害
-                if (getEnduranceManager().makeAttack()) {
+                if (enduranceModule.makeAttack(b.getDamage())) {
                     b.finish();
                 }
             }
@@ -237,10 +246,62 @@ public class TankBase {
         return enduranceModule;
     }
     
+    private static final class SeqModule { // todo private
+        private static final AtomicInteger cur = new AtomicInteger(0);
+        private static final HashSet<Integer> usingSequences = new HashSet<>(); // 正在被使用的序号
+        private static final HashSet<Integer> spareSequences = new HashSet<>(); // 被以前创建过但是被废弃的序号
+        
+        /**
+         * 产生新序列
+         */
+        private static int next() {
+            if (!spareSequences.isEmpty()) { // 先使用 spareSequences 里的序号
+                int rst = spareSequences.iterator().next();
+                spareSequences.remove(rst);
+                return rst;
+            }
+            int rst;
+            while (true) { // 跳过已经在使用的序号
+                if (!isUsing((rst = cur.getAndIncrement()))) {
+                    break;
+                }
+            }
+            return rst;
+        }
+        
+        /**
+         * 判断该序号是否被使用
+         */
+        private static boolean isUsing(int seq) {
+            return usingSequences.contains(seq);
+        }
+        
+        /**
+         * 将序号设置为正在使用
+         */
+        public static void use(int seq) {
+            if (isUsing(seq)) {
+                throw new IllegalArgumentException("This sequence has been used.");
+            }
+            if (spareSequences.contains(seq)) {
+                spareSequences.remove(seq);
+            }
+            usingSequences.add(seq);
+        }
+        
+        /**
+         * 将指定序号设置为未使用(不会判断原来是否在使用)
+         */
+        private static void dispose(int seq) {
+            usingSequences.remove(seq);
+            spareSequences.add(seq);
+        }
+    }
+    
     /**
      * 坦克生命模块
      */
-    protected static class EnduranceModule {
+    protected class EnduranceModule {
         protected AtomicLong lastInjuredTime = new AtomicLong(0);
         protected AtomicInteger endurance = new AtomicInteger(Config.TANK_MAX_ENDURANCE); // 一般此数值不会小于零
         
@@ -252,14 +313,14 @@ public class TankBase {
          *
          * @return 是否造成了伤害
          */
-        public boolean makeAttack() {
-            if (endurance.get() <= 0) {
-                makeDie();
-            }
+        public boolean makeAttack(int damage) {
             if (Tools.getFrameTimeInMillis() > Config.TANK_INJURED_INTERVAL_MILLIS + lastInjuredTime.get()) { // 过了受伤间隔
-                endurance.getAndDecrement();
+                endurance.getAndAdd(-damage);
                 lastInjuredTime.set(Tools.getFrameTimeInMillis());
                 return true;
+            }
+            if (endurance.get() <= 0) {
+                makeDie();
             }
             return false;
         }
@@ -272,6 +333,7 @@ public class TankBase {
          */
         public void makeDie() {
             endurance.set(0);
+            SeqModule.dispose(seq);
         }
         
         /**

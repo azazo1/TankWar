@@ -1,5 +1,6 @@
 package com.azazo1.game.wall;
 
+import com.azazo1.Config;
 import com.azazo1.game.GameMap;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -51,7 +52,7 @@ public class WallGroup {
      * 但储存介质变为黑白两色图片
      * 只有像素为 (0,0,0) 时才会被记为墙,alpha 通道被忽略
      */
-    public static @NotNull WallGroup parseFromBinaryBitmap(@NotNull BufferedImage image, int screenWidth, int screenHeight) {
+    public static @NotNull WallGroup parseFromBinaryBitmap(@NotNull BufferedImage image, int mapWidth, int mapHeight) {
         Raster data = image.getData();
         int w = data.getWidth(), h = data.getHeight();
         return new WallGroup() {{
@@ -61,13 +62,17 @@ public class WallGroup {
                     data.getPixel(x, y, array);
                     if (array[0] == array[1] && array[1] == array[2] && array[2] == 0) {
                         addSingleWall(new Wall(
-                                (int) ((screenWidth * 1.0) / w * x), (int) ((screenHeight * 1.0) / h * y), // x和y不需要减一来使左上角坐标处于正确位置,因为xy从0开始
-                                (int) ((screenWidth * 1.0) / w), (int) (screenWidth * 1.0 / h)
+                                (int) ((mapWidth * 1.0) / w * x), (int) ((mapHeight * 1.0) / h * y), // x和y不需要减一来使左上角坐标处于正确位置,因为xy从0开始
+                                (int) ((mapWidth * 1.0) / w), (int) (mapWidth * 1.0 / h)
                         ));
                     }
                 }
             }
         }};
+    }
+    
+    public static @NotNull WallGroup parseFromBinaryBitmap(@NotNull BufferedImage image) {
+        return parseFromBinaryBitmap(image, Config.MAP_WIDTH, Config.MAP_HEIGHT);
     }
     
     /**

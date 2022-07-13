@@ -1,10 +1,14 @@
 package com.azazo1.game.bullet;
 
 import com.azazo1.game.GameMap;
+import com.azazo1.game.tank.TankBase;
 
 import java.awt.*;
 import java.util.Vector;
 
+/**
+ * 管理子弹, 子弹不需手动写代码添加, 一般由 {@link TankBase} 调用
+ */
 public class BulletGroup {
     protected Vector<BulletBase> bullets = new Vector<>();
     protected GameMap map;

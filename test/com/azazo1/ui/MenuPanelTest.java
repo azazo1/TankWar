@@ -1,7 +1,10 @@
 package com.azazo1.ui;
 
+import com.azazo1.Config;
+
 import javax.swing.*;
-import java.awt.*;
+
+import static com.azazo1.util.Tools.resizeFrame;
 
 class MenuPanelTest {
     
@@ -9,9 +12,9 @@ class MenuPanelTest {
         JFrame f = new JFrame();
         MenuPanel m = new MenuPanel();
         f.setContentPane(m);
-        EventQueue.invokeLater(
-                () -> m.setupUI(f)
-        );
+        m.setupUI();
+        f.setResizable(false);
+        resizeFrame(f, Config.WINDOW_WIDTH, Config.WINDOW_HEIGHT);
         f.setVisible(true);
         f.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
     }

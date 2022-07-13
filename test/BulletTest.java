@@ -19,13 +19,11 @@ class BulletTest {
         map.setSize(Config.MAP_WIDTH, Config.MAP_HEIGHT);
         
         TankBase tank = new TankBase();
-        tank.setActionKeyMap(Config.TANK_ACTION_KEY_MAP_1_ST);
         TankBase tank2 = new TankBase();
         tank2.turn(Math.toRadians(45));
         tank2.go(50);
         tank2.turn(Math.toRadians(-45));
         tank2.go(50);
-        tank2.setActionKeyMap(Config.TANK_ACTION_KEY_MAP_2_ND);
         TankGroup tankG = new TankGroup();
         
         WallGroup wallG;
@@ -57,7 +55,7 @@ class BulletTest {
         t.setRepeats(true);
         t.start();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        resizeFrame(frame, Config.MAP_WIDTH, Config.MAP_HEIGHT);
+        resizeFrame(frame, Config.WINDOW_WIDTH, Config.WINDOW_HEIGHT);
         map.requestFocus();
         frame.setVisible(true);
     }
