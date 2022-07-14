@@ -11,6 +11,8 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.font.TextLayout;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -23,6 +25,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ * todo 坦克子弹数限制在5
+ */
 public class TankBase {
     
     protected static final BufferedImage rawImg;
@@ -49,6 +54,9 @@ public class TankBase {
     protected TankGroup tankGroup; // 用于统一处理数据和显示
     private HashMap<Integer, TankAction> actionKeyMap; // 默认按键映射
     
+    /**
+     * @implNote 当为 Online 模式时, 客户端子类无参构造函数要禁用, 因为 seq 由服务端控制
+     */
     public TankBase() {
         this(SeqModule.next());
     }
@@ -240,13 +248,19 @@ public class TankBase {
         g2d.rotate(orientationModule.getOrientation());
         // 注意负值使图像中点落在初始位置上,使旋转锚点正常
         g.drawImage(enduranceModule.adjustEnduranceImage(), -rect.width / 2, -rect.height / 2, rect.width, rect.height, null);
+        // 在坦克身上标注序号 todo 有待完善
+        g2d.rotate(Math.PI / 2);
+        g.setColor(Config.TANK_SEQ_COLOR);
+        TextLayout text = new TextLayout(seq + "", Config.TANK_SEQ_FONT, g2d.getFontRenderContext());
+        Rectangle2D rect = text.getBounds();
+        text.draw(g2d, (float) (-rect.getWidth() / 2), (float) (-rect.getHeight() / 2));
     }
     
     public EnduranceModule getEnduranceManager() {
         return enduranceModule;
     }
     
-    private static final class SeqModule { // todo private
+    private static final class SeqModule {
         private static final AtomicInteger cur = new AtomicInteger(0);
         private static final HashSet<Integer> usingSequences = new HashSet<>(); // 正在被使用的序号
         private static final HashSet<Integer> spareSequences = new HashSet<>(); // 被以前创建过但是被废弃的序号
@@ -283,9 +297,7 @@ public class TankBase {
             if (isUsing(seq)) {
                 throw new IllegalArgumentException("This sequence has been used.");
             }
-            if (spareSequences.contains(seq)) {
-                spareSequences.remove(seq);
-            }
+            spareSequences.remove(seq);
             usingSequences.add(seq);
         }
         

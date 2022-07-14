@@ -64,4 +64,11 @@ public class BulletGroup {
     public void clearGameMap() {
         this.map = null;
     }
+    
+    /**
+     * 获得子弹数
+     */
+    public int getBulletNum() {
+        return bullets.size();
+    }
 }

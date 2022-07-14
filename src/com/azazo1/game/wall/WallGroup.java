@@ -1,6 +1,7 @@
 package com.azazo1.game.wall;
 
 import com.azazo1.Config;
+import com.azazo1.base.ConstantVal;
 import com.azazo1.game.GameMap;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -9,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.Raster;
+import java.io.File;
 import java.util.Vector;
 
 public class WallGroup {
@@ -52,7 +54,7 @@ public class WallGroup {
      * 但储存介质变为黑白两色图片
      * 只有像素为 (0,0,0) 时才会被记为墙,alpha 通道被忽略
      */
-    public static @NotNull WallGroup parseFromBinaryBitmap(@NotNull BufferedImage image, int mapWidth, int mapHeight) {
+    public static @NotNull WallGroup parseFromBitmap(@NotNull BufferedImage image, int mapWidth, int mapHeight) {
         Raster data = image.getData();
         int w = data.getWidth(), h = data.getHeight();
         return new WallGroup() {{
@@ -71,8 +73,8 @@ public class WallGroup {
         }};
     }
     
-    public static @NotNull WallGroup parseFromBinaryBitmap(@NotNull BufferedImage image) {
-        return parseFromBinaryBitmap(image, Config.MAP_WIDTH, Config.MAP_HEIGHT);
+    public static @NotNull WallGroup parseFromBitmap(@NotNull BufferedImage image) {
+        return parseFromBitmap(image, Config.MAP_WIDTH, Config.MAP_HEIGHT);
     }
     
     /**
@@ -105,6 +107,26 @@ public class WallGroup {
         }
         
         return valid;
+    }
+    
+    /**
+     * 扫描当前文件夹下可用的游戏墙图文件
+     */
+    public static @Nullable Vector<File> scanBinaryBitmapFiles(String scanPath) {
+        File f = new File(scanPath);
+        String[] sons = f.list((dir, name) -> name.endsWith(ConstantVal.WALL_MAP_FILE_SUFFIX));
+        if (sons == null) {
+            return null;
+        }
+        Vector<File> rst = new Vector<>();
+        for (String name : sons) {
+            rst.add(new File(f.getPath() + File.separator + name));
+        }
+        return rst;
+    }
+    
+    public static @Nullable Vector<File> scanBinaryBitmapFiles() {
+        return scanBinaryBitmapFiles(".");
     }
     
     /**

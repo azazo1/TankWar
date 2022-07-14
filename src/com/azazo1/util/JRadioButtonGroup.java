@@ -1,5 +1,7 @@
 package com.azazo1.util;
 
+import org.jetbrains.annotations.Nullable;
+
 import javax.swing.*;
 import java.awt.event.ActionListener;
 import java.util.Iterator;
@@ -19,8 +21,12 @@ public class JRadioButtonGroup extends ButtonGroup {
         return null;
     }
     
-    public String getSelectedActionCommand() {
-        return getSelectedJRadioButton().getActionCommand();
+    public @Nullable String getSelectedActionCommand() {
+        JRadioButton selectedJRadioButton = getSelectedJRadioButton();
+        if (selectedJRadioButton == null) {
+            return null;
+        }
+        return selectedJRadioButton.getActionCommand();
     }
     
     @Override

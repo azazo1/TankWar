@@ -3,12 +3,16 @@ package com.azazo1.game;
 import com.azazo1.Config;
 import com.azazo1.game.bullet.BulletGroup;
 import com.azazo1.game.tank.TankGroup;
-import com.azazo1.util.Tools;
 import com.azazo1.game.wall.WallGroup;
+import com.azazo1.util.Tools;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
+import java.awt.font.TextLayout;
 
+/**
+ * 游戏画面
+ */
 public class GameMap extends Canvas {
     protected TankGroup tankGroup;
     protected WallGroup wallGroup;
@@ -18,6 +22,11 @@ public class GameMap extends Canvas {
         super();
     }
     
+    /**
+     * 更新 {@link GameMap} 对象状态
+     *
+     * @apiNote 此方法要在 {@link #tankGroup} {@link #wallGroup} {@link #bulletGroup} 都被设置后才能调用
+     */
     @Override
     public void update(Graphics g) {
         setSize(Config.MAP_WIDTH, Config.MAP_HEIGHT);
@@ -25,13 +34,13 @@ public class GameMap extends Canvas {
             g = getGraphics();
         }
         paint(g);
-        Tools.tickFrame();
     }
     
     @Override
     public void paint(Graphics g) {
         Image buffer = createImage(getWidth(), getHeight()); // 二级缓冲
         Graphics bufferGraphics = buffer.getGraphics();
+        Graphics2D g2d = (Graphics2D) bufferGraphics;
         bufferGraphics.setColor(Config.BACKGROUND_COLOR);
         bufferGraphics.fillRect(0, 0, getWidth(), getHeight());
         
@@ -40,8 +49,8 @@ public class GameMap extends Canvas {
         getBulletGroup().update(bufferGraphics.create()); // 传入副本
         if (!hasFocus()) {
             bufferGraphics.setColor(Config.TEXT_COLOR);
-            char[] c = "Click Here To Focus".toCharArray();
-            bufferGraphics.drawChars(c, 0, c.length, 30, 30);
+            TextLayout text = new TextLayout(Config.translation.clickToFocusHint, Config.TEXT_FONT, g2d.getFontRenderContext());
+            text.draw(g2d, 50, 50);
         }
         // g.fillRect(0, 0, getWidth(), getHeight()); 不需要再清除内容,因为后来的图片直接覆盖
         g.drawImage(buffer, 0, 0, getWidth(), getHeight(), null);

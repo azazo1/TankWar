@@ -73,4 +73,11 @@ public class TankGroup {
             }
         }
     }
+    
+    /**
+     * 获得现在存在的坦克数量
+     */
+    public int getTankNum() {
+        return tanks.size();
+    }
 }

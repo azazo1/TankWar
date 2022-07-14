@@ -28,7 +28,7 @@ class BulletTest {
         
         WallGroup wallG;
         try {
-            wallG = WallGroup.parseFromBinaryBitmap(ImageIO.read(new File("res/WallMap.png")), map.getWidth(), map.getHeight());
+            wallG = WallGroup.parseFromBitmap(ImageIO.read(new File("res/WallMap.mwal")), map.getWidth(), map.getHeight());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

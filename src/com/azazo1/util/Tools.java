@@ -8,16 +8,46 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.util.Calendar;
+import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public final class Tools {
     private static final AtomicInteger framesCounter = new AtomicInteger(0);
+    private static final Vector<Long> lastTickTimes = new Vector<>(10); // 最后10次 tickFrame 时间戳, 真实时间
+    private static final AtomicLong firstTickTime = new AtomicLong(-1); // 真实时间
+    
+    /**
+     * 获得当前帧率<br>
+     * 通过 10 除以 倒数10帧的时间 来计算
+     */
+    public static int getFPS() {
+        if (lastTickTimes.size() < 10) {
+            return getAverageFPS();
+        }
+        return (int) (1000.0 * 10 / (lastTickTimes.get(9) - lastTickTimes.get(0)));
+    }
+    
+    /**
+     * 获得平均帧率
+     */
+    public static int getAverageFPS() {
+        return (int) (getFrameCounts() * 1000.0 / (getRealTimeInMillis() - firstTickTime.get()));
+    }
     
     /**
      * 累计帧数
      */
     public static void tickFrame() {
+        long nowTime = getRealTimeInMillis();
         framesCounter.incrementAndGet();
+        if (firstTickTime.get() < 0) {
+            firstTickTime.set(nowTime);
+        }
+        lastTickTimes.add(nowTime);
+        while (lastTickTimes.size() > 10) {
+            lastTickTimes.remove(0);
+        }
     }
     
     /**

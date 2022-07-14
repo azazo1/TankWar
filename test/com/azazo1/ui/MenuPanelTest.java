@@ -9,10 +9,9 @@ import static com.azazo1.util.Tools.resizeFrame;
 class MenuPanelTest {
     
     public static void main(String[] args) {
-        JFrame f = new JFrame();
+        MyFrame f = new MyFrame();
         MenuPanel m = new MenuPanel();
         f.setContentPane(m);
-        m.setupUI();
         f.setResizable(false);
         resizeFrame(f, Config.WINDOW_WIDTH, Config.WINDOW_HEIGHT);
         f.setVisible(true);
