@@ -234,6 +234,7 @@ public class TankBase {
         g2dBak.setColor(Config.TANK_SEQ_COLOR);
         g2dBak.setFont(Config.TANK_SEQ_FONT);
         g2dBak.drawString(seq + "", -rect.width / 2, -rect.height / 2);
+        
         // 显示坦克子弹数
         g2dBak.setColor(Config.TANK_CLIP_COLOR);
         g2dBak.setFont(Config.TANK_CLIP_FONT); // 降低字体大小

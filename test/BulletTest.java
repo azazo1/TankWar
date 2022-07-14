@@ -5,6 +5,7 @@ import com.azazo1.game.bullet.BulletGroup;
 import com.azazo1.game.tank.TankBase;
 import com.azazo1.game.tank.TankGroup;
 import com.azazo1.game.wall.WallGroup;
+import com.azazo1.util.Tools;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -51,7 +52,10 @@ class BulletTest {
         vBox.add(map);
         frame.add(hBox);
         
-        Timer t = new Timer((int) (1.0 / Config.FPS * 1000), (listener) -> map.update(null));
+        Timer t = new Timer((int) (1.0 / Config.FPS * 1000), (listener) -> {
+            map.update(null);
+            Tools.tickFrame();
+        });
         t.setRepeats(true);
         t.start();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
