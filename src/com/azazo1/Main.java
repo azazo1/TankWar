@@ -1,14 +1,14 @@
-package com.azazo1.ui;
+package com.azazo1;
 
-import com.azazo1.Config;
+import com.azazo1.ui.MenuPanel;
+import com.azazo1.ui.MyFrame;
 
 import javax.swing.*;
 import java.io.IOException;
 
 import static com.azazo1.util.Tools.resizeFrame;
 
-class MenuPanelTest {
-    
+public class Main {
     public static void main(String[] args) throws IOException {
         MyFrame f = new MyFrame();
         MenuPanel m = new MenuPanel();

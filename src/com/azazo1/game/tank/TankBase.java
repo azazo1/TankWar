@@ -65,7 +65,9 @@ public class TankBase {
         super();
         seqModule.use(seq); // 若序号已经在使用会报错
         this.seq = seq;
-        setActionKeyMap(Config.TANK_ACTION_KEY_MAPS.get(seq));
+        if (Config.TANK_ACTION_KEY_MAPS.size() > seq) {
+            setActionKeyMap(Config.TANK_ACTION_KEY_MAPS.get(seq));
+        }
     }
     
     public Rectangle getRect() {

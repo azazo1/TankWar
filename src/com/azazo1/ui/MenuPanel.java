@@ -50,7 +50,7 @@ public class MenuPanel extends MyPanel {
         verticalBox = Box.createVerticalBox();
         localPlayingPanel = new JPanel();
         localPlayingPanel.setBorder(new LineBorder(Config.BORDER_COLOR));
-        playerNumComboBox = new JComboBox<>(new Integer[]{1, 2});
+        playerNumComboBox = new JComboBox<>(new Integer[]{2, 3});
         wallMapFilesComboBox = new JComboBox<>(WallGroup.scanBinaryBitmapFiles("res"));
         localPlayingRadioButton = new JRadioButton(PlayingMode.LOCAL);
         localPlayingRadioButton.setSelected(true);

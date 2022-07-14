@@ -23,6 +23,7 @@ public class Translation {
     public String qTreeDepthLabelText = "Quadtree depth: ";
     public String hasBulletChar = "■";
     public String emptyBulletChar = "□";
+    public String frameTitle = "Tank War(Practice) --Author: azazo1";
     
     public Translation() {
     }
@@ -49,6 +50,7 @@ public class Translation {
             bulletNumLabelText = "子弹数量: ";
             loading = "加载中...";
             qTreeDepthLabelText = "四叉树深度: ";
+            frameTitle = "坦克战争(练习) --作者:azazo1";
         }
         
     }

@@ -2,18 +2,33 @@ package com.azazo1.ui;
 
 import com.azazo1.Config;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
+import java.io.IOException;
+
+import static com.azazo1.util.Tools.resizeFrame;
 
 public class MyFrame extends JFrame {
     protected static MyFrame instance;
     
-    public MyFrame() { // 这个构造函数只会被调用一次
+    public MyFrame() throws IOException { // 这个构造函数只会被调用一次
         super();
         if (instance != null) {
             throw new IllegalStateException("MyFrame can be created only once.");
         }
         instance = this;
+        setTitle(Config.translation.frameTitle);
+        setIconImage(ImageIO.read(new File("res/FrameIcon.png")));
+        setContentPane(new MyPanel() { // 显示加载中画面
+            @Override
+            public void setupUI() {
+                setLayout(new BorderLayout());
+                add(new JLabel(Config.translation.loading, SwingConstants.CENTER), BorderLayout.CENTER);
+            }
+        });
+        resizeFrame(this, Config.WINDOW_WIDTH, Config.WINDOW_HEIGHT);
         consumeFontLoadingTime();
     }
     
