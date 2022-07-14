@@ -29,7 +29,7 @@ public class BulletBase {
         }
     }
     
-    protected final AtomicInteger speed = new AtomicInteger(5);
+    protected final AtomicInteger speed = new AtomicInteger(10);
     protected final AtomicBoolean finished = new AtomicBoolean(false); // 子弹是否已经击中目标或到达飞行时间上限
     protected final AtomicDouble orientation = new AtomicDouble(0); // 0 向右,顺时针为正向
     protected final Rectangle rect = new Rectangle(img.getWidth(), img.getHeight());
@@ -70,8 +70,11 @@ public class BulletBase {
     public void update(Graphics graphics) {
         lifeModule.updateLife();
         if (!finished.get()) {
-            reflectionModule.updateReflection();
+            int bakX = rect.x, bakY = rect.y;
             rect.translate((int) (speed.get() * Math.cos(orientation.get())), (int) (speed.get() * Math.sin(orientation.get())));
+            if (reflectionModule.updateReflection()) {
+                rect.setLocation(bakX,bakY);
+            }
             paint(graphics);
         }
     }
@@ -128,6 +131,7 @@ public class BulletBase {
     
     /**
      * 子弹（轨迹）反射模块
+     * todo 子弹仍穿墙
      */
     protected class ReflectionModule {
         protected final AtomicInteger reflectionTimes = new AtomicInteger(0); // 发生发射次数
@@ -179,7 +183,6 @@ public class BulletBase {
          * L_·_R<br>
          * _/_\_<br>
          * /_D_\<br>
-         * todo 子弹仍有穿墙的bug
          *
          * @param intersectionCenterPoint 参阅 {@link #getIntersectionCenterPoint(Rectangle)} 返回值
          */
@@ -199,13 +202,17 @@ public class BulletBase {
         
         /**
          * 尝试进行反射
+         *
+         * @return 是否发生了反射
          */
-        public void updateReflection() {
+        public boolean updateReflection() {
             Rectangle wallRect = detectCollision();
             if (wallRect != null) { // 到此真正发生反射
                 reflect(getIntersectionCenterPoint(wallRect));
                 reflectionTimes.incrementAndGet();
+                return true;
             }
+            return false;
         }
     }
 }

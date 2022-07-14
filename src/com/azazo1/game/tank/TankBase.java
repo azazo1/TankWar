@@ -49,6 +49,7 @@ public class TankBase {
     protected final AtomicDouble goingSpeed = new AtomicDouble(6); // 行动速度 pixels/帧
     protected final AtomicDouble turningSpeed = new AtomicDouble(Math.toRadians(7)); // 转向速度 rad/帧
     protected final EnduranceModule enduranceModule = new EnduranceModule();
+    protected final FireModule fireModule = new FireModule();
     private final int seq;
     protected Rectangle rect = new Rectangle(0, 0, rawImg.getWidth(), rawImg.getHeight());
     protected TankGroup tankGroup; // 用于统一处理数据和显示
@@ -142,7 +143,7 @@ public class TankBase {
      */
     private void toggleTrigger(boolean state) {
         if (state && !firingKeyPressed.get()) {
-            fire();
+            fireModule.fire();
         }
         firingKeyPressed.set(state);
     }
@@ -167,29 +168,6 @@ public class TankBase {
         orientationModule.setOrientation(orientationModule.getOrientation() + theta);
     }
     
-    public void fire(@NotNull Class<? extends BulletBase> T) {
-        try {
-            Constructor<? extends BulletBase> constructor = T.getConstructor(int.class, int.class, double.class);
-            double orientation = orientationModule.getOrientation();
-            // rect.width 是坦克炮筒所在边
-            int cx = (int) (rect.getCenterX() + Math.cos(orientation) * rect.width);
-            int cy = (int) (rect.getCenterY() + Math.sin(orientation) * rect.width);
-            BulletBase bullet = constructor.newInstance(cx, cy, orientation);
-            
-            tankGroup.getGameMap().getBulletGroup().addBullet(bullet);
-        } catch (NoSuchMethodException | InvocationTargetException | InstantiationException |
-                 IllegalAccessException e) {
-            throw new RuntimeException(e); // 一般不会到达此处
-        }
-    }
-    
-    /**
-     * 坦克开火
-     * 子代可以继承来修改子弹的类型
-     */
-    public void fire() {
-        fire(BulletBase.class);
-    }
     
     public boolean detectCollision(Rectangle rect) {
         // todo 更合理的碰撞检测
@@ -204,6 +182,7 @@ public class TankBase {
         Rectangle rectBak = getRect();
         double orientationBak = orientationModule.getOrientation();
         
+        // 移动
         if (forwardGoingKeyPressed.get()) {
             go(goingSpeed.get());
         } else if (backwardGoingKeyPressed.get()) {
@@ -215,6 +194,7 @@ public class TankBase {
         if (rightTurningKeyPressed.get()) {
             turn(turningSpeed.get());
         }
+        
         // 与墙进行碰撞检测
         WallGroup wg = tankGroup.getGameMap().getWallGroup();
         Vector<Wall> walls = wg.getWalls((int) rect.getCenterX(), (int) rect.getCenterY());
@@ -237,6 +217,10 @@ public class TankBase {
                 }
             }
         }
+        
+        // 更新弹夹状态
+        fireModule.updateFireState();
+        
         paint(g);
     }
     
@@ -314,8 +298,8 @@ public class TankBase {
      * 坦克生命模块
      */
     protected class EnduranceModule {
-        protected AtomicLong lastInjuredTime = new AtomicLong(0);
-        protected AtomicInteger endurance = new AtomicInteger(Config.TANK_MAX_ENDURANCE); // 一般此数值不会小于零
+        protected final AtomicLong lastInjuredTime = new AtomicLong(0);
+        protected final AtomicInteger endurance = new AtomicInteger(Config.TANK_MAX_ENDURANCE); // 一般此数值不会小于零
         
         public EnduranceModule() {
         }
@@ -358,7 +342,7 @@ public class TankBase {
         /**
          * 返回坦克当前生命值对应的图片 (血量越低越透明)
          */
-        public Image adjustEnduranceImage() { // 临时生成图片
+        public Image adjustEnduranceImage() { // 临时生成图片 todo 此方案有太慢的嫌疑
             double bias = endurance.get() * 1.0 / Config.TANK_MAX_ENDURANCE;
             BufferedImage img = Tools.deepCopy(rawImg);
             var r = img.getAlphaRaster();
@@ -404,6 +388,59 @@ public class TankBase {
         
         public void setOrientation(double orientation) {
             this.orientation.set(orientation % (Math.PI * 2));
+        }
+    }
+    
+    protected class FireModule {
+        // todo 显示弹夹数
+        protected final AtomicLong lastIncrementTime = new AtomicLong(0); // 上次弹夹数量增加时间戳 (FrameTime)
+        protected final AtomicInteger spareBulletNum = new AtomicInteger(0); // 弹夹内子弹数量, 有最大值, 见 Config
+        
+        public FireModule() {
+        }
+        
+        public void fire(@NotNull Class<? extends BulletBase> T) {
+            if (spareBulletNum.get() <= 0) {
+                return;
+            }
+            try {
+                Constructor<? extends BulletBase> constructor = T.getConstructor(int.class, int.class, double.class);
+                double orientation = orientationModule.getOrientation();
+                // rect.width 是坦克炮筒所在边
+                int cx = (int) (rect.getCenterX() + Math.cos(orientation) * rect.width);
+                int cy = (int) (rect.getCenterY() + Math.sin(orientation) * rect.width);
+                BulletBase bullet = constructor.newInstance(cx, cy, orientation);
+                
+                spareBulletNum.getAndDecrement();
+                tankGroup.getGameMap().getBulletGroup().addBullet(bullet);
+            } catch (NoSuchMethodException | InvocationTargetException | InstantiationException |
+                     IllegalAccessException e) {
+                throw new RuntimeException(e); // 一般不会到达此处
+            }
+        }
+        
+        /**
+         * 管理弹夹
+         */
+        public void updateFireState() {
+            long nowTime = Tools.getFrameTimeInMillis();
+            if (nowTime > Config.TANK_BULLET_INCREMENT_INTERVAL_MILLIS + lastIncrementTime.get()
+                    && spareBulletNum.get() < Config.TANK_MAX_FIRE_CAPACITY) {
+                spareBulletNum.getAndIncrement();
+                System.out.println(spareBulletNum.get());
+                lastIncrementTime.set(nowTime);
+            }
+            if (spareBulletNum.get() >= Config.TANK_MAX_FIRE_CAPACITY) { // 防止满弹夹开火瞬间补回一发子弹
+                lastIncrementTime.set(nowTime);
+            }
+        }
+        
+        /**
+         * 坦克开火
+         * 子代可以继承来修改子弹的类型
+         */
+        public void fire() {
+            fire(BulletBase.class);
         }
     }
 }

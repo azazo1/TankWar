@@ -41,6 +41,8 @@ public final class Config {
             }
         });// 二号坦克按键映射
     }};
+    public static final int TANK_MAX_FIRE_CAPACITY = 5; // 坦克弹夹容量
+    public static final int TANK_BULLET_INCREMENT_INTERVAL_MILLIS = 1000; // 坦克弹夹子弹数增加间隔
     public static final int TANK_MAX_ENDURANCE = 3; // 默认坦克最大生命值
     public static final int TANK_INJURED_INTERVAL_MILLIS = 200; // 坦克受伤时间间隔 ms
     public static final Translation translation = Translation.Chinese.instance;
