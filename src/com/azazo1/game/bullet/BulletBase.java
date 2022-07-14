@@ -70,10 +70,10 @@ public class BulletBase {
     public void update(Graphics graphics) {
         lifeModule.updateLife();
         if (!finished.get()) {
-            int bakX = rect.x, bakY = rect.y;
+            Rectangle bakRect = new Rectangle(rect);
             rect.translate((int) (speed.get() * Math.cos(orientation.get())), (int) (speed.get() * Math.sin(orientation.get())));
-            if (reflectionModule.updateReflection()) {
-                rect.setLocation(bakX,bakY);
+            if (reflectionModule.updateReflection(bakRect)) {
+                rect.setLocation(bakRect.x, bakRect.y);
             }
             paint(graphics);
         }
@@ -131,7 +131,7 @@ public class BulletBase {
     
     /**
      * 子弹（轨迹）反射模块
-     * todo 子弹仍穿墙
+     * todo 子弹反射有异常
      */
     protected class ReflectionModule {
         protected final AtomicInteger reflectionTimes = new AtomicInteger(0); // 发生发射次数
@@ -141,7 +141,7 @@ public class BulletBase {
         }
         
         /**
-         * 查找子弹是否和墙发生碰撞
+         * 用下一帧的位置查找子弹是否和墙发生碰撞
          *
          * @return 与子弹碰撞的所有墙合并形成的矩形
          */
@@ -166,7 +166,9 @@ public class BulletBase {
         }
         
         /**
-         * @return 与 {@link Wall} 对象重叠区域的中心位置
+         * 用下一帧的位置计算碰撞重叠区域
+         *
+         * @return 与 {@link Wall#getRect()} 对象重叠区域的中心位置
          */
         @NotNull
         protected Point getIntersectionCenterPoint(@NotNull Rectangle wallRect) {
@@ -186,9 +188,9 @@ public class BulletBase {
          *
          * @param intersectionCenterPoint 参阅 {@link #getIntersectionCenterPoint(Rectangle)} 返回值
          */
-        protected void reflect(@NotNull Point intersectionCenterPoint) {
-            double tx = rect.getCenterX();
-            double ty = rect.getCenterY();
+        protected void reflect(@NotNull Point intersectionCenterPoint, @NotNull Rectangle bakRect) {
+            double tx = bakRect.getCenterX();
+            double ty = bakRect.getCenterY();
             double dx = intersectionCenterPoint.getX();
             double dy = intersectionCenterPoint.getY();
             double X = dx - tx, Y = dy - ty;
@@ -203,12 +205,14 @@ public class BulletBase {
         /**
          * 尝试进行反射
          *
+         * @param bakRect 此帧时子弹位置
          * @return 是否发生了反射
+         * @apiNote 应该在子弹进行了位置变换之后调用
          */
-        public boolean updateReflection() {
+        public boolean updateReflection(@NotNull Rectangle bakRect) {
             Rectangle wallRect = detectCollision();
             if (wallRect != null) { // 到此真正发生反射
-                reflect(getIntersectionCenterPoint(wallRect));
+                reflect(getIntersectionCenterPoint(wallRect), bakRect);
                 reflectionTimes.incrementAndGet();
                 return true;
             }

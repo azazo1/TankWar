@@ -21,6 +21,8 @@ public class Translation {
     public String bulletNumLabelText = "Bullet Num: ";
     public String loading = "Loading...";
     public String qTreeDepthLabelText = "Quadtree depth: ";
+    public String hasBulletChar = "■";
+    public String emptyBulletChar = "□";
     
     public Translation() {
     }

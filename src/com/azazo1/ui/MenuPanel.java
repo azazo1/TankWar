@@ -43,7 +43,7 @@ public class MenuPanel extends MyPanel {
      */
     @Override
     public void setupUI() {
-        if (attached.get()) { // 不调用第二次
+        if (attached.get()) { // 不构建第二次
             return;
         }
         horizontalBox = Box.createHorizontalBox();
@@ -73,6 +73,7 @@ public class MenuPanel extends MyPanel {
                         Config.translation.errorTitle, JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
             } else if (command.equals(PlayingMode.LOCAL)) {
                 try {
+                    @SuppressWarnings("ConstantConditions")
                     GameSession.LocalSession session = GameSession.LocalSession.createLocalSession(
                             (Integer) playerNumComboBox.getSelectedItem(),
                             (File) wallMapFilesComboBox.getSelectedItem());

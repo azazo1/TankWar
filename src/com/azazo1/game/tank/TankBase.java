@@ -11,23 +11,20 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
-import java.awt.font.TextLayout;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.IntStream;
 
-/**
- * todo 坦克子弹数限制在5
- */
 public class TankBase {
     
     protected static final BufferedImage rawImg;
@@ -229,15 +226,20 @@ public class TankBase {
         double dx = rect.getCenterX();
         double dy = rect.getCenterY();
         g2d.translate(dx, dy); // 移动初始位置
+        Graphics2D g2dBak = (Graphics2D) g2d.create();
         g2d.rotate(orientationModule.getOrientation());
-        // 注意负值使图像中点落在初始位置上,使旋转锚点正常
+        // 注意负值使图像中点落在初始位置上, 使旋转锚点正确在图像中央
         g.drawImage(enduranceModule.adjustEnduranceImage(), -rect.width / 2, -rect.height / 2, rect.width, rect.height, null);
         // 在坦克身上标注序号 todo 有待完善
-        g2d.rotate(Math.PI / 2);
-        g.setColor(Config.TANK_SEQ_COLOR);
-        TextLayout text = new TextLayout(seq + "", Config.TANK_SEQ_FONT, g2d.getFontRenderContext());
-        Rectangle2D rect = text.getBounds();
-        text.draw(g2d, (float) (-rect.getWidth() / 2), (float) (-rect.getHeight() / 2));
+        g2dBak.setColor(Config.TANK_SEQ_COLOR);
+        g2dBak.setFont(Config.TANK_SEQ_FONT);
+        g2dBak.drawString(seq + "", -rect.width / 2, -rect.height / 2);
+        // 显示坦克子弹数
+        g2dBak.setColor(Config.TANK_CLIP_COLOR);
+        g2dBak.setFont(Config.TANK_CLIP_FONT); // 降低字体大小
+        g2dBak.drawString(Config.translation.hasBulletChar.repeat(fireModule.getSpareBulletNum()) +
+                        Config.translation.emptyBulletChar.repeat(fireModule.getUsedBulletNum()),
+                -rect.width / 4, -rect.height / 4);
     }
     
     public EnduranceModule getEnduranceManager() {
@@ -342,16 +344,13 @@ public class TankBase {
         /**
          * 返回坦克当前生命值对应的图片 (血量越低越透明)
          */
-        public Image adjustEnduranceImage() { // 临时生成图片 todo 此方案有太慢的嫌疑
-            double bias = endurance.get() * 1.0 / Config.TANK_MAX_ENDURANCE;
+        public Image adjustEnduranceImage() { // 临时生成图片, 测试发现此方法对帧率影响不大
+            double bias = endurance.get() * 1.0 / Config.TANK_MAX_ENDURANCE; // 0~1
             BufferedImage img = Tools.deepCopy(rawImg);
             var r = img.getAlphaRaster();
-            for (int x = 0; x < img.getWidth(); x++) {
-                for (int y = 0; y < img.getHeight(); y++) {
-                    // 采用相乘的方式设置透明度
-                    r.setPixel(x, y, new int[]{(int) (r.getPixel(x, y, (int[]) null)[0] * bias)});
-                }
-            }
+            int[] data = r.getPixels(0, 0, r.getWidth(), r.getHeight(), (int[]) null);
+            IntStream newData = Arrays.stream(data).map((i) -> (int) (i * bias));
+            r.setPixels(0, 0, r.getWidth(), r.getHeight(), newData.toArray());
             return img;
         }
     }
@@ -392,7 +391,6 @@ public class TankBase {
     }
     
     protected class FireModule {
-        // todo 显示弹夹数
         protected final AtomicLong lastIncrementTime = new AtomicLong(0); // 上次弹夹数量增加时间戳 (FrameTime)
         protected final AtomicInteger spareBulletNum = new AtomicInteger(0); // 弹夹内子弹数量, 有最大值, 见 Config
         
@@ -427,7 +425,6 @@ public class TankBase {
             if (nowTime > Config.TANK_BULLET_INCREMENT_INTERVAL_MILLIS + lastIncrementTime.get()
                     && spareBulletNum.get() < Config.TANK_MAX_FIRE_CAPACITY) {
                 spareBulletNum.getAndIncrement();
-                System.out.println(spareBulletNum.get());
                 lastIncrementTime.set(nowTime);
             }
             if (spareBulletNum.get() >= Config.TANK_MAX_FIRE_CAPACITY) { // 防止满弹夹开火瞬间补回一发子弹
@@ -441,6 +438,14 @@ public class TankBase {
          */
         public void fire() {
             fire(BulletBase.class);
+        }
+        
+        public int getSpareBulletNum() {
+            return spareBulletNum.get();
+        }
+        
+        public int getUsedBulletNum() {
+            return Config.TANK_MAX_FIRE_CAPACITY - spareBulletNum.get();
         }
     }
 }

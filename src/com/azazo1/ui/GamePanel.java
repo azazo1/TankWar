@@ -45,13 +45,13 @@ public class GamePanel extends MyPanel {
         bulletNumLabel = new MyLabel();
         qTreeDepthLabel = new MyLabel();
         qTreeDepthLabel.setText(session.getGameMap().getWallGroup().getQTreeDepth());
+        GameMap map = session.getGameMap();
+        mapSizeLabel.setText(map.getWidth(), map.getHeight());
         
         
         session.setFrameListener((tankNum, bulletNum) -> {
             tankNumLabel.setText(tankNum, session.getTotalTankNum(), (TankGroup) null);
             bulletNumLabel.setText(bulletNum, null);
-            GameMap map = session.getGameMap();
-            mapSizeLabel.setText(map.getWidth(), map.getHeight());
             FPSLabel.setText(Tools.getFPS(), Tools.getAverageFPS(), (Tools) null);
             Tools.tickFrame();
         });
@@ -70,9 +70,9 @@ public class GamePanel extends MyPanel {
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.gridwidth = REMAINDER;
         sideBar.add(FPSLabel, constraints);
-        sideBar.add(mapSizeLabel, constraints);
         sideBar.add(tankNumLabel, constraints);
         sideBar.add(bulletNumLabel, constraints);
+        sideBar.add(mapSizeLabel, constraints);
         sideBar.add(qTreeDepthLabel, constraints);
         
         attached.set(true);
