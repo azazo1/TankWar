@@ -6,6 +6,7 @@ import com.azazo1.game.bullet.BulletBase;
 import com.azazo1.game.wall.Wall;
 import com.azazo1.game.wall.WallGroup;
 import com.azazo1.util.AtomicDouble;
+import com.azazo1.util.SeqModule;
 import com.azazo1.util.Tools;
 import org.jetbrains.annotations.NotNull;
 
@@ -14,11 +15,11 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -26,12 +27,13 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.IntStream;
 
 public class TankBase {
-    
+    public static final String imgFilePath = "res/Tank.png";
     protected static final BufferedImage rawImg;
+    private static final SeqModule seqModule = new SeqModule();
     
     static {
         try {
-            rawImg = ImageIO.read(new File("res/Tank.png"));
+            rawImg = ImageIO.read(new File(imgFilePath));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -56,12 +58,12 @@ public class TankBase {
      * @implNote 当为 Online 模式时, 客户端子类无参构造函数要禁用, 因为 seq 由服务端控制
      */
     public TankBase() {
-        this(SeqModule.next());
+        this(seqModule.next());
     }
     
     public TankBase(int seq) {
         super();
-        SeqModule.use(seq); // 若序号已经在使用会报错
+        seqModule.use(seq); // 若序号已经在使用会报错
         this.seq = seq;
         setActionKeyMap(Config.TANK_ACTION_KEY_MAPS.get(seq));
     }
@@ -117,7 +119,6 @@ public class TankBase {
         this.actionKeyMap = keyMap;
     }
     
-    
     /**
      * 设置本坦克所属的 group,本操作不保证真的从 group 对象中添加本坦克
      * <br>本方法应由 {@link com.azazo1.game.tank.TankGroup#addTank(TankBase)} 调用
@@ -164,7 +165,6 @@ public class TankBase {
     public void turn(double theta) {
         orientationModule.setOrientation(orientationModule.getOrientation() + theta);
     }
-    
     
     public boolean detectCollision(Rectangle rect) {
         // todo 更合理的碰撞检测
@@ -217,6 +217,8 @@ public class TankBase {
         
         // 更新弹夹状态
         fireModule.updateFireState();
+        // 更新生命状态
+        enduranceModule.updateEndurance();
         
         paint(g);
     }
@@ -238,62 +240,71 @@ public class TankBase {
         // 显示坦克子弹数
         g2dBak.setColor(Config.TANK_CLIP_COLOR);
         g2dBak.setFont(Config.TANK_CLIP_FONT); // 降低字体大小
-        g2dBak.drawString(Config.translation.hasBulletChar.repeat(fireModule.getSpareBulletNum()) +
-                        Config.translation.emptyBulletChar.repeat(fireModule.getUsedBulletNum()),
-                -rect.width / 4, -rect.height / 4);
+        g2dBak.drawString(Config.translation.hasBulletChar.repeat(fireModule.getSpareBulletNum()) + Config.translation.emptyBulletChar.repeat(fireModule.getUsedBulletNum()), -rect.width / 4, -rect.height / 4);
     }
     
     public EnduranceModule getEnduranceManager() {
         return enduranceModule;
     }
     
-    private static final class SeqModule {
-        private static final AtomicInteger cur = new AtomicInteger(0);
-        private static final HashSet<Integer> usingSequences = new HashSet<>(); // 正在被使用的序号
-        private static final HashSet<Integer> spareSequences = new HashSet<>(); // 被以前创建过但是被废弃的序号
+    public TankInfo getInfo() {
+        return new TankInfo();
+    }
+    
+    /**
+     * 用于序列化坦克与提供信息
+     */
+    public class TankInfo implements Serializable {
+        protected int totalEndurance = enduranceModule.maxEndurance;
+        protected int nowEndurance = enduranceModule.getEndurance();
+        protected Rectangle rect = new Rectangle(TankBase.this.rect);
+        protected double orientation = orientationModule.getOrientation();
+        protected long livingTime = enduranceModule.getLivingTime();
+        protected int seq = TankBase.this.seq;
+        protected String tankBitmapFilePath = imgFilePath;
         
-        /**
-         * 产生新序列
-         */
-        private static int next() {
-            if (!spareSequences.isEmpty()) { // 先使用 spareSequences 里的序号
-                int rst = spareSequences.iterator().next();
-                spareSequences.remove(rst);
-                return rst;
-            }
-            int rst;
-            while (true) { // 跳过已经在使用的序号
-                if (!isUsing((rst = cur.getAndIncrement()))) {
-                    break;
-                }
-            }
-            return rst;
+        protected TankInfo() {
         }
         
-        /**
-         * 判断该序号是否被使用
-         */
-        private static boolean isUsing(int seq) {
-            return usingSequences.contains(seq);
+        @Override
+        public String toString() {
+            return "TankInfo{" +
+                    "totalEndurance=" + totalEndurance +
+                    ", nowEndurance=" + nowEndurance +
+                    ", rect=" + rect +
+                    ", orientation=" + orientation +
+                    ", livingTime=" + livingTime +
+                    ", seq=" + seq +
+                    ", tankBitmapFilePath='" + tankBitmapFilePath + '\'' +
+                    '}';
         }
         
-        /**
-         * 将序号设置为正在使用
-         */
-        public static void use(int seq) {
-            if (isUsing(seq)) {
-                throw new IllegalArgumentException("This sequence has been used.");
-            }
-            spareSequences.remove(seq);
-            usingSequences.add(seq);
+        public long getLivingTime() {
+            return livingTime;
         }
         
-        /**
-         * 将指定序号设置为未使用(不会判断原来是否在使用)
-         */
-        private static void dispose(int seq) {
-            usingSequences.remove(seq);
-            spareSequences.add(seq);
+        public double getOrientation() {
+            return orientation;
+        }
+        
+        public Rectangle getRect() {
+            return rect;
+        }
+        
+        public int getNowEndurance() {
+            return nowEndurance;
+        }
+        
+        public int getTotalEndurance() {
+            return totalEndurance;
+        }
+        
+        public int getSeq() {
+            return seq;
+        }
+        
+        public String getTankBitmapFilePath() {
+            return tankBitmapFilePath;
         }
     }
     
@@ -302,9 +313,19 @@ public class TankBase {
      */
     protected class EnduranceModule {
         protected final AtomicLong lastInjuredTime = new AtomicLong(0);
-        protected final AtomicInteger endurance = new AtomicInteger(Config.TANK_MAX_ENDURANCE); // 一般此数值不会小于零
+        protected final int maxEndurance = Config.TANK_MAX_ENDURANCE;
+        protected final AtomicInteger endurance = new AtomicInteger(maxEndurance); // 血量, 一般此数值不会小于零
+        protected final AtomicLong livingTime = new AtomicLong(); // 存活时间 _ ms
         
         public EnduranceModule() {
+        }
+        
+        public void updateEndurance() {
+            livingTime.set(Tools.getFrameTimeInMillis());
+        }
+        
+        public int getEndurance() {
+            return endurance.get();
         }
         
         /**
@@ -332,7 +353,7 @@ public class TankBase {
          */
         public void makeDie() {
             endurance.set(0);
-            SeqModule.dispose(seq);
+            seqModule.dispose(seq);
         }
         
         /**
@@ -353,6 +374,10 @@ public class TankBase {
             IntStream newData = Arrays.stream(data).map((i) -> (int) (i * bias));
             r.setPixels(0, 0, r.getWidth(), r.getHeight(), newData.toArray());
             return img;
+        }
+        
+        public long getLivingTime() {
+            return livingTime.get();
         }
     }
     
@@ -423,8 +448,7 @@ public class TankBase {
          */
         public void updateFireState() {
             long nowTime = Tools.getFrameTimeInMillis();
-            if (nowTime > Config.TANK_BULLET_INCREMENT_INTERVAL_MILLIS + lastIncrementTime.get()
-                    && spareBulletNum.get() < Config.TANK_MAX_FIRE_CAPACITY) {
+            if (nowTime > Config.TANK_BULLET_INCREMENT_INTERVAL_MILLIS + lastIncrementTime.get() && spareBulletNum.get() < Config.TANK_MAX_FIRE_CAPACITY) {
                 spareBulletNum.getAndIncrement();
                 lastIncrementTime.set(nowTime);
             }

@@ -54,6 +54,9 @@ public class GamePanel extends MyPanel {
             bulletNumLabel.setText(bulletNum, null);
             FPSLabel.setText(Tools.getFPS(), Tools.getAverageFPS(), (Tools) null);
             Tools.tickFrame();
+            if (session.isOver()) {
+                stop();
+            }
         });
         horizontalBox.add(Box.createVerticalStrut(Config.MAP_HEIGHT));
         horizontalBox.add(verticalBox);
@@ -80,10 +83,17 @@ public class GamePanel extends MyPanel {
     
     /**
      * 启动 Session
-     * <p>
-     * 应该在{@link GamePanel#setupUI()}后调用
+     *
+     * @apiNote 应该在{@link GamePanel#setupUI()}后调用
      */
     public void start() {
         EventQueue.invokeLater(session::start);
+    }
+    
+    /**
+     * 关闭 Session, 并显示游戏结局 {@link ResultPanel}
+     */
+    public void stop() {
+        MyFrame.getInstance().setContentPane(new ResultPanel(session.stop()));
     }
 }

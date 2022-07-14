@@ -32,10 +32,6 @@ public abstract class GameSession {
         listener = frameListener;
     }
     
-    public int getTotalTankNum() {
-        return totalTankNum;
-    }
-    
     public GameMap getGameMap() {
         return gameMap;
     }
@@ -47,7 +43,7 @@ public abstract class GameSession {
         timer = new Timer((int) (1000.0 / Config.FPS), (e) -> {
             gameMap.update(null);
             if (listener != null) {
-                listener.tick(gameMap.getTankGroup().getTankNum(), gameMap.getBulletGroup().getBulletNum());
+                listener.tick(gameMap.getTankGroup().getLivingTankNum(), gameMap.getBulletGroup().getBulletNum());
             }
         });
         timer.setRepeats(true);
@@ -55,16 +51,22 @@ public abstract class GameSession {
     }
     
     /**
-     * 停止游戏事件调度
+     * 停止游戏事件调度, 获得游戏信息
      */
-    public void stop() {
+    public GameMap.GameInfo stop() {
         timer.stop();
+        return gameMap.getInfo();
     }
     
     /**
-     * 根据特定条件判断游戏进程是否结束(如:有坦克胜利则则为结束)
+     * 根据特定条件判断游戏进程是否结束(如:有坦克胜利则则为结束)<br>
+     * 一般此方法由 {@link FrameListener} 调用检查游戏进程
      */
     public abstract boolean isOver();
+    
+    public int getTotalTankNum() {
+        return totalTankNum;
+    }
     
     
     /**
@@ -112,7 +114,7 @@ public abstract class GameSession {
         
         @Override
         public boolean isOver() {
-            return false; // todo
+            return gameMap.getTankGroup().getLivingTankNum() <= 1;
         }
     }
 }

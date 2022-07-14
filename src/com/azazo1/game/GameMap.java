@@ -2,13 +2,14 @@ package com.azazo1.game;
 
 import com.azazo1.Config;
 import com.azazo1.game.bullet.BulletGroup;
+import com.azazo1.game.tank.TankBase;
 import com.azazo1.game.tank.TankGroup;
 import com.azazo1.game.wall.WallGroup;
-import com.azazo1.util.Tools;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.awt.font.TextLayout;
+import java.util.Vector;
 
 /**
  * 游戏画面
@@ -91,5 +92,39 @@ public class GameMap extends Canvas {
         }
         this.bulletGroup = bulletGroup;
         bulletGroup.setGameMap(this);
+    }
+    
+    public GameInfo getInfo() {
+        return new GameInfo();
+    }
+    
+    public class GameInfo {
+        protected Vector<TankBase.TankInfo> tanksInfo = tankGroup.getTanksInfo();
+        protected int mapHeight = getHeight();
+        protected int mapWidth = getWidth();
+        
+        protected GameInfo() {
+        }
+    
+        public Vector<TankBase.TankInfo> getTanksInfo() {
+            return tanksInfo;
+        }
+    
+        public int getMapHeight() {
+            return mapHeight;
+        }
+    
+        public int getMapWidth() {
+            return mapWidth;
+        }
+    
+        @Override
+        public String toString() {
+            return "GameInfo{" +
+                    "tanksInfo=" + tanksInfo.toString() +
+                    ", mapHeight=" + mapHeight +
+                    ", mapWidth=" + mapWidth +
+                    '}';
+        }
     }
 }

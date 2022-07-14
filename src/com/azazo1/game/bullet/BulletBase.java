@@ -19,11 +19,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class BulletBase {
     protected final static int EXISTING_DURATION_IN_MILLIS = 5000; // 子弹飞行时长
     protected final static int MAX_REFLECTION_TIMES = 10; // 子弹最大反弹次数
-    protected static BufferedImage img;
+    protected static final String imgFileName = "res/Bullet.png";
+    protected static final BufferedImage rawImg;
     
     static {
         try {
-            img = ImageIO.read(new File("res/Bullet.png")); // 为了保证子弹反射正常进行, 建议子弹图像为方形
+            rawImg = ImageIO.read(new File(imgFileName)); // 为了保证子弹反射正常进行, 建议子弹图像为方形
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -32,7 +33,7 @@ public class BulletBase {
     protected final AtomicInteger speed = new AtomicInteger(10);
     protected final AtomicBoolean finished = new AtomicBoolean(false); // 子弹是否已经击中目标或到达飞行时间上限
     protected final AtomicDouble orientation = new AtomicDouble(0); // 0 向右,顺时针为正向
-    protected final Rectangle rect = new Rectangle(img.getWidth(), img.getHeight());
+    protected final Rectangle rect = new Rectangle(rawImg.getWidth(), rawImg.getHeight());
     protected final LifeModule lifeModule = new LifeModule();
     protected final ReflectionModule reflectionModule = new ReflectionModule();
     protected final AtomicInteger damage = new AtomicInteger(1); // 对坦克造成的伤害
@@ -82,7 +83,7 @@ public class BulletBase {
     protected void paint(@NotNull Graphics graphics) {
         graphics.translate(rect.x, rect.y);
         ((Graphics2D) graphics).rotate(orientation.get());
-        graphics.drawImage(img, -rect.width / 2, -rect.height / 2, rect.width, rect.height, null);
+        graphics.drawImage(rawImg, -rect.width / 2, -rect.height / 2, rect.width, rect.height, null);
     }
     
     public boolean isFinished() {
@@ -108,6 +109,33 @@ public class BulletBase {
     
     public int getDamage() {
         return damage.get();
+    }
+    
+    public class BulletInfo {
+        protected double orientation = BulletBase.this.orientation.get();
+        protected Rectangle rect = new Rectangle(BulletBase.this.rect);
+        protected long createdTime = lifeModule.createdTime;
+        protected String bulletBitmapFileName = imgFileName;
+        
+        protected BulletInfo() {
+        
+        }
+        
+        public double getOrientation() {
+            return orientation;
+        }
+        
+        public Rectangle getRect() {
+            return rect;
+        }
+        
+        public long getCreatedTime() {
+            return createdTime;
+        }
+        
+        public String getBulletBitmapFileName() {
+            return bulletBitmapFileName;
+        }
     }
     
     /**
