@@ -139,29 +139,34 @@ public class BulletBase {
         /**
          * 查找子弹是否和墙发生碰撞
          *
-         * @return 与子弹碰撞的 一 个墙
+         * @return 与子弹碰撞的所有墙合并形成的矩形
          */
         @Nullable
-        protected Wall detectCollision() {
+        protected Rectangle detectCollision() {
             WallGroup wg = bulletGroup.getGameMap().getWallGroup();
             Vector<Wall> walls = wg.getWalls((int) rect.getCenterX(), (int) rect.getCenterY());
             if (walls == null) { // 四叉树查找不到则全局检测
                 walls = wg.getWalls();
             }
+            Rectangle rst = null;
             for (Wall w : walls) {
                 if (rect.intersects(w.getRect())) {
-                    return w;
+                    if (rst == null) {
+                        rst = w.getRect();
+                    } else {
+                        rst.union(w.getRect());
+                    }
                 }
             }
-            return null;
+            return rst;
         }
         
         /**
          * @return 与 {@link Wall} 对象重叠区域的中心位置
          */
         @NotNull
-        protected Point getIntersectionCenterPoint(@NotNull Wall wall) {
-            Rectangle intersection = rect.intersection(wall.getRect());
+        protected Point getIntersectionCenterPoint(@NotNull Rectangle wallRect) {
+            Rectangle intersection = rect.intersection(wallRect);
             return new Point((int) intersection.getCenterX(), (int) intersection.getCenterY());
         }
         
@@ -176,7 +181,7 @@ public class BulletBase {
          * /_D_\<br>
          * todo 子弹仍有穿墙的bug
          *
-         * @param intersectionCenterPoint 参阅 {@link #getIntersectionCenterPoint(Wall)} 返回值
+         * @param intersectionCenterPoint 参阅 {@link #getIntersectionCenterPoint(Rectangle)} 返回值
          */
         protected void reflect(@NotNull Point intersectionCenterPoint) {
             double tx = rect.getCenterX();
@@ -196,9 +201,9 @@ public class BulletBase {
          * 尝试进行反射
          */
         public void updateReflection() {
-            Wall wall = detectCollision();
-            if (wall != null) { // 到此真正发生反射
-                reflect(getIntersectionCenterPoint(wall));
+            Rectangle wallRect = detectCollision();
+            if (wallRect != null) { // 到此真正发生反射
+                reflect(getIntersectionCenterPoint(wallRect));
                 reflectionTimes.incrementAndGet();
             }
         }

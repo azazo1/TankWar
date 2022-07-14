@@ -32,6 +32,10 @@ public abstract class GameSession {
         listener = frameListener;
     }
     
+    public int getTotalTankNum() {
+        return totalTankNum;
+    }
+    
     public GameMap getGameMap() {
         return gameMap;
     }
@@ -43,7 +47,7 @@ public abstract class GameSession {
         timer = new Timer((int) (1000.0 / Config.FPS), (e) -> {
             gameMap.update(null);
             if (listener != null) {
-                listener.tick(gameMap.getTankGroup().getTankNum(), totalTankNum, gameMap.getBulletGroup().getBulletNum());
+                listener.tick(gameMap.getTankGroup().getTankNum(), gameMap.getBulletGroup().getBulletNum());
             }
         });
         timer.setRepeats(true);
@@ -70,12 +74,11 @@ public abstract class GameSession {
         /**
          * 每次帧刷新({@link GameMap#update(Graphics)})都要被调用
          *
-         * @param tankNum      现存坦克数量
-         * @param totalTankNum 总共坦克数量
-         * @param bulletNum    现在的子弹数量
+         * @param tankNum   现存坦克数量
+         * @param bulletNum 现在的子弹数量
          * @apiNote 记得调用 {@link Tools#tickFrame()} 来推动游戏进程
          */
-        void tick(int tankNum, int totalTankNum, int bulletNum);
+        void tick(int tankNum, int bulletNum);
     }
     
     public static class LocalSession extends GameSession {
@@ -83,6 +86,12 @@ public abstract class GameSession {
             super();
         }
         
+        /**
+         * 创建一局本地游戏会话
+         *
+         * @param tankNum 坦克(玩家)数量
+         * @param wallMap 游戏墙图文件, 用于读取产生 {@link WallGroup}
+         */
         public static @NotNull LocalSession createLocalSession(int tankNum, File wallMap) throws IOException {
             LocalSession session = new LocalSession();
             

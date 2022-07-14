@@ -24,6 +24,7 @@ public class GamePanel extends MyPanel {
     protected MyLabel tankNumLabel;
     protected MyLabel bulletNumLabel;
     protected JPanel sideBar; // 侧边栏
+    private MyLabel qTreeDepthLabel;
     
     public GamePanel(GameSession.LocalSession session) {
         mode = PlayingMode.LOCAL;
@@ -42,9 +43,12 @@ public class GamePanel extends MyPanel {
         mapSizeLabel = new MyLabel();
         tankNumLabel = new MyLabel();
         bulletNumLabel = new MyLabel();
+        qTreeDepthLabel = new MyLabel();
+        qTreeDepthLabel.setText(session.getGameMap().getWallGroup().getQTreeDepth());
         
-        session.setFrameListener((tankNum, totalTankNum, bulletNum) -> {
-            tankNumLabel.setText(tankNum, totalTankNum, (TankGroup) null);
+        
+        session.setFrameListener((tankNum, bulletNum) -> {
+            tankNumLabel.setText(tankNum, session.getTotalTankNum(), (TankGroup) null);
             bulletNumLabel.setText(bulletNum, null);
             GameMap map = session.getGameMap();
             mapSizeLabel.setText(map.getWidth(), map.getHeight());
@@ -60,6 +64,7 @@ public class GamePanel extends MyPanel {
         verticalBox.add(session.getGameMap());
         
         // 侧边栏
+        horizontalBox.add(Box.createHorizontalStrut(5));
         horizontalBox.add(sideBar);
         sideBar.setLayout(new GridBagLayout());
         GridBagConstraints constraints = new GridBagConstraints();
@@ -68,6 +73,7 @@ public class GamePanel extends MyPanel {
         sideBar.add(mapSizeLabel, constraints);
         sideBar.add(tankNumLabel, constraints);
         sideBar.add(bulletNumLabel, constraints);
+        sideBar.add(qTreeDepthLabel, constraints);
         
         attached.set(true);
     }

@@ -73,7 +73,9 @@ public class MenuPanel extends MyPanel {
                         Config.translation.errorTitle, JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
             } else if (command.equals(PlayingMode.LOCAL)) {
                 try {
-                    GameSession.LocalSession session = GameSession.LocalSession.createLocalSession((Integer) playerNumComboBox.getSelectedItem(), (File) wallMapFilesComboBox.getSelectedItem());
+                    GameSession.LocalSession session = GameSession.LocalSession.createLocalSession(
+                            (Integer) playerNumComboBox.getSelectedItem(),
+                            (File) wallMapFilesComboBox.getSelectedItem());
                     // 切换到GamePanel
                     GamePanel gamePanel = new GamePanel(session);
                     MyFrame.getInstance().setContentPane(gamePanel);

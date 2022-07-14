@@ -20,6 +20,7 @@ public class Translation {
     public String tankNumLabelText = "Tank Num: ";
     public String bulletNumLabelText = "Bullet Num: ";
     public String loading = "Loading...";
+    public String qTreeDepthLabelText = "Quadtree depth: ";
     
     public Translation() {
     }
@@ -45,6 +46,7 @@ public class Translation {
             tankNumLabelText = "坦克数量: ";
             bulletNumLabelText = "子弹数量: ";
             loading = "加载中...";
+            qTreeDepthLabelText = "四叉树深度: ";
         }
         
     }

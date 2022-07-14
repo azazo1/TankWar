@@ -3,23 +3,30 @@ package com.azazo1.game.wall;
 import com.azazo1.Config;
 import com.azazo1.base.ConstantVal;
 import com.azazo1.game.GameMap;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.Raster;
 import java.io.File;
+import java.io.IOException;
 import java.util.Vector;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class WallGroup {
-    protected Vector<Wall> walls = new Vector<>();
-    protected Vector<Wall> wallsToDispatch = new Vector<>();
+    protected final AtomicInteger qTreeDepth = new AtomicInteger(Config.QUADTREE_DEPTH);
+    protected final Vector<Wall> walls = new Vector<>();
+    protected final Vector<Wall> wallsToDispatch = new Vector<>();
     protected QTreeWallStorage tree;
     protected GameMap map;
     
     public WallGroup() {
+    }
+    
+    public WallGroup(int qTreeDepth) {
+        this.qTreeDepth.set(qTreeDepth);
     }
     
     /**
@@ -28,21 +35,22 @@ public class WallGroup {
      * 010<br>
      * 101<br>
      * 010<br>
+     *
+     * @param mapWidth   要被映射到的地图像素尺寸
+     * @param mapHeight  要被映射到的地图像素尺寸
+     * @param qTreeDepth 四叉树深度
      */
-    @Contract("_, _, _ -> new")
-    public static @NotNull WallGroup parseFromWallExpression(@NotNull String wallExpression, int screenWidth, int screenHeight) {
+    public static @NotNull WallGroup parseFromWallExpression(@NotNull String wallExpression, int mapWidth, int mapHeight, int qTreeDepth) {
         String[] lines = wallExpression.strip().split("\n");
         checkWallExpression(lines, true);
         int h = lines.length;
         int w = lines[0].length();
-        return new WallGroup() {{
+        return new WallGroup(qTreeDepth) {{
             for (int i = 0; i < lines.length; i++) {
                 for (int j = 0; j < lines[i].length(); j++) {
                     if (lines[i].charAt(j) == '1') {
-                        addSingleWall(new Wall(
-                                (int) ((screenWidth * 1.0) / w * j), (int) ((screenHeight * 1.0) / h * i), // i和j不需要减一来使左上角坐标处于正确位置,因为ij从0开始
-                                (int) ((screenWidth * 1.0) / w), (int) (screenWidth * 1.0 / h)
-                        ));
+                        addSingleWall(new Wall((int) ((mapWidth * 1.0) / w * j), (int) ((mapHeight * 1.0) / h * i), // i和j不需要减一来使左上角坐标处于正确位置,因为ij从0开始
+                                (int) ((mapWidth * 1.0) / w), (int) (mapWidth * 1.0 / h)));
                     }
                 }
             }
@@ -50,23 +58,26 @@ public class WallGroup {
     }
     
     /**
-     * 原理同 parseFromWallExpression,
-     * 但储存介质变为黑白两色图片
-     * 只有像素为 (0,0,0) 时才会被记为墙,alpha 通道被忽略
+     * 原理同 {@link #parseFromWallExpression(String, int, int, int)},<br>
+     * 但储存介质变为黑白两色图片<br>
+     * 只有像素为 (0,0,0) 时才会被记为墙<br>
+     * 最左上角的一个像素的 alpha 通道值 a 为四叉树深度 d = 255-a <br>
+     * 其他像素 alpha 通道被忽略<br>
+     *
+     * @param mapWidth  要被映射到的地图像素尺寸
+     * @param mapHeight 要被映射到的地图像素尺寸
      */
     public static @NotNull WallGroup parseFromBitmap(@NotNull BufferedImage image, int mapWidth, int mapHeight) {
         Raster data = image.getData();
         int w = data.getWidth(), h = data.getHeight();
-        return new WallGroup() {{
+        return new WallGroup(255 - data.getPixel(0, 0, (int[]) null)[3]) {{
             for (int x = 0; x < w; x++) {
                 for (int y = 0; y < h; y++) {
                     int[] array = new int[4];
                     data.getPixel(x, y, array);
                     if (array[0] == array[1] && array[1] == array[2] && array[2] == 0) {
-                        addSingleWall(new Wall(
-                                (int) ((mapWidth * 1.0) / w * x), (int) ((mapHeight * 1.0) / h * y), // x和y不需要减一来使左上角坐标处于正确位置,因为xy从0开始
-                                (int) ((mapWidth * 1.0) / w), (int) (mapWidth * 1.0 / h)
-                        ));
+                        addSingleWall(new Wall((int) ((mapWidth * 1.0) / w * x), (int) ((mapHeight * 1.0) / h * y), // x和y不需要减一来使左上角坐标处于正确位置,因为xy从0开始
+                                (int) ((mapWidth * 1.0) / w), (int) (mapWidth * 1.0 / h)));
                     }
                 }
             }
@@ -75,6 +86,20 @@ public class WallGroup {
     
     public static @NotNull WallGroup parseFromBitmap(@NotNull BufferedImage image) {
         return parseFromBitmap(image, Config.MAP_WIDTH, Config.MAP_HEIGHT);
+    }
+    
+    /**
+     * 将四叉树深度保存到墙图文件中
+     */
+    public static void setBitmapQTreeDepth(File bitmapFile, int depth) throws IOException {
+        BufferedImage img = ImageIO.read(bitmapFile);
+        Raster data = img.getData();
+        int[] pixel = data.getPixel(0, 0, (int[]) null);
+        Graphics g = img.getGraphics();
+        g.setColor(new Color(pixel[0], pixel[1], pixel[2], 255 - depth));
+        g.drawRect(0, 0, 1, 1);
+        g.dispose();
+        ImageIO.write(img, bitmapFile.getName(), bitmapFile);
     }
     
     /**
@@ -136,7 +161,7 @@ public class WallGroup {
      */
     public void setGameMap(@NotNull GameMap map) {
         this.map = map;
-        tree = new QTreeWallStorage(map.getWidth(), map.getHeight());
+        tree = new QTreeWallStorage(map.getWidth(), map.getHeight(), qTreeDepth.get());
         for (Wall w : wallsToDispatch) {
             tree.dispatch(w);
         }
@@ -193,5 +218,9 @@ public class WallGroup {
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
+    }
+    
+    public int getQTreeDepth() {
+        return qTreeDepth.get();
     }
 }

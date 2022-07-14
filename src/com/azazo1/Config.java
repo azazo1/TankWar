@@ -9,13 +9,14 @@ import java.util.HashMap;
 import java.util.Vector;
 
 public final class Config {
-    public static final int FPS = 30; // todo 实际帧率上不去60
+    public static final int FPS = 60; // todo 实际帧率上不去60
     public static final Color BACKGROUND_COLOR = new Color(0xffffff);
     public static final Color TEXT_COLOR = new Color(0x100E0E);
     public static final Font TEXT_FONT = new Font("楷体", Font.PLAIN, 20);
     public static final Font TANK_SEQ_FONT = new Font("楷体", Font.BOLD, 15); // 坦克上的序号字体
     public static final Color BORDER_COLOR = new Color(0x9F9F9F);
     public static final Color TANK_SEQ_COLOR = new Color(0xFF0000); // 坦克上的序号字色
+    public static final int QUADTREE_DEPTH = 2; // 默认四叉树深度
     public static final int MAP_WIDTH = 500; // 游戏画布尺寸 pixels
     public static final int MAP_HEIGHT = 500;// 游戏画布尺寸 pixels
     public static final int WINDOW_WIDTH = 750; // 界面窗口宽度

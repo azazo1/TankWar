@@ -15,6 +15,7 @@ public class MyLabel extends JLabel {
     public MyLabel() {
         setText(Config.translation.loading);
     }
+    
     /**
      * 显示帧率
      *
@@ -51,5 +52,12 @@ public class MyLabel extends JLabel {
      */
     public void setText(int tankNum, @Nullable BulletGroup placeHolder) {
         super.setText(Config.translation.bulletNumLabelText + tankNum);
+    }
+    
+    /**
+     * 显示四叉树深度
+     */
+    public void setText(int qTreeDepth) {
+        super.setText(Config.translation.qTreeDepthLabelText + qTreeDepth);
     }
 }
