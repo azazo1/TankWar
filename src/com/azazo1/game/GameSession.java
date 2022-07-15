@@ -43,7 +43,7 @@ public abstract class GameSession {
      * 开启游戏事件调度
      */
     public void start() {
-        timer = new Timer((int) (1000.0 / Config.FPS), (e) -> {
+        timer = new Timer(0, (e) -> {
             gameMap.update(null);
             if (listener != null) {
                 listener.tick(gameMap.getTankGroup().getTanksInfo(), gameMap.getBulletGroup().getBulletNum());
@@ -81,7 +81,7 @@ public abstract class GameSession {
          *
          * @param tanks     现存坦克信息
          * @param bulletNum 现在的子弹数量
-         * @apiNote 记得调用 {@link Tools#tickFrame()} 来推动游戏进程
+         * @apiNote 记得调用 {@link Tools#tickFrame()} 来推动游戏进程和控制游戏帧率
          */
         void tick(Vector<TankBase.TankInfo> tanks, int bulletNum);
     }

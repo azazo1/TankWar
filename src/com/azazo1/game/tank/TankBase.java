@@ -551,6 +551,7 @@ public class TankBase implements CharWithRectangle {
         
         /**
          * 执行在碰撞下发生的动作
+         * todo 解决抖震问题
          *
          * @param rectBak        矩形位置备份
          * @param orientationBak 朝向备份 等更真实的碰撞检测出现后会使用

@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Vector;
 
 public final class Config {
-    public static final int FPS = 60; // todo 实际帧率上不去60
+    public static final int FPS = 60;
     public static final Font TEXT_FONT = new Font("楷体", Font.PLAIN, 20);
     public static final Font TANK_SEQ_FONT = new Font("楷体", Font.BOLD, 15); // 坦克上的序号字体
     public static final Font TANK_CLIP_FONT = new Font("楷体", Font.BOLD, 7); // 坦克上的序号字体

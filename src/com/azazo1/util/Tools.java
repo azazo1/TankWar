@@ -7,7 +7,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
-import java.util.Calendar;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -45,10 +44,18 @@ public final class Tools {
     }
     
     /**
-     * 累计帧数
+     * 累计帧数, 控制帧率
      */
     public static void tickFrame() {
         long nowTime = getRealTimeInMillis();
+        // 控制帧率
+        if (!lastTickTimes.isEmpty()) {
+            long lastTime = lastTickTimes.get(lastTickTimes.size() - 1);
+            double sleepTime = (1000.0 / Config.FPS);
+            while (nowTime - lastTime < sleepTime) { // 循环等待
+                nowTime = getRealTimeInMillis();
+            }
+        }
         framesCounter.incrementAndGet();
         if (firstTickTime.get() < 0) {
             firstTickTime.set(nowTime);
@@ -57,6 +64,7 @@ public final class Tools {
         while (lastTickTimes.size() > 10) {
             lastTickTimes.remove(0);
         }
+        
     }
     
     /**
@@ -70,7 +78,7 @@ public final class Tools {
      * 获得真实的时间
      */
     public static long getRealTimeInMillis() {
-        return Calendar.getInstance().getTimeInMillis(); // 必须要每次都创建 instance 才能获得最新时间
+        return System.currentTimeMillis();
     }
     
     /**

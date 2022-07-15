@@ -5,6 +5,7 @@ import com.azazo1.game.bullet.BulletGroup;
 import com.azazo1.game.tank.TankBase;
 import com.azazo1.game.tank.TankGroup;
 import com.azazo1.game.wall.WallGroup;
+import com.azazo1.util.Tools;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -44,10 +45,10 @@ public class GameMap extends Canvas {
         Graphics2D g2d = (Graphics2D) bufferGraphics;
         bufferGraphics.setColor(Config.BACKGROUND_COLOR);
         bufferGraphics.fillRect(0, 0, getWidth(), getHeight());
-        
         getTankGroup().update(bufferGraphics.create()); // 传入副本
         getWallGroup().update(bufferGraphics.create()); // 传入副本
         getBulletGroup().update(bufferGraphics.create()); // 传入副本
+
         if (!hasFocus()) {
             bufferGraphics.setColor(Config.TEXT_COLOR);
             TextLayout text = new TextLayout(Config.translation.clickToFocusHint, Config.TEXT_FONT, g2d.getFontRenderContext());
@@ -105,19 +106,19 @@ public class GameMap extends Canvas {
         
         protected GameInfo() {
         }
-    
+        
         public Vector<TankBase.TankInfo> getTanksInfo() {
             return tanksInfo;
         }
-    
+        
         public int getMapHeight() {
             return mapHeight;
         }
-    
+        
         public int getMapWidth() {
             return mapWidth;
         }
-    
+        
         @Override
         public String toString() {
             return "GameInfo{" +
