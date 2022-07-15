@@ -99,9 +99,9 @@ public class GameMap extends Canvas {
     }
     
     public class GameInfo {
-        protected Vector<TankBase.TankInfo> tanksInfo = tankGroup.getTanksInfo();
-        protected int mapHeight = getHeight();
-        protected int mapWidth = getWidth();
+        protected final Vector<TankBase.TankInfo> tanksInfo = tankGroup.getTanksInfo();
+        protected final int mapHeight = getHeight();
+        protected final int mapWidth = getWidth();
         
         protected GameInfo() {
         }

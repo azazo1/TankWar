@@ -10,6 +10,7 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.Raster;
+import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
 import java.util.Vector;
@@ -89,17 +90,16 @@ public class WallGroup {
     }
     
     /**
-     * 将四叉树深度保存到墙图文件中
+     * 将四叉树深度保存到墙图文件中<br>
+     * 此方法会将墙图文件 (0,0) 像素 的 rgb 值不变, 修改其 alpha 值
      */
     public static void setBitmapQTreeDepth(File bitmapFile, int depth) throws IOException {
         BufferedImage img = ImageIO.read(bitmapFile);
-        Raster data = img.getData();
-        int[] pixel = data.getPixel(0, 0, (int[]) null);
-        Graphics g = img.getGraphics();
-        g.setColor(new Color(pixel[0], pixel[1], pixel[2], 255 - depth));
-        g.drawRect(0, 0, 1, 1);
-        g.dispose();
-        ImageIO.write(img, bitmapFile.getName(), bitmapFile);
+        WritableRaster copiedData = (WritableRaster) img.getData();
+        int[] pixel = copiedData.getPixel(0, 0, (int[]) null);
+        copiedData.setPixel(0, 0, new int[]{pixel[0], pixel[1], pixel[2], 255 - depth});
+        img.setData(copiedData);
+        ImageIO.write(img, "png", bitmapFile);
     }
     
     /**

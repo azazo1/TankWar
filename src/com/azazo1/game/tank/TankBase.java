@@ -280,15 +280,15 @@ public class TankBase {
      * 用于序列化坦克与提供信息
      */
     public class TankInfo implements Serializable {
-        protected int totalEndurance = enduranceModule.maxEndurance;
-        protected int nowEndurance = enduranceModule.getEndurance();
-        protected Rectangle rect = new Rectangle(TankBase.this.rect);
-        protected double orientation = orientationModule.getOrientation();
+        protected final int totalEndurance = enduranceModule.maxEndurance;
+        protected final int nowEndurance = enduranceModule.getEndurance();
+        protected final Rectangle rect = new Rectangle(TankBase.this.rect);
+        protected final double orientation = orientationModule.getOrientation();
         protected long livingTime = enduranceModule.getLivingTime();
-        protected int seq = TankBase.this.seq;
-        protected String tankBitmapFilePath = imgFilePath;
+        protected final int seq = TankBase.this.seq;
+        protected final String tankBitmapFilePath = imgFilePath;
         protected int rank; // 排名(由死亡顺序计算) (产生后由 TankGroup 分配其值)
-        protected String nickname = name; // 坦克昵称
+        protected final String nickname = name; // 坦克昵称
         
         protected TankInfo() {
         }
@@ -420,8 +420,8 @@ public class TankBase {
      * 自动校准坦克朝向，防止 orientation 小角度的偏离坐标轴却平行坐标轴行驶
      */
     protected class OrientationModule {
-        protected static double ignoredRad = Math.toRadians(10); // 将被忽略的距离坐标轴的偏差
-        protected static int intervalFrames = 10; // 每隔一定帧就尝试校准一次
+        protected static final double ignoredRad = Math.toRadians(10); // 将被忽略的距离坐标轴的偏差
+        protected static final int intervalFrames = 10; // 每隔一定帧就尝试校准一次
         protected final AtomicDouble orientation = new AtomicDouble(0); // 0 向右,顺时针为正向
         
         public void adjust() {

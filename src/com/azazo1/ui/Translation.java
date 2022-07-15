@@ -7,12 +7,15 @@ public class Translation {
     public String playerNumLabelText = "Player Number: ";
     public String wallMapFilesComboLabelText = "Wall Maps: ";
     public String onlinePlayingPanelTitle = "Online Playing";
-    public String ipAddressSeparator = ":";
+    public final String ipAddressSeparator = ":";
     public String typeIPAddressLabelText = "Server IP Address: ";
     public String typeNameLabelText = "Nickname: ";
     public String menuPanelTitle = "Launch Menu";
     public String clickToFocusHint = "Click Here To Focus";
-    public String readingWallMapErrorText = "Exception occurred when read wall map file";
+    public String errorTextFormat = """
+            Exception occurred.
+            From: %s
+            Detail: %s""";
     public String errorTitle = "Exception occurred";
     public String playingModeNotChosen = "Which playing mode hasn't been chosen";
     public String FPSLabelText = "FPS: ";
@@ -21,8 +24,8 @@ public class Translation {
     public String bulletNumLabelText = "Bullet Num: ";
     public String loading = "Loading...";
     public String qTreeDepthLabelText = "Quadtree depth: ";
-    public String hasBulletChar = "■";
-    public String emptyBulletChar = "□";
+    public final String hasBulletChar = "■";
+    public final String emptyBulletChar = "□";
     public String frameTitle = "Tank War(Practice) --Author: azazo1";
     public String basicTankInfoFormat = """
             <html>Tank %s (Seq: %d):<br>
@@ -51,7 +54,10 @@ public class Translation {
             typeNameLabelText = "昵称: ";
             menuPanelTitle = "启动菜单";
             clickToFocusHint = "点击这里聚焦";
-            readingWallMapErrorText = "读取墙图文件时出现错误";
+            errorTextFormat = """
+                    出现错误
+                    来自: %s
+                    详情: %s""";
             errorTitle = "错误发生了";
             playingModeNotChosen = "没有选择游戏模式";
             FPSLabelText = "帧率: ";

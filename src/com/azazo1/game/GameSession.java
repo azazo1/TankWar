@@ -20,7 +20,7 @@ import java.util.Vector;
  */
 public abstract class GameSession {
     protected int totalTankNum = 0; // 总共的坦克数量
-    protected GameMap gameMap;
+    protected final GameMap gameMap;
     protected Timer timer;
     protected FrameListener listener;
     

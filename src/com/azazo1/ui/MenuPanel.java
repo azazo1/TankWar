@@ -21,20 +21,10 @@ import static java.awt.GridBagConstraints.REMAINDER;
  */
 public class MenuPanel extends MyPanel {
     private static MyPanel instance;
-    private Box verticalBox;
-    private JPanel localPlayingPanel;
-    private JPanel onlinePlayingPanel;
-    private JTextField serverIPTextField;
-    private JTextField serverPortTextField;
-    private JTextField tankNameTextField;
-    private Box horizontalBox;
     private JRadioButtonGroup buttonGroup;
     private JComboBox<Integer> playerNumComboBox;
     private JComboBox<File> wallMapFilesComboBox;
-    private JRadioButton localPlayingRadioButton;
-    private JRadioButton onlinePlayingRadioButton;
-    private JButton launchButton;
-    private AtomicBoolean attached = new AtomicBoolean(false); // 是否曾被设置为 MyFrame 的 contentPanel
+    private final AtomicBoolean attached = new AtomicBoolean(false); // 是否曾被设置为 MyFrame 的 contentPanel
     
     public MenuPanel() {
         super();
@@ -55,19 +45,19 @@ public class MenuPanel extends MyPanel {
         if (attached.get()) { // 不构建第二次
             return;
         }
-        horizontalBox = Box.createHorizontalBox();
-        verticalBox = Box.createVerticalBox();
-        localPlayingPanel = new JPanel();
+        Box horizontalBox = Box.createHorizontalBox();
+        Box verticalBox = Box.createVerticalBox();
+        JPanel localPlayingPanel = new JPanel();
         playerNumComboBox = new JComboBox<>(new Integer[]{2, 3});
         wallMapFilesComboBox = new JComboBox<>(WallGroup.scanBinaryBitmapFiles("res"));
-        localPlayingRadioButton = new JRadioButton(PlayingMode.LOCAL);
-        onlinePlayingPanel = new JPanel();
-        serverIPTextField = new JTextField();
-        serverPortTextField = new JTextField();
-        onlinePlayingRadioButton = new JRadioButton(PlayingMode.ONLINE);
-        tankNameTextField = new JTextField();
+        JRadioButton localPlayingRadioButton = new JRadioButton(PlayingMode.LOCAL);
+        JPanel onlinePlayingPanel = new JPanel();
+        JTextField serverIPTextField = new JTextField();
+        JTextField serverPortTextField = new JTextField();
+        JRadioButton onlinePlayingRadioButton = new JRadioButton(PlayingMode.ONLINE);
+        JTextField tankNameTextField = new JTextField();
         buttonGroup = new JRadioButtonGroup();
-        launchButton = new JButton(Config.translation.launchButtonText);
+        JButton launchButton = new JButton(Config.translation.launchButtonText);
         
         localPlayingPanel.setBorder(new LineBorder(Config.BORDER_COLOR, 2, true));
         onlinePlayingPanel.setBorder(new LineBorder(Config.BORDER_COLOR, 2, true));
@@ -94,7 +84,8 @@ public class MenuPanel extends MyPanel {
                     gamePanel.start();
                     MenuPanel.this.setVisible(false);
                 } catch (IOException | IllegalArgumentException ex) {
-                    JOptionPane.showConfirmDialog(this, Config.translation.readingWallMapErrorText,
+                    JOptionPane.showConfirmDialog(this,
+                            String.format(Config.translation.errorTextFormat, ex.getStackTrace()[0], ex.getMessage()),
                             Config.translation.errorTitle, JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
                 }
             } else if (buttonGroup.getSelectedActionCommand().equals(PlayingMode.ONLINE)) {

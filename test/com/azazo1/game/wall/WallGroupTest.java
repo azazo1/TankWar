@@ -1,10 +1,13 @@
-import com.azazo1.game.wall.WallGroup;
+package com.azazo1.game.wall;
+
 import org.junit.jupiter.api.Test;
 
 import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
 class WallGroupTest {
@@ -19,7 +22,12 @@ class WallGroupTest {
     @Test
     void setAlpha() {
         try {
-            WallGroup.setBitmapQTreeDepth(new File("res/WallMap.mwal"), 3);
+            File file = new File("res/WallMap.mwal");
+            int depth = 3;
+            WallGroup.setBitmapQTreeDepth(file, depth);
+            
+            BufferedImage img = ImageIO.read(file);
+            assertEquals(depth, 255 - img.getData().getPixel(0, 0, (int[]) null)[3]);
         } catch (IOException e) {
             e.printStackTrace();
             fail();

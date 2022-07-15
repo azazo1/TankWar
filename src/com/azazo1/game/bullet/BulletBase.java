@@ -112,10 +112,10 @@ public class BulletBase {
     }
     
     public class BulletInfo {
-        protected double orientation = BulletBase.this.orientation.get();
-        protected Rectangle rect = new Rectangle(BulletBase.this.rect);
-        protected long createdTime = lifeModule.createdTime;
-        protected String bulletBitmapFileName = imgFileName;
+        protected final double orientation = BulletBase.this.orientation.get();
+        protected final Rectangle rect = new Rectangle(BulletBase.this.rect);
+        protected final long createdTime = lifeModule.createdTime;
+        protected final String bulletBitmapFileName = imgFileName;
         
         protected BulletInfo() {
         

@@ -18,15 +18,14 @@ public class GamePanel extends MyPanel {
     protected final String mode; // 游戏模式 @see PlayingMode
     protected Box horizontalBox;
     protected Box verticalBox;
-    protected GameSession session;
-    protected AtomicBoolean attached = new AtomicBoolean(false);
+    protected final GameSession session;
+    protected final AtomicBoolean attached = new AtomicBoolean(false);
     protected MyLabel FPSLabel;
     protected MyLabel mapSizeLabel;
     protected MyLabel tankNumLabel;
     protected MyLabel bulletNumLabel;
     protected Box sideBar; // 侧边栏
-    protected Vector<MyLabel> tankList = new Vector<>(); // 顺序: 排名 由高到低
-    private MyLabel qTreeDepthLabel;
+    protected final Vector<MyLabel> tankLabelList = new Vector<>(); // 顺序: 排名 由高到低
     
     public GamePanel(GameSession.LocalSession session) {
         mode = PlayingMode.LOCAL;
@@ -61,7 +60,7 @@ public class GamePanel extends MyPanel {
         mapSizeLabel = new MyLabel();
         tankNumLabel = new MyLabel();
         bulletNumLabel = new MyLabel();
-        qTreeDepthLabel = new MyLabel();
+        MyLabel qTreeDepthLabel = new MyLabel();
         qTreeDepthLabel.setText(session.getGameMap().getWallGroup().getQTreeDepth());
         GameMap map = session.getGameMap();
         mapSizeLabel.setText(map.getWidth(), map.getHeight());
@@ -82,7 +81,7 @@ public class GamePanel extends MyPanel {
             // 输出所有坦克基本信息
             for (int i = 0, tanksSize = tanks.size(); i < tanksSize; i++) {
                 TankBase.TankInfo info = tanks.get(i);
-                MyLabel label = tankList.get(i);
+                MyLabel label = tankLabelList.get(i);
                 label.setText(info);
             }
         });
@@ -105,7 +104,7 @@ public class GamePanel extends MyPanel {
         for (int i = 0; i < session.getTotalTankNum(); i++) {
             MyLabel tankLabel = new MyLabel();
             sideBar.add(tankLabel);
-            tankList.add(tankLabel);
+            tankLabelList.add(tankLabel);
         }
         
         attached.set(true);

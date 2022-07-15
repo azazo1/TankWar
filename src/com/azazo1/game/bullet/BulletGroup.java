@@ -10,7 +10,7 @@ import java.util.Vector;
  * 管理子弹, 子弹不需手动写代码添加, 一般由 {@link TankBase} 调用
  */
 public class BulletGroup {
-    protected Vector<BulletBase> bullets = new Vector<>();
+    protected final Vector<BulletBase> bullets = new Vector<>();
     protected GameMap map;
     
     public void addBullet(BulletBase bulletBase) {
