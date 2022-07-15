@@ -199,6 +199,10 @@ public class WallGroup {
         }
     }
     
+    /**
+     * 获得墙列表拷贝
+     */
+    @NotNull
     public Vector<Wall> getWalls() {
         return new Vector<>(walls);
     }

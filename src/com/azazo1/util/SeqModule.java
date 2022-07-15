@@ -8,6 +8,19 @@ public final class SeqModule {
     public final HashSet<Integer> usingSequences = new HashSet<>(); // 正在被使用的序号
     public final HashSet<Integer> spareSequences = new HashSet<>(); // 被以前创建过但是被废弃的序号
     
+    public SeqModule() {
+        init();
+    }
+    
+    /**
+     * 初始化, 清空所有信息, 便于重新开始游戏
+     */
+    public void init() {
+        cur.set(0);
+        usingSequences.clear();
+        spareSequences.clear();
+    }
+    
     /**
      * 产生新序列
      */

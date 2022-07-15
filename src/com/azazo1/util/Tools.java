@@ -18,6 +18,15 @@ public final class Tools {
     private static final AtomicLong firstTickTime = new AtomicLong(-1); // 真实时间
     
     /**
+     * 清除所有帧数信息, 便于重开游戏
+     */
+    public static void clearFrameData() {
+        framesCounter.set(0);
+        lastTickTimes.clear();
+        firstTickTime.set(-1);
+    }
+    
+    /**
      * 获得当前帧率<br>
      * 通过 10 除以 倒数10帧的时间 来计算
      */

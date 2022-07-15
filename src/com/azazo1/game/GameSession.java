@@ -19,12 +19,14 @@ import java.util.Vector;
  * 此类用于管理一局游戏
  */
 public abstract class GameSession {
-    protected int totalTankNum = 0; // 总共的坦克数量
     protected final GameMap gameMap;
+    protected int totalTankNum = 0; // 总共的坦克数量
     protected Timer timer;
     protected FrameListener listener;
     
     protected GameSession() {
+        TankBase.getSeqModule().init();
+        Tools.clearFrameData(); // 清空帧数信息
         gameMap = new GameMap();
         gameMap.setSize(Config.MAP_WIDTH, Config.MAP_HEIGHT);
     }
@@ -98,18 +100,19 @@ public abstract class GameSession {
         public static @NotNull LocalSession createLocalSession(int tankNum, File wallMap) throws IOException {
             LocalSession session = new LocalSession();
             
-            TankGroup tankG = new TankGroup();
-            session.totalTankNum = tankNum;
-            for (int i = 0; i < tankNum; i++) {
-                tankG.addTank(new TankBase());
-            }
-            session.gameMap.setTankGroup(tankG);
-            
             WallGroup wallG = WallGroup.parseFromBitmap(ImageIO.read(wallMap));
             session.gameMap.setWallGroup(wallG);
             
             session.gameMap.setBulletGroup(new BulletGroup());
             
+            TankGroup tankG = new TankGroup();
+            session.gameMap.setTankGroup(tankG);
+            session.totalTankNum = tankNum;
+            for (int i = 0; i < tankNum; i++) {
+                TankBase tank = new TankBase();
+                tankG.addTank(tank);
+                tank.randomlyTeleport(); // 要在其他内容都设置完毕后调用
+            }
             return session;
         }
         

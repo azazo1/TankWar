@@ -1,5 +1,6 @@
 package com.azazo1.game.wall;
 
+import com.azazo1.game.CharWithRectangle;
 import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
@@ -8,7 +9,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
-public class Wall {
+public class Wall implements CharWithRectangle {
     public static final BufferedImage img;
     
     static {

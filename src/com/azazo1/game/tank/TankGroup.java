@@ -114,4 +114,10 @@ public class TankGroup {
         }
         return infoSequence;
     }
+    
+    public Vector<TankBase> getLivingTanks() {
+        Vector<TankBase> _livingTanks = new Vector<>();
+        livingTanks.forEach((integer -> _livingTanks.add(tanks.get(integer))));
+        return _livingTanks;
+    }
 }
