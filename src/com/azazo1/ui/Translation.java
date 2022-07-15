@@ -2,12 +2,14 @@ package com.azazo1.ui;
 
 public class Translation {
     public static final Translation instance = new Translation();
+    public final String ipAddressSeparator = ":";
+    public final String hasBulletChar = "■";
+    public final String emptyBulletChar = "□";
     public String localPlayingPanelTitle = "Local Playing";
     public String launchButtonText = "Launch";
     public String playerNumLabelText = "Player Number: ";
     public String wallMapFilesComboLabelText = "Wall Maps: ";
     public String onlinePlayingPanelTitle = "Online Playing";
-    public final String ipAddressSeparator = ":";
     public String typeIPAddressLabelText = "Server IP Address: ";
     public String typeNameLabelText = "Nickname: ";
     public String menuPanelTitle = "Launch Menu";
@@ -24,8 +26,6 @@ public class Translation {
     public String bulletNumLabelText = "Bullet Num: ";
     public String loading = "Loading...";
     public String qTreeDepthLabelText = "Quadtree depth: ";
-    public final String hasBulletChar = "■";
-    public final String emptyBulletChar = "□";
     public String frameTitle = "Tank War(Practice) --Author: azazo1";
     public String basicTankInfoFormat = """
             <html>Tank %s (Seq: %d):<br>
@@ -36,7 +36,8 @@ public class Translation {
             """;
     public String backToMenuButtonText = "Return to Launch Menu";
     public String resultTitle = "Game Result";
-    public String onlineModeStillDeveloping = "Online mode is still developing.";
+    public String onlineModeStillDeveloping = "Online mode is still developing";
+    public String localPlayerNamesBoxHint = "Player Names (Click me to refresh):";
     
     public Translation() {
     }
@@ -77,6 +78,7 @@ public class Translation {
             backToMenuButtonText = "回到启动菜单";
             resultTitle = "游戏结果";
             onlineModeStillDeveloping = "在线模式仍在开发中";
+            localPlayerNamesBoxHint = "玩家名(点我刷新):";
         }
         
     }

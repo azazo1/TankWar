@@ -22,7 +22,7 @@ class WallGroupTest {
     @Test
     void setAlpha() {
         try {
-            File file = new File("res/WallMap.mwal");
+            File file = new File("res/WallMap2.mwal");
             int depth = 3;
             WallGroup.setBitmapQTreeDepth(file, depth);
             

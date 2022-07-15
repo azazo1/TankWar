@@ -5,13 +5,17 @@ import com.azazo1.base.PlayingMode;
 import com.azazo1.game.GameSession;
 import com.azazo1.game.wall.WallGroup;
 import com.azazo1.util.JRadioButtonGroup;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import javax.swing.border.LineBorder;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
 import java.awt.*;
+import java.awt.event.*;
 import java.io.File;
-import java.io.IOException;
+import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.awt.GridBagConstraints.REMAINDER;
@@ -21,10 +25,41 @@ import static java.awt.GridBagConstraints.REMAINDER;
  */
 public class MenuPanel extends MyPanel {
     private static MyPanel instance;
+    private final AtomicBoolean attached = new AtomicBoolean(false); // 是否曾被设置为 MyFrame 的 contentPanel
+    private final Vector<Box> localPlayerNames = new Vector<>();
+    private JComboBox<File> wallMapFilesComboBox;
     private JRadioButtonGroup buttonGroup;
     private JComboBox<Integer> playerNumComboBox;
-    private JComboBox<File> wallMapFilesComboBox;
-    private final AtomicBoolean attached = new AtomicBoolean(false); // 是否曾被设置为 MyFrame 的 contentPanel
+    private final ActionListener launchButtonListener = (e) -> {
+        String command = buttonGroup.getSelectedActionCommand();
+        if (command == null) {
+            JOptionPane.showConfirmDialog(this, Config.translation.playingModeNotChosen,
+                    Config.translation.errorTitle, JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
+        } else if (command.equals(PlayingMode.LOCAL)) {
+            try {
+                @SuppressWarnings("ConstantConditions")
+                GameSession.LocalSession session = GameSession.LocalSession.createLocalSession(
+                        (Integer) playerNumComboBox.getSelectedItem(),
+                        getLocalPlayerNames(),
+                        (File) wallMapFilesComboBox.getSelectedItem());
+                // 切换到GamePanel
+                GamePanel gamePanel = new GamePanel(session);
+                MyFrame.getInstance().setContentPane(gamePanel);
+                gamePanel.start();
+                MenuPanel.this.setVisible(false);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showConfirmDialog(this,
+                        String.format(Config.translation.errorTextFormat, ex.getStackTrace()[0], ex.getMessage()),
+                        Config.translation.errorTitle, JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
+            }
+        } else if (buttonGroup.getSelectedActionCommand().equals(PlayingMode.ONLINE)) {
+            JOptionPane.showConfirmDialog(this, Config.translation.onlineModeStillDeveloping,
+                    Config.translation.errorTitle, JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
+            // todo invoke online game
+        }
+    };
+    private Box localPlayerNamesBox;
     
     public MenuPanel() {
         super();
@@ -34,6 +69,19 @@ public class MenuPanel extends MyPanel {
     @Nullable
     public static MyPanel getInstance() {
         return instance;
+    }
+    
+    private String @NotNull [] getLocalPlayerNames() {
+        Vector<String> rst = new Vector<>();
+        localPlayerNames.stream().forEach((box -> {
+            Document doc = ((JTextField) box.getComponents()[1]).getDocument();
+            try {
+                rst.add(doc.getText(0, doc.getLength()));
+            } catch (BadLocationException e) {
+                throw new RuntimeException(e);
+            }
+        }));
+        return rst.toArray(new String[]{});
     }
     
     /**
@@ -48,6 +96,7 @@ public class MenuPanel extends MyPanel {
         Box horizontalBox = Box.createHorizontalBox();
         Box verticalBox = Box.createVerticalBox();
         JPanel localPlayingPanel = new JPanel();
+        localPlayerNamesBox = Box.createVerticalBox();
         playerNumComboBox = new JComboBox<>(new Integer[]{2, 3});
         wallMapFilesComboBox = new JComboBox<>(WallGroup.scanBinaryBitmapFiles("res"));
         JRadioButton localPlayingRadioButton = new JRadioButton(PlayingMode.LOCAL);
@@ -67,33 +116,7 @@ public class MenuPanel extends MyPanel {
         tankNameTextField.setColumns(serverIPTextField.getColumns() + serverPortTextField.getColumns());
         buttonGroup.add(localPlayingRadioButton);
         buttonGroup.add(onlinePlayingRadioButton);
-        launchButton.addActionListener((e) -> {
-            String command = buttonGroup.getSelectedActionCommand();
-            if (command == null) {
-                JOptionPane.showConfirmDialog(this, Config.translation.playingModeNotChosen,
-                        Config.translation.errorTitle, JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
-            } else if (command.equals(PlayingMode.LOCAL)) {
-                try {
-                    @SuppressWarnings("ConstantConditions")
-                    GameSession.LocalSession session = GameSession.LocalSession.createLocalSession(
-                            (Integer) playerNumComboBox.getSelectedItem(),
-                            (File) wallMapFilesComboBox.getSelectedItem());
-                    // 切换到GamePanel
-                    GamePanel gamePanel = new GamePanel(session);
-                    MyFrame.getInstance().setContentPane(gamePanel);
-                    gamePanel.start();
-                    MenuPanel.this.setVisible(false);
-                } catch (IOException | IllegalArgumentException ex) {
-                    JOptionPane.showConfirmDialog(this,
-                            String.format(Config.translation.errorTextFormat, ex.getStackTrace()[0], ex.getMessage()),
-                            Config.translation.errorTitle, JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
-                }
-            } else if (buttonGroup.getSelectedActionCommand().equals(PlayingMode.ONLINE)) {
-                JOptionPane.showConfirmDialog(this, Config.translation.onlineModeStillDeveloping,
-                        Config.translation.errorTitle, JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
-                // todo invoke online game
-            }
-        });
+        launchButton.addActionListener(launchButtonListener);
         
         add(horizontalBox);
         horizontalBox.add(Box.createVerticalStrut(Config.WINDOW_HEIGHT - 10));
@@ -102,22 +125,53 @@ public class MenuPanel extends MyPanel {
         verticalBox.add(new JLabel(Config.translation.menuPanelTitle));
         
         verticalBox.add(localPlayingPanel);
-        localPlayingPanel.setLayout(new GridBagLayout());
-        GridBagConstraints constraints = new GridBagConstraints();
-        constraints.gridwidth = REMAINDER;
-        localPlayingPanel.add(localPlayingRadioButton, constraints);
-        constraints.gridwidth = 1;
-        localPlayingPanel.add(new JLabel(Config.translation.playerNumLabelText), constraints);
-        constraints.gridwidth = REMAINDER;
-        localPlayingPanel.add(playerNumComboBox, constraints);
-        constraints.gridwidth = 1;
-        localPlayingPanel.add(new JLabel(Config.translation.wallMapFilesComboLabelText), constraints);
-        constraints.gridwidth = REMAINDER;
-        localPlayingPanel.add(wallMapFilesComboBox, constraints);
+        var layout = new BoxLayout(localPlayingPanel, BoxLayout.Y_AXIS);
+        localPlayingPanel.setLayout(layout);
+        localPlayingPanel.add(localPlayingRadioButton);
+        localPlayingPanel.add(MyPanel.createHBoxContainingPairComponent(
+                new JLabel(Config.translation.playerNumLabelText),
+                playerNumComboBox
+        ));
+        localPlayingPanel.add(MyPanel.createHBoxContainingPairComponent(// 选择地图
+                new JLabel(Config.translation.wallMapFilesComboLabelText),
+                wallMapFilesComboBox
+        ));
+        localPlayingPanel.add(localPlayerNamesBox); // 玩家昵称填写区
+        JLabel label = new JLabel(Config.translation.localPlayerNamesBoxHint);
+        // 点击刷新功能
+        label.setFocusable(true);
+        label.setFont(Config.TEXT_FONT);
+        label.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                super.focusGained(e);
+                adjustPlayerTextFieldNumber();
+                label.setFont(Config.TEXT_FONT_FOCUSED);
+            }
+            
+            @Override
+            public void focusLost(FocusEvent e) {
+                super.focusLost(e);
+                adjustPlayerTextFieldNumber();
+                label.setFont(Config.TEXT_FONT);
+            }
+        });
+        label.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                adjustPlayerTextFieldNumber();
+                label.requestFocus();
+            }
+        });
+        localPlayerNamesBox.add(label);
+        // 填充玩家昵称输入框列表
+        adjustPlayerTextFieldNumber();
+        
         
         verticalBox.add(onlinePlayingPanel);
         onlinePlayingPanel.setLayout(new GridBagLayout());
-        constraints = new GridBagConstraints();
+        GridBagConstraints constraints = new GridBagConstraints();
         constraints.gridwidth = REMAINDER;
         onlinePlayingPanel.add(onlinePlayingRadioButton, constraints);
         constraints.gridwidth = 1;
@@ -138,5 +192,22 @@ public class MenuPanel extends MyPanel {
         verticalBox.add(launchButton);
         setSize(Config.WINDOW_WIDTH, Config.WINDOW_HEIGHT);
         attached.set(true);
+    }
+    
+    private void adjustPlayerTextFieldNumber() {
+        Integer selectedItem = (Integer) playerNumComboBox.getSelectedItem();
+        if (selectedItem == null) {
+            localPlayerNames.forEach((e) -> e.getParent().remove(e)); // 清空
+            return;
+        }
+        while (localPlayerNames.size() < selectedItem) {
+            Box box = MyLabel.createHBoxWithMyLabelAndJTextField(localPlayerNames.size() + " ", 10);
+            localPlayerNames.add(box);
+            localPlayerNamesBox.add(box);
+        }
+        while (localPlayerNames.size() > selectedItem) {
+            Box removed = localPlayerNames.remove(localPlayerNames.size() - 1);
+            removed.getParent().remove(removed);
+        }
     }
 }

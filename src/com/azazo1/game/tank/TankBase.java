@@ -223,9 +223,9 @@ public class TankBase implements CharWithRectangle {
         g2d.translate(dx, dy); // 移动初始位置
         Graphics2D g2dBak = (Graphics2D) g2d.create(); // 未旋转的备份
         
-        // todo debug 显示 this.rect
-        g2dBak.setColor(Color.BLUE);
-        g2dBak.drawRect(-rect.width / 2, -rect.width / 2, rect.width, rect.height);
+        // debug 显示 this.rect
+        // g2dBak.setColor(Color.BLUE);
+        // g2dBak.drawRect(-rect.width / 2, -rect.width / 2, rect.width, rect.height);
         
         g2d.rotate(orientationModule.getOrientation());
         // 注意负值使图像中点落在初始位置上, 使旋转锚点正确在图像中央

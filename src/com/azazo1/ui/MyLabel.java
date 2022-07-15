@@ -22,6 +22,21 @@ public class MyLabel extends JLabel {
         setText(Config.translation.loading);
     }
     
+    /**
+     * 获得一个水平方向的同时具有 {@link MyLabel} 和 {@link JTextField} 的 {@link Box}, 子代顺序如前半句
+     *
+     * @param text   MyLabel 文字
+     * @param column JTextField 列
+     */
+    public static @NotNull Box createHBoxWithMyLabelAndJTextField(String text, int column) {
+        return MyPanel.createHBoxContainingPairComponent(
+                new MyLabel() {{
+                    setText(text);
+                }},
+                new JTextField(column)
+        );
+    }
+    
     @Override
     public void setText(String text) {
         super.setText(text);

@@ -7,6 +7,7 @@ import com.azazo1.game.tank.TankGroup;
 import com.azazo1.game.wall.WallGroup;
 import com.azazo1.util.Tools;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -94,10 +95,11 @@ public abstract class GameSession {
         /**
          * 创建一局本地游戏会话
          *
-         * @param tankNum 坦克(玩家)数量
-         * @param wallMap 游戏墙图文件, 用于读取产生 {@link WallGroup}
+         * @param tankNum   坦克(玩家)数量
+         * @param tankNames 各个坦克名称, 但如果不为 null, 其长度要符合 tankNum
+         * @param wallMap   游戏墙图文件, 用于读取产生 {@link WallGroup}
          */
-        public static @NotNull LocalSession createLocalSession(int tankNum, File wallMap) throws IOException {
+        public static @NotNull LocalSession createLocalSession(int tankNum, @Nullable String[] tankNames, File wallMap) throws IOException {
             LocalSession session = new LocalSession();
             
             WallGroup wallG = WallGroup.parseFromBitmap(ImageIO.read(wallMap));
@@ -110,6 +112,9 @@ public abstract class GameSession {
             session.totalTankNum = tankNum;
             for (int i = 0; i < tankNum; i++) {
                 TankBase tank = new TankBase();
+                if (tankNames != null) {
+                    tank.setName(tankNames[i]);
+                }
                 tankG.addTank(tank);
                 tank.randomlyTeleport(); // 要在其他内容都设置完毕后调用
             }
