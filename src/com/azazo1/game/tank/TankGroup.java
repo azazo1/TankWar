@@ -14,18 +14,18 @@ import java.util.Vector;
 public class TankGroup {
     protected final HashMap<Integer, TankBase> tanks = new HashMap<>(); // 所有坦克 <序号, tank>
     protected final Vector<Integer> tankDeathSequence = new Vector<>(); // 用于储存坦克死亡顺序(用坦克 Seq 表示坦克), 索引 0 为最先死亡
+    private final HashSet<Integer> livingTanks = new HashSet<>(); // 存活的坦克
     protected final KeyListener keyListener = new KeyAdapter() {
         @Override
         public void keyPressed(KeyEvent e) {
-            tanks.forEach((seq, tank) -> tank.pressKey(e.getKeyCode()));
+            livingTanks.forEach((seq) -> tanks.get(seq).pressKey(e.getKeyCode()));
         }
         
         @Override
         public void keyReleased(KeyEvent e) {
-            tanks.forEach((seq, tank) -> tank.releaseKey(e.getKeyCode()));
+            livingTanks.forEach((seq) -> tanks.get(seq).releaseKey(e.getKeyCode()));
         }
     };
-    private final HashSet<Integer> livingTanks = new HashSet<>(); // 存活的坦克
     protected GameMap map;
     
     public TankGroup() {
