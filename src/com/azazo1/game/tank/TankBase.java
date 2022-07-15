@@ -9,6 +9,7 @@ import com.azazo1.util.AtomicDouble;
 import com.azazo1.util.SeqModule;
 import com.azazo1.util.Tools;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -52,6 +53,7 @@ public class TankBase {
     private final int seq;
     protected Rectangle rect = new Rectangle(0, 0, rawImg.getWidth(), rawImg.getHeight());
     protected TankGroup tankGroup; // 用于统一处理数据和显示
+    protected String name; // 坦克昵称, 可能为 null
     private HashMap<Integer, TankAction> actionKeyMap; // 默认按键映射
     
     /**
@@ -70,10 +72,6 @@ public class TankBase {
         }
     }
     
-    public Rectangle getRect() {
-        return new Rectangle(rect);
-    }
-    
     /**
      * 激发坦克对应运动状态: {@link TankAction}
      * 值得注意的是按键映射的选择应由子代继承后实现
@@ -81,6 +79,9 @@ public class TankBase {
      * @param keyCode 按下的按键对应的 code
      */
     public void pressKey(int keyCode) {
+        if (actionKeyMap == null) {
+            return;
+        }
         TankAction motion = actionKeyMap.get(keyCode);
         if (motion == null) {
             return;
@@ -94,6 +95,7 @@ public class TankBase {
         }
     }
     
+    
     /**
      * 解除坦克对应运动状态: {@link TankAction}
      * 值得注意的是按键映射的选择应由子代继承后实现
@@ -101,6 +103,9 @@ public class TankBase {
      * @param keyCode 松开的按键对应的 code
      */
     public void releaseKey(int keyCode) {
+        if (actionKeyMap == null) {
+            return;
+        }
         TankAction motion = actionKeyMap.get(keyCode);
         if (motion == null) {
             return;
@@ -253,6 +258,24 @@ public class TankBase {
         return new TankInfo();
     }
     
+    public int getSeq() {
+        return seq;
+    }
+    
+    @NotNull
+    public Rectangle getRect() {
+        return new Rectangle(rect);
+    }
+    
+    @Nullable
+    public String getName() {
+        return name;
+    }
+    
+    public void setName(@Nullable String name) {
+        this.name = name;
+    }
+    
     /**
      * 用于序列化坦克与提供信息
      */
@@ -264,6 +287,8 @@ public class TankBase {
         protected long livingTime = enduranceModule.getLivingTime();
         protected int seq = TankBase.this.seq;
         protected String tankBitmapFilePath = imgFilePath;
+        protected int rank; // 排名(由死亡顺序计算) (产生后由 TankGroup 分配其值)
+        protected String nickname = name; // 坦克昵称
         
         protected TankInfo() {
         }
@@ -307,6 +332,14 @@ public class TankBase {
         
         public String getTankBitmapFilePath() {
             return tankBitmapFilePath;
+        }
+        
+        public int getRank() {
+            return rank;
+        }
+        
+        public String getNickname() {
+            return nickname;
         }
     }
     

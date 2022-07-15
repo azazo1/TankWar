@@ -1,32 +1,32 @@
 package com.azazo1.game.tank;
 
 import com.azazo1.game.GameMap;
+import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Vector;
 
 public class TankGroup {
-    protected GameMap map;
-    protected Vector<TankBase> tanks = new Vector<>();
-    protected Vector<TankBase> tankDeathSequence = new Vector<>(); // 用于储存坦克死亡顺序, 索引 0 为最先死亡
-    protected KeyListener keyListener = new KeyAdapter() {
+    protected final HashMap<Integer, TankBase> tanks = new HashMap<>(); // 所有坦克 <序号, tank>
+    protected final Vector<Integer> tankDeathSequence = new Vector<>(); // 用于储存坦克死亡顺序(用坦克 Seq 表示坦克), 索引 0 为最先死亡
+    protected final KeyListener keyListener = new KeyAdapter() {
         @Override
         public void keyPressed(KeyEvent e) {
-            for (TankBase tank : tanks) {
-                tank.pressKey(e.getKeyCode());
-            }
+            tanks.forEach((seq, tank) -> tank.pressKey(e.getKeyCode()));
         }
         
         @Override
         public void keyReleased(KeyEvent e) {
-            for (TankBase tank : tanks) {
-                tank.releaseKey(e.getKeyCode());
-            }
+            tanks.forEach((seq, tank) -> tank.releaseKey(e.getKeyCode()));
         }
     };
+    private final HashSet<Integer> livingTanks = new HashSet<>(); // 存活的坦克
+    protected GameMap map;
     
     public TankGroup() {
     }
@@ -51,8 +51,9 @@ public class TankGroup {
         this.map = null;
     }
     
-    public void addTank(TankBase tank) {
-        tanks.add(tank);
+    public void addTank(@NotNull TankBase tank) {
+        tanks.put(tank.getSeq(), tank);
+        livingTanks.add(tank.getSeq());
         tank.setTankGroup(this);
     }
     
@@ -60,9 +61,10 @@ public class TankGroup {
      * 移除坦克
      * 此方法不会在游戏进行时被调用
      */
-    public void removeTank(TankBase tank) {
-        tanks.remove(tank);
-        tankDeathSequence.remove(tank);
+    public void removeTank(@NotNull TankBase tank) {
+        tanks.remove(tank.getSeq());
+        tankDeathSequence.remove(Integer.valueOf(tank.getSeq()));
+        livingTanks.remove(tank.getSeq());
         tank.clearTankGroup();
         tank.getEnduranceManager().makeDie(); // 强行销毁坦克
     }
@@ -71,16 +73,14 @@ public class TankGroup {
         if (tanks.isEmpty()) {
             return;
         }
-        for (int i = 0; i < tanks.size(); i++) {
-            TankBase tank = tanks.get(i);
+        for (TankBase tank : tanks.values()) {
             if (tank.getEnduranceManager().isDead()) {
                 continue;
             }
             tank.update(g.create()); // 更新坦克, 传入一个副本
             if (tank.getEnduranceManager().isDead()) {
-                // 不对死亡坦克进行移除 (removeTank)
-                tankDeathSequence.add(tank);
-                i--; // 移除后后来的元素向前, 对应 i 向前
+                tankDeathSequence.add(tank.getSeq());
+                livingTanks.remove(tank.getSeq());
             }
         }
     }
@@ -93,20 +93,25 @@ public class TankGroup {
     }
     
     /**
-     * 获得坦克死亡顺序
-     */
-    public Vector<TankBase> getTankDeathSequence() {
-        return new Vector<>(tankDeathSequence);
-    }
-    
-    /**
-     * 获得所有坦克信息
+     * 获得所有坦克信息<br>
+     * 同时将排名分配到每个 {@link TankBase.TankInfo} 上
+     *
+     * @return 坦克信息列表, 结果按照排名高到低排序
      */
     public Vector<TankBase.TankInfo> getTanksInfo() {
-        Vector<TankBase.TankInfo> multiInfo = new Vector<>();
-        for (TankBase tank : tanks) {
-            multiInfo.add(tank.getInfo());
+        Vector<TankBase.TankInfo> infoSequence = new Vector<>();
+        for (int tankSeq : livingTanks) {
+            TankBase tank = tanks.get(tankSeq);
+            TankBase.TankInfo info = tank.getInfo();
+            info.rank = 0;
+            infoSequence.add(info);
         }
-        return multiInfo;
+        for (int i = tankDeathSequence.size() - 1; i >= 0; i--) {
+            TankBase tank = tanks.get(tankDeathSequence.get(i));
+            TankBase.TankInfo info = tank.getInfo();
+            info.rank = tankDeathSequence.size() - i; // 从一开始
+            infoSequence.add(info);
+        }
+        return infoSequence;
     }
 }

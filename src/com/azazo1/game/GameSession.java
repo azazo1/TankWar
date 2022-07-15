@@ -13,6 +13,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.util.Vector;
 
 /**
  * 此类用于管理一局游戏
@@ -43,7 +44,7 @@ public abstract class GameSession {
         timer = new Timer((int) (1000.0 / Config.FPS), (e) -> {
             gameMap.update(null);
             if (listener != null) {
-                listener.tick(gameMap.getTankGroup().getLivingTankNum(), gameMap.getBulletGroup().getBulletNum());
+                listener.tick(gameMap.getTankGroup().getTanksInfo(), gameMap.getBulletGroup().getBulletNum());
             }
         });
         timer.setRepeats(true);
@@ -76,11 +77,11 @@ public abstract class GameSession {
         /**
          * 每次帧刷新({@link GameMap#update(Graphics)})都要被调用
          *
-         * @param tankNum   现存坦克数量
+         * @param tanks     现存坦克信息
          * @param bulletNum 现在的子弹数量
          * @apiNote 记得调用 {@link Tools#tickFrame()} 来推动游戏进程
          */
-        void tick(int tankNum, int bulletNum);
+        void tick(Vector<TankBase.TankInfo> tanks, int bulletNum);
     }
     
     public static class LocalSession extends GameSession {

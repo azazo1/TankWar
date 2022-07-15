@@ -5,6 +5,7 @@ import com.azazo1.base.PlayingMode;
 import com.azazo1.game.GameSession;
 import com.azazo1.game.wall.WallGroup;
 import com.azazo1.util.JRadioButtonGroup;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import javax.swing.border.LineBorder;
@@ -19,6 +20,7 @@ import static java.awt.GridBagConstraints.REMAINDER;
  * 此类应该只作为 {@link MyFrame#setContentPane(Container)} 的参数
  */
 public class MenuPanel extends MyPanel {
+    private static MyPanel instance;
     private Box verticalBox;
     private JPanel localPlayingPanel;
     private JPanel onlinePlayingPanel;
@@ -36,6 +38,12 @@ public class MenuPanel extends MyPanel {
     
     public MenuPanel() {
         super();
+        instance = this;
+    }
+    
+    @Nullable
+    public static MyPanel getInstance() {
+        return instance;
     }
     
     /**
@@ -43,29 +51,32 @@ public class MenuPanel extends MyPanel {
      */
     @Override
     public void setupUI() {
+        setVisible(true);
         if (attached.get()) { // 不构建第二次
             return;
         }
         horizontalBox = Box.createHorizontalBox();
         verticalBox = Box.createVerticalBox();
         localPlayingPanel = new JPanel();
-        localPlayingPanel.setBorder(new LineBorder(Config.BORDER_COLOR));
         playerNumComboBox = new JComboBox<>(new Integer[]{2, 3});
         wallMapFilesComboBox = new JComboBox<>(WallGroup.scanBinaryBitmapFiles("res"));
         localPlayingRadioButton = new JRadioButton(PlayingMode.LOCAL);
-        localPlayingRadioButton.setSelected(true);
         onlinePlayingPanel = new JPanel();
         serverIPTextField = new JTextField();
-        serverIPTextField.setColumns(10);
         serverPortTextField = new JTextField();
-        serverPortTextField.setColumns(4);
         onlinePlayingRadioButton = new JRadioButton(PlayingMode.ONLINE);
         tankNameTextField = new JTextField();
-        tankNameTextField.setColumns(serverIPTextField.getColumns() + serverPortTextField.getColumns());
         buttonGroup = new JRadioButtonGroup();
+        launchButton = new JButton(Config.translation.launchButtonText);
+        
+        localPlayingPanel.setBorder(new LineBorder(Config.BORDER_COLOR, 2, true));
+        onlinePlayingPanel.setBorder(new LineBorder(Config.BORDER_COLOR, 2, true));
+        serverIPTextField.setColumns(10);
+        serverPortTextField.setColumns(4);
+        localPlayingRadioButton.setSelected(true);
+        tankNameTextField.setColumns(serverIPTextField.getColumns() + serverPortTextField.getColumns());
         buttonGroup.add(localPlayingRadioButton);
         buttonGroup.add(onlinePlayingRadioButton);
-        launchButton = new JButton(Config.translation.launchButtonText);
         launchButton.addActionListener((e) -> {
             String command = buttonGroup.getSelectedActionCommand();
             if (command == null) {
@@ -81,11 +92,14 @@ public class MenuPanel extends MyPanel {
                     GamePanel gamePanel = new GamePanel(session);
                     MyFrame.getInstance().setContentPane(gamePanel);
                     gamePanel.start();
+                    MenuPanel.this.setVisible(false);
                 } catch (IOException | IllegalArgumentException ex) {
                     JOptionPane.showConfirmDialog(this, Config.translation.readingWallMapErrorText,
                             Config.translation.errorTitle, JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
                 }
             } else if (buttonGroup.getSelectedActionCommand().equals(PlayingMode.ONLINE)) {
+                JOptionPane.showConfirmDialog(this, Config.translation.onlineModeStillDeveloping,
+                        Config.translation.errorTitle, JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
                 // todo invoke online game
             }
         });
@@ -112,7 +126,6 @@ public class MenuPanel extends MyPanel {
         
         verticalBox.add(onlinePlayingPanel);
         onlinePlayingPanel.setLayout(new GridBagLayout());
-        onlinePlayingPanel.setBorder(new LineBorder(Config.BORDER_COLOR));
         constraints = new GridBagConstraints();
         constraints.gridwidth = REMAINDER;
         onlinePlayingPanel.add(onlinePlayingRadioButton, constraints);

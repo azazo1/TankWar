@@ -24,6 +24,16 @@ public class Translation {
     public String hasBulletChar = "■";
     public String emptyBulletChar = "□";
     public String frameTitle = "Tank War(Practice) --Author: azazo1";
+    public String basicTankInfoFormat = """
+            <html>Tank %s (Seq: %d):<br>
+            &emsp;&emsp;Rank: %d<br>
+            &emsp;&emsp;Endurance (Now / Total): %d / %d<br>
+            &emsp;&emsp;LivingTime: %d<br>
+            </html>
+            """;
+    public String backToMenuButtonText = "Return to Launch Menu";
+    public String resultTitle = "Game Result";
+    public String onlineModeStillDeveloping = "Online mode is still developing.";
     
     public Translation() {
     }
@@ -51,6 +61,16 @@ public class Translation {
             loading = "加载中...";
             qTreeDepthLabelText = "四叉树深度: ";
             frameTitle = "坦克战争(练习) --作者:azazo1";
+            basicTankInfoFormat = """
+                    <html>坦克 %s (序号: %d):<br>
+                    &emsp;&emsp;排名: %d<br>
+                    &emsp;&emsp;生命 (现在 / 总共): %d / %d<br>
+                    &emsp;&emsp;存活时间: %.1f s<br>
+                    </html>
+                    """;
+            backToMenuButtonText = "回到启动菜单";
+            resultTitle = "游戏结果";
+            onlineModeStillDeveloping = "在线模式仍在开发中";
         }
         
     }

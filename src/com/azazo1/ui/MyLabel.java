@@ -2,18 +2,30 @@ package com.azazo1.ui;
 
 import com.azazo1.Config;
 import com.azazo1.game.bullet.BulletGroup;
+import com.azazo1.game.tank.TankBase;
 import com.azazo1.game.tank.TankGroup;
 import com.azazo1.util.Tools;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.LineBorder;
 
 /**
  * 用于侧边栏快速辅助显示信息
  */
 public class MyLabel extends JLabel {
+    public static final Border TANK_INFO_BORDER = new LineBorder(Config.BORDER_COLOR, 2, true);
+    
     public MyLabel() {
         setText(Config.translation.loading);
+    }
+    
+    @Override
+    public void setText(String text) {
+        super.setText(text);
+        setBorder(null);
     }
     
     /**
@@ -24,14 +36,14 @@ public class MyLabel extends JLabel {
      * @param placeHolder 方法调用标识
      */
     public void setText(int FPS, int averageFPS, @Nullable Tools placeHolder) {
-        super.setText(Config.translation.FPSLabelText + FPS + " / " + averageFPS);
+        setText(Config.translation.FPSLabelText + FPS + " / " + averageFPS);
     }
     
     /**
      * 显示屏幕宽高
      */
     public void setText(int width, int height) {
-        super.setText(String.format(Config.translation.mapSizeLabelFormat, width, height));
+        setText(String.format(Config.translation.mapSizeLabelFormat, width, height));
     }
     
     /**
@@ -42,7 +54,7 @@ public class MyLabel extends JLabel {
      * @param placeHolder  用于标识为调用此方法
      */
     public void setText(int tankNum, int totalTankNum, @Nullable TankGroup placeHolder) {
-        super.setText(Config.translation.tankNumLabelText + tankNum + " / " + totalTankNum);
+        setText(Config.translation.tankNumLabelText + tankNum + " / " + totalTankNum);
     }
     
     /**
@@ -51,13 +63,27 @@ public class MyLabel extends JLabel {
      * @param placeHolder 用于标识为调用此方法
      */
     public void setText(int tankNum, @Nullable BulletGroup placeHolder) {
-        super.setText(Config.translation.bulletNumLabelText + tankNum);
+        setText(Config.translation.bulletNumLabelText + tankNum);
     }
     
     /**
      * 显示四叉树深度
      */
     public void setText(int qTreeDepth) {
-        super.setText(Config.translation.qTreeDepthLabelText + qTreeDepth);
+        setText(Config.translation.qTreeDepthLabelText + qTreeDepth);
+    }
+    
+    /**
+     * 显示坦克基本信息
+     */
+    public void setText(TankBase.@NotNull TankInfo info) {
+        setText(String.format(
+                Config.translation.basicTankInfoFormat,
+                info.getNickname() == null ? "" : info.getNickname(), info.getSeq(),
+                info.getRank(),
+                info.getNowEndurance(), info.getTotalEndurance(),
+                info.getLivingTime() / 1000.0
+        ));
+        setBorder(TANK_INFO_BORDER);
     }
 }

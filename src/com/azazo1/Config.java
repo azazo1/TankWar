@@ -48,6 +48,7 @@ public final class Config {
     public static final int TANK_MAX_ENDURANCE = 3; // 默认坦克最大生命值
     public static final int TANK_INJURED_INTERVAL_MILLIS = 200; // 坦克受伤时间间隔 ms
     public static final Translation translation = Translation.Chinese.instance;
+    public static final int QUIT_GAME_KEY = KeyEvent.VK_ESCAPE; // 退出该局游戏键
     
     private Config() {
     }
