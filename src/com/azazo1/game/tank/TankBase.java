@@ -1,8 +1,8 @@
 package com.azazo1.game.tank;
 
 import com.azazo1.Config;
+import com.azazo1.base.CharWithRectangle;
 import com.azazo1.base.TankAction;
-import com.azazo1.game.CharWithRectangle;
 import com.azazo1.game.GameMap;
 import com.azazo1.game.bullet.BulletBase;
 import com.azazo1.game.wall.Wall;
@@ -53,6 +53,7 @@ public class TankBase implements CharWithRectangle {
     protected final EnduranceModule enduranceModule = new EnduranceModule();
     protected final FireModule fireModule = new FireModule();
     protected final Rectangle rect = new Rectangle(0, 0, rawImg.getWidth(), rawImg.getHeight());
+    protected final AtomicBoolean doPaint = new AtomicBoolean(true); // 是否显示, 服务端子类设为 false
     private final CollisionAndMotionModule collisionAndMotionModule = new CollisionAndMotionModule();
     private final int seq;
     protected TankGroup tankGroup; // 用于统一处理数据和显示
@@ -67,7 +68,6 @@ public class TankBase implements CharWithRectangle {
     }
     
     public TankBase(int seq) {
-        super();
         seqModule.use(seq); // 若序号已经在使用会报错
         this.seq = seq;
         if (Config.TANK_ACTION_KEY_MAPS.size() > seq) {
@@ -217,28 +217,26 @@ public class TankBase implements CharWithRectangle {
     }
     
     protected void paint(@NotNull Graphics g) {
-        Graphics2D g2d = (Graphics2D) g;
-        double dx = rect.getCenterX();
-        double dy = rect.getCenterY();
-        g2d.translate(dx, dy); // 移动初始位置
-        Graphics2D g2dBak = (Graphics2D) g2d.create(); // 未旋转的备份
-        
-        // debug 显示 this.rect
-        // g2dBak.setColor(Color.BLUE);
-        // g2dBak.drawRect(-rect.width / 2, -rect.width / 2, rect.width, rect.height);
-        
-        g2d.rotate(orientationModule.getOrientation());
-        // 注意负值使图像中点落在初始位置上, 使旋转锚点正确在图像中央
-        g.drawImage(enduranceModule.adjustEnduranceImage(), -rect.width / 2, -rect.height / 2, rect.width, rect.height, null);
-        // 在坦克身上标注序号
-        g2dBak.setColor(Config.TANK_SEQ_COLOR);
-        g2dBak.setFont(Config.TANK_SEQ_FONT);
-        g2dBak.drawString(seq + "", -rect.width / 2, -rect.height / 2);
-        
-        // 显示坦克子弹数
-        g2dBak.setColor(Config.TANK_CLIP_COLOR);
-        g2dBak.setFont(Config.TANK_CLIP_FONT); // 降低字体大小
-        g2dBak.drawString(Config.translation.hasBulletChar.repeat(fireModule.getSpareBulletNum()) + Config.translation.emptyBulletChar.repeat(fireModule.getUsedBulletNum()), -rect.width / 4, -rect.height / 4);
+        if (doPaint.get()) {
+            Graphics2D g2d = (Graphics2D) g;
+            double dx = rect.getCenterX();
+            double dy = rect.getCenterY();
+            g2d.translate(dx, dy); // 移动初始位置
+            Graphics2D g2dBak = (Graphics2D) g2d.create(); // 未旋转的备份
+            
+            g2d.rotate(orientationModule.getOrientation());
+            // 注意负值使图像中点落在初始位置上, 使旋转锚点正确在图像中央
+            g.drawImage(enduranceModule.adjustEnduranceImage(), -rect.width / 2, -rect.height / 2, rect.width, rect.height, null);
+            // 在坦克身上标注序号
+            g2dBak.setColor(Config.TANK_SEQ_COLOR);
+            g2dBak.setFont(Config.TANK_SEQ_FONT);
+            g2dBak.drawString(seq + "", -rect.width / 2, -rect.height / 2);
+            
+            // 显示坦克子弹数
+            g2dBak.setColor(Config.TANK_CLIP_COLOR);
+            g2dBak.setFont(Config.TANK_CLIP_FONT); // 降低字体大小
+            g2dBak.drawString(Config.translation.hasBulletChar.repeat(fireModule.getSpareBulletNum()) + Config.translation.emptyBulletChar.repeat(fireModule.getUsedBulletNum()), -rect.width / 4, -rect.height / 4);
+        }
     }
     
     public EnduranceModule getEnduranceManager() {

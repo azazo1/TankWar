@@ -3,6 +3,7 @@ package com.azazo1.game.bullet;
 import com.azazo1.game.wall.Wall;
 import com.azazo1.game.wall.WallGroup;
 import com.azazo1.util.AtomicDouble;
+import com.azazo1.util.SeqModule;
 import com.azazo1.util.Tools;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -21,6 +22,7 @@ public class BulletBase {
     protected final static int MAX_REFLECTION_TIMES = 10; // 子弹最大反弹次数
     protected static final String imgFileName = "res/Bullet.png";
     protected static final BufferedImage rawImg;
+    private static final SeqModule seqModule = new SeqModule();
     
     static {
         try {
@@ -37,20 +39,42 @@ public class BulletBase {
     protected final LifeModule lifeModule = new LifeModule();
     protected final ReflectionModule reflectionModule = new ReflectionModule();
     protected final AtomicInteger damage = new AtomicInteger(1); // 对坦克造成的伤害
+    protected final AtomicBoolean doPaint = new AtomicBoolean(true); // 是否显示, 服务端子类设为 false
+    private final int seq;
     protected BulletGroup bulletGroup;
     
     /**
      * 子代都应继承这个构造函数
      */
-    public BulletBase(int centerX, int centerY, double orientation) {
+    public BulletBase(int seq, int centerX, int centerY, double orientation) {
         rect.translate(centerX, centerY);
         rect.translate(-rect.width / 2, -rect.height / 2);
         this.orientation.set(orientation % (Math.PI * 2));
+        seqModule.use(seq);
+        this.seq = seq;
     }
     
+    /**
+     * @implNote 当为 Online 模式时, 客户端子类无 seq 参构造函数要禁用, 因为 seq 由服务端控制
+     */
     public BulletBase(int centerX, int centerY, double orientation, int speed) {
-        this(centerX, centerY, orientation);
+        this(seqModule.next(), centerX, centerY, orientation);
         setSpeed(speed);
+    }
+    
+    /**
+     * @implNote 当为 Online 模式时, 客户端子类无 seq 参构造函数要禁用, 因为 seq 由服务端控制
+     */
+    public BulletBase(int centerX, int centerY, double orientation) {
+        this(seqModule.next(), centerX, centerY, orientation);
+    }
+    
+    public static SeqModule getSeqModule() {
+        return seqModule;
+    }
+    
+    public int getSeq() {
+        return seq;
     }
     
     public Rectangle getRect() {
@@ -81,9 +105,11 @@ public class BulletBase {
     }
     
     protected void paint(@NotNull Graphics graphics) {
-        graphics.translate(rect.x, rect.y);
-        ((Graphics2D) graphics).rotate(orientation.get());
-        graphics.drawImage(rawImg, -rect.width / 2, -rect.height / 2, rect.width, rect.height, null);
+        if (doPaint.get()) {
+            graphics.translate(rect.x, rect.y);
+            ((Graphics2D) graphics).rotate(orientation.get());
+            graphics.drawImage(rawImg, -rect.width / 2, -rect.height / 2, rect.width, rect.height, null);
+        }
     }
     
     public boolean isFinished() {
@@ -112,6 +138,7 @@ public class BulletBase {
     }
     
     public class BulletInfo {
+        protected final int seq = BulletBase.this.seq;
         protected final double orientation = BulletBase.this.orientation.get();
         protected final Rectangle rect = new Rectangle(BulletBase.this.rect);
         protected final long createdTime = lifeModule.createdTime;
@@ -135,6 +162,10 @@ public class BulletBase {
         
         public String getBulletBitmapFileName() {
             return bulletBitmapFileName;
+        }
+        
+        public int getSeq() {
+            return seq;
         }
     }
     

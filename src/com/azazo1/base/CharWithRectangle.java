@@ -1,4 +1,4 @@
-package com.azazo1.game;
+package com.azazo1.base;
 
 import java.awt.*;
 

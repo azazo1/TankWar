@@ -1,6 +1,7 @@
 package com.azazo1.ui;
 
 import com.azazo1.Config;
+import com.azazo1.base.SingleInstance;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -10,14 +11,12 @@ import java.io.IOException;
 
 import static com.azazo1.util.Tools.resizeFrame;
 
-public class MyFrame extends JFrame {
+public class MyFrame extends JFrame implements SingleInstance {
     protected static MyFrame instance;
     
     public MyFrame() throws IOException { // 这个构造函数只会被调用一次
         super();
-        if (instance != null) {
-            throw new IllegalStateException("MyFrame can be created only once.");
-        }
+        checkInstance();
         instance = this;
         setTitle(Config.translation.frameTitle);
         setIconImage(ImageIO.read(new File("res/FrameIcon.png")));
@@ -34,6 +33,18 @@ public class MyFrame extends JFrame {
     
     public static MyFrame getInstance() {
         return instance;
+    }
+    
+    @Override
+    public void checkInstance() {
+        if (hasInstance()) {
+            throw new IllegalStateException("MyFrame can be created only once.");
+        }
+    }
+    
+    @Override
+    public boolean hasInstance() {
+        return instance != null;
     }
     
     /**

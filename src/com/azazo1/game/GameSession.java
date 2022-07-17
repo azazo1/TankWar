@@ -1,6 +1,7 @@
 package com.azazo1.game;
 
 import com.azazo1.Config;
+import com.azazo1.base.SingleInstance;
 import com.azazo1.game.bullet.BulletGroup;
 import com.azazo1.game.tank.TankBase;
 import com.azazo1.game.tank.TankGroup;
@@ -19,17 +20,36 @@ import java.util.Vector;
 /**
  * 此类用于管理一局游戏
  */
-public abstract class GameSession {
+public abstract class GameSession implements SingleInstance {
+    protected static GameSession instance = null;
     protected final GameMap gameMap;
     protected int totalTankNum = 0; // 总共的坦克数量
     protected Timer timer;
     protected FrameListener listener;
     
     protected GameSession() {
+        checkInstance();
+        instance = this;
         TankBase.getSeqModule().init();
         Tools.clearFrameData(); // 清空帧数信息
         gameMap = new GameMap();
         gameMap.setSize(Config.MAP_WIDTH, Config.MAP_HEIGHT);
+    }
+    
+    public static void clearInstance() {
+        instance = null;
+    }
+    
+    @Override
+    public void checkInstance() {
+        if (hasInstance()) {
+            throw new IllegalStateException("GameSession can be created only once.");
+        }
+    }
+    
+    @Override
+    public boolean hasInstance() {
+        return instance != null;
     }
     
     public void setFrameListener(FrameListener frameListener) {
@@ -72,13 +92,12 @@ public abstract class GameSession {
         return totalTankNum;
     }
     
-    
     /**
      * 游戏回调函数
      */
     public interface FrameListener {
         /**
-         * 每次帧刷新({@link GameMap#update(Graphics)})都要被调用
+         * 每次帧刷新({@link GameMap#update(Graphics)})都要被调用, 用于本地信息显示, 而不用于向客户端/服务器同步数据
          *
          * @param tanks     现存坦克信息
          * @param bulletNum 现在的子弹数量
@@ -99,7 +118,8 @@ public abstract class GameSession {
          * @param tankNames 各个坦克名称, 但如果不为 null, 其长度要符合 tankNum
          * @param wallMap   游戏墙图文件, 用于读取产生 {@link WallGroup}
          */
-        public static @NotNull LocalSession createLocalSession(int tankNum, @Nullable String[] tankNames, File wallMap) throws IOException {
+        public static @NotNull LocalSession createLocalSession(int tankNum, @Nullable String[] tankNames, @NotNull File wallMap) throws IOException {
+            GameSession.clearInstance();
             LocalSession session = new LocalSession();
             
             WallGroup wallG = WallGroup.parseFromBitmap(ImageIO.read(wallMap));

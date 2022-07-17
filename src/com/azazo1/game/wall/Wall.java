@@ -1,6 +1,6 @@
 package com.azazo1.game.wall;
 
-import com.azazo1.game.CharWithRectangle;
+import com.azazo1.base.CharWithRectangle;
 import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
@@ -8,6 +8,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Wall implements CharWithRectangle {
     public static final BufferedImage img;
@@ -20,6 +21,7 @@ public class Wall implements CharWithRectangle {
         }
     }
     
+    protected final AtomicBoolean doPaint = new AtomicBoolean(true); // 是否显示, 服务端子类设为 false
     protected final Rectangle rect = new Rectangle(0, 0, img.getWidth(), img.getHeight());
     
     /**
@@ -45,7 +47,9 @@ public class Wall implements CharWithRectangle {
     
     public void paint(@NotNull Graphics graphics) {
         // 进行缩放
-        graphics.drawImage(img, rect.x, rect.y, (int) rect.getWidth(), (int) rect.getHeight(), null);
+        if (doPaint.get()) {
+            graphics.drawImage(img, rect.x, rect.y, (int) rect.getWidth(), (int) rect.getHeight(), null);
+        }
     }
     
     public Rectangle getRect() {

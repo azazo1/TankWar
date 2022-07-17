@@ -37,7 +37,7 @@ public class Translation {
     public String backToMenuButtonText = "Return to Launch Menu";
     public String resultTitle = "Game Result";
     public String onlineModeStillDeveloping = "Online mode is still developing";
-    public String localPlayerNamesBoxHint = "Player Names (Click me to refresh):";
+    public String localPlayerNamesBoxHint = "Player Name List (Click me to refresh):";
     
     public Translation() {
     }
@@ -78,7 +78,7 @@ public class Translation {
             backToMenuButtonText = "回到启动菜单";
             resultTitle = "游戏结果";
             onlineModeStillDeveloping = "在线模式仍在开发中";
-            localPlayerNamesBoxHint = "玩家名(点我刷新):";
+            localPlayerNamesBoxHint = "玩家列表 (点我刷新):";
         }
         
     }

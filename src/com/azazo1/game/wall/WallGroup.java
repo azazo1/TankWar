@@ -59,12 +59,12 @@ public class WallGroup {
     }
     
     /**
-     * 原理同 {@link #parseFromWallExpression(String, int, int, int)},<br>
-     * 但储存介质变为黑白两色图片<br>
-     * 只有像素为 (0,0,0) 时才会被记为墙<br>
-     * 最左上角的一个像素的 alpha 通道值 a 为四叉树深度 d = 255-a <br>
-     * 其他像素 alpha 通道被忽略<br>
+     * 将 墙图文件 解析为 {@link WallGroup}
      *
+     * @param image     黑白两色图片
+     *                  只有像素为 (0,0,0) 时才会被记为墙<br>
+     *                  最左上角的一个像素的 alpha 通道值 a 为四叉树深度 d = 255-a <br>
+     *                  其他像素 alpha 通道被忽略<br>
      * @param mapWidth  要被映射到的地图像素尺寸
      * @param mapHeight 要被映射到的地图像素尺寸
      */

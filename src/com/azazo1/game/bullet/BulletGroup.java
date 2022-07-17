@@ -30,21 +30,17 @@ public class BulletGroup {
                 i--;
             }
         }
-        paint(graphics);
-    }
-    
-    public void removeBullet(BulletBase bullet) {
-        bullets.remove(bullet);
-        bullet.clearBulletGroup();
-    }
-    
-    protected void paint(Graphics graphics) {
         if (bullets.isEmpty()) {
             return;
         }
         for (BulletBase bullet : bullets) {
             bullet.update(graphics.create());
         }
+    }
+    
+    public void removeBullet(BulletBase bullet) {
+        bullets.remove(bullet);
+        bullet.clearBulletGroup();
     }
     
     public GameMap getGameMap() {

@@ -73,7 +73,7 @@ public class MenuPanel extends MyPanel {
     
     private String @NotNull [] getLocalPlayerNames() {
         Vector<String> rst = new Vector<>();
-        localPlayerNames.stream().forEach((box -> {
+        localPlayerNames.forEach((box -> {
             Document doc = ((JTextField) box.getComponents()[1]).getDocument();
             try {
                 rst.add(doc.getText(0, doc.getLength()));

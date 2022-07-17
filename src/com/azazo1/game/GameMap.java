@@ -5,17 +5,18 @@ import com.azazo1.game.bullet.BulletGroup;
 import com.azazo1.game.tank.TankBase;
 import com.azazo1.game.tank.TankGroup;
 import com.azazo1.game.wall.WallGroup;
-import com.azazo1.util.Tools;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.awt.font.TextLayout;
 import java.util.Vector;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 游戏画面
  */
 public class GameMap extends Canvas {
+    protected final AtomicBoolean doPaint = new AtomicBoolean(true); // 是否显示, 服务端子类设为 false
     protected TankGroup tankGroup;
     protected WallGroup wallGroup;
     protected BulletGroup bulletGroup;
@@ -40,22 +41,30 @@ public class GameMap extends Canvas {
     
     @Override
     public void paint(Graphics g) {
+        boolean doPaint = this.doPaint.get();
         Image buffer = createImage(getWidth(), getHeight()); // 二级缓冲
         Graphics bufferGraphics = buffer.getGraphics();
-        Graphics2D g2d = (Graphics2D) bufferGraphics;
-        bufferGraphics.setColor(Config.BACKGROUND_COLOR);
-        bufferGraphics.fillRect(0, 0, getWidth(), getHeight());
+        Graphics2D g2d = null;
+        if (doPaint) {
+            g2d = (Graphics2D) bufferGraphics;
+            bufferGraphics.setColor(Config.BACKGROUND_COLOR);
+            bufferGraphics.fillRect(0, 0, getWidth(), getHeight());
+        }
+        
+        // 更新游戏信息, 服务端不会取消此过程
         getTankGroup().update(bufferGraphics.create()); // 传入副本
         getWallGroup().update(bufferGraphics.create()); // 传入副本
         getBulletGroup().update(bufferGraphics.create()); // 传入副本
-
-        if (!hasFocus()) {
-            bufferGraphics.setColor(Config.TEXT_COLOR);
-            TextLayout text = new TextLayout(Config.translation.clickToFocusHint, Config.TEXT_FONT, g2d.getFontRenderContext());
-            text.draw(g2d, 50, 50);
+        
+        if (doPaint) {
+            if (!hasFocus()) {
+                bufferGraphics.setColor(Config.TEXT_COLOR);
+                TextLayout text = new TextLayout(Config.translation.clickToFocusHint, Config.TEXT_FONT, g2d.getFontRenderContext());
+                text.draw(g2d, 50, 50);
+            }
+            // g.fillRect(0, 0, getWidth(), getHeight()); 不需要再清除内容,因为后来的图片直接覆盖
+            g.drawImage(buffer, 0, 0, getWidth(), getHeight(), null);
         }
-        // g.fillRect(0, 0, getWidth(), getHeight()); 不需要再清除内容,因为后来的图片直接覆盖
-        g.drawImage(buffer, 0, 0, getWidth(), getHeight(), null);
         bufferGraphics.dispose();
     }
     
