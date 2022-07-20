@@ -11,7 +11,6 @@ import org.jetbrains.annotations.Nullable;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -20,13 +19,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class BulletBase {
     protected final static int EXISTING_DURATION_IN_MILLIS = 5000; // 子弹飞行时长
     protected final static int MAX_REFLECTION_TIMES = 10; // 子弹最大反弹次数
-    protected static final String imgFileName = "res/Bullet.png";
+    protected static final String imgFileName = "img/Bullet.png";
     protected static final BufferedImage rawImg;
     private static final SeqModule seqModule = new SeqModule();
     
     static {
         try {
-            rawImg = ImageIO.read(new File(imgFileName)); // 为了保证子弹反射正常进行, 建议子弹图像为方形
+            rawImg = ImageIO.read(Tools.getFileURL(imgFileName)); // 为了保证子弹反射正常进行, 建议子弹图像为方形
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

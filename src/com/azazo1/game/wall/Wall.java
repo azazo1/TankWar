@@ -1,12 +1,12 @@
 package com.azazo1.game.wall;
 
 import com.azazo1.base.CharWithRectangle;
+import com.azazo1.util.Tools;
 import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -15,7 +15,7 @@ public class Wall implements CharWithRectangle {
     
     static {
         try {
-            img = ImageIO.read(new File("res/SingleWall.png"));
+            img = ImageIO.read(Tools.getFileURL("img/SingleWall.png"));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

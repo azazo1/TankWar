@@ -2,11 +2,11 @@ package com.azazo1.ui;
 
 import com.azazo1.Config;
 import com.azazo1.base.SingleInstance;
+import com.azazo1.util.Tools;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
 import java.io.IOException;
 
 import static com.azazo1.util.Tools.resizeFrame;
@@ -19,7 +19,7 @@ public class MyFrame extends JFrame implements SingleInstance {
         checkInstance();
         instance = this;
         setTitle(Config.translation.frameTitle);
-        setIconImage(ImageIO.read(new File("res/FrameIcon.png")));
+        setIconImage(ImageIO.read(Tools.getFileURL("img/FrameIcon.png")));
         setContentPane(new MyPanel() { // 显示加载中画面
             @Override
             public void setupUI() {

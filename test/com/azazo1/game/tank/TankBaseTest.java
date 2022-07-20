@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -36,17 +35,17 @@ class TankBaseTest {
         Tools.tickFrame();
         BufferedImage image;
         try {
-            image = ImageIO.read(new File("res/wallmap.mwal"));
+            image = ImageIO.read(Tools.getFileURL("wallmap/wallmap.mwal"));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         tank.update(image.getGraphics());
         TankBase.TankInfo info = tank.getInfo();
-        assertNotEquals(0, info.getLivingTime()); // info 和 tank 不会再产生数据关联
-        info.livingTime = 0;
+        assertEquals(-1, info.getRank()); // info 和 tank 不会再产生数据关联
+        info.rank = 100;
         tank.update(image.getGraphics());
         Tools.tickFrame();
         tank.update(image.getGraphics());
-        assertEquals(0, info.getLivingTime()); // info 和 tank 不会再产生数据关联
+        assertNotEquals(100, tank.getInfo().getRank()); // info 和 tank 不会再产生数据关联
     }
 }

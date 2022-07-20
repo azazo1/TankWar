@@ -1,3 +1,5 @@
+import com.azazo1.util.Tools;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
@@ -6,13 +8,12 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TankTry {
-    public BufferedImage rawTankImg = ImageIO.read(new File("res/Tank.png"));
+    public BufferedImage rawTankImg = ImageIO.read(Tools.getFileURL("img/Tank.png"));
     public Rectangle tankRect = new Rectangle(rawTankImg.getWidth(), rawTankImg.getHeight());
     public TankDrawer canvas = new TankDrawer();
     public AtomicBoolean doPaint = new AtomicBoolean(true);

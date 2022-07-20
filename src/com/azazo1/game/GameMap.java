@@ -26,6 +26,24 @@ public class GameMap extends Canvas {
     }
     
     /**
+     * 废弃 GameMap, 释放内存
+     */
+    public void dispose() {
+        if (tankGroup != null) {
+            tankGroup.clearGameMap();
+            tankGroup = null;
+        }
+        if (wallGroup != null) {
+            wallGroup.clearGameMap();
+            wallGroup = null;
+        }
+        if (bulletGroup != null) {
+            bulletGroup.clearGameMap();
+            bulletGroup = null;
+        }
+    }
+    
+    /**
      * 更新 {@link GameMap} 对象状态
      *
      * @apiNote 此方法要在 {@link #tankGroup} {@link #wallGroup} {@link #bulletGroup} 都被设置后才能调用

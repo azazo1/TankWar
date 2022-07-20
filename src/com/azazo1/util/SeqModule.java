@@ -16,27 +16,31 @@ public final class SeqModule {
      * 初始化, 清空所有信息, 便于重新开始游戏
      */
     public void init() {
-        cur.set(0);
-        usingSequences.clear();
-        spareSequences.clear();
+        synchronized (this) {
+            cur.set(0);
+            usingSequences.clear();
+            spareSequences.clear();
+        }
     }
     
     /**
-     * 产生新序列
+     * 产生新序号(未被使用), 但并不会调用 {@link #use(int)} 方法
      */
     public int next() {
-        if (!spareSequences.isEmpty()) { // 先使用 spareSequences 里的序号
-            int rst = spareSequences.iterator().next();
-            spareSequences.remove(rst);
+        synchronized (this) {
+            if (!spareSequences.isEmpty()) { // 先使用 spareSequences 里的序号
+                int rst = spareSequences.iterator().next();
+                spareSequences.remove(rst);
+                return rst;
+            }
+            int rst;
+            while (true) { // 跳过已经在使用的序号
+                if (!isUsing((rst = cur.getAndIncrement()))) {
+                    break;
+                }
+            }
             return rst;
         }
-        int rst;
-        while (true) { // 跳过已经在使用的序号
-            if (!isUsing((rst = cur.getAndIncrement()))) {
-                break;
-            }
-        }
-        return rst;
     }
     
     /**
@@ -50,18 +54,22 @@ public final class SeqModule {
      * 将序号设置为正在使用
      */
     public void use(int seq) {
-        if (isUsing(seq)) {
-            throw new IllegalArgumentException("This sequence has been used.");
+        synchronized (this) {
+            if (isUsing(seq)) {
+                throw new IllegalArgumentException("This sequence has been used.");
+            }
+            spareSequences.remove(seq);
+            usingSequences.add(seq);
         }
-        spareSequences.remove(seq);
-        usingSequences.add(seq);
     }
     
     /**
      * 将指定序号设置为未使用(不会判断原来是否在使用)
      */
     public void dispose(int seq) {
-        usingSequences.remove(seq);
-        spareSequences.add(seq);
+        synchronized (this) {
+            usingSequences.remove(seq);
+            spareSequences.add(seq); // HashSet 不会重复
+        }
     }
 }

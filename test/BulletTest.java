@@ -9,7 +9,6 @@ import com.azazo1.util.Tools;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import java.io.File;
 import java.io.IOException;
 
 import static com.azazo1.util.Tools.resizeFrame;
@@ -29,7 +28,7 @@ class BulletTest {
         
         WallGroup wallG;
         try {
-            wallG = WallGroup.parseFromBitmap(ImageIO.read(new File("res/WallMap.mwal")), map.getWidth(), map.getHeight());
+            wallG = WallGroup.parseFromBitmap(ImageIO.read(Tools.getFileURL("wallmap/WallMap.mwal")), map.getWidth(), map.getHeight());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

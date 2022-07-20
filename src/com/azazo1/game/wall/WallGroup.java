@@ -3,6 +3,7 @@ package com.azazo1.game.wall;
 import com.azazo1.Config;
 import com.azazo1.base.ConstantVal;
 import com.azazo1.game.GameMap;
+import com.azazo1.util.Tools;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -13,6 +14,7 @@ import java.awt.image.Raster;
 import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -135,23 +137,21 @@ public class WallGroup {
     }
     
     /**
-     * 扫描当前文件夹下可用的游戏墙图文件
+     * 扫描当前文件夹(或 Jar 内路径)下可用的游戏墙图文件
      */
-    public static @Nullable Vector<File> scanBinaryBitmapFiles(String scanPath) {
-        File f = new File(scanPath);
-        String[] sons = f.list((dir, name) -> name.endsWith(ConstantVal.WALL_MAP_FILE_SUFFIX));
-        if (sons == null) {
+    public static @Nullable Vector<URL> scanBinaryBitmapFiles(String scanPath) {
+        try {
+            return Tools.getFileURLs(scanPath, (dir, name) -> name.endsWith(ConstantVal.WALL_MAP_FILE_SUFFIX));
+        } catch (IOException e) {
             return null;
         }
-        Vector<File> rst = new Vector<>();
-        for (String name : sons) {
-            rst.add(new File(f.getPath() + File.separator + name));
-        }
-        return rst;
     }
     
-    public static @Nullable Vector<File> scanBinaryBitmapFiles() {
-        return scanBinaryBitmapFiles(".");
+    /**
+     * 从项目根目录查找
+     */
+    public static @Nullable Vector<URL> scanBinaryBitmapFiles() {
+        return scanBinaryBitmapFiles("wallmap");
     }
     
     /**

@@ -9,7 +9,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 
@@ -20,7 +19,7 @@ public class ServerSession extends GameSession {
     
     /**
      * 创建一局在线服务端游戏会话<br>
-     * 该方法将会在所有玩家都加入游戏并注册后
+     * 该方法应在所有玩家都加入游戏并注册后被调用
      *
      * @param tankNum   坦克(玩家)数量
      * @param tankNames 各个坦克名称, 但如果不为 null, 其长度要符合 tankNum
@@ -52,17 +51,5 @@ public class ServerSession extends GameSession {
     @Override
     public boolean isOver() {
         return gameMap.getTankGroup().getLivingTankNum() <= 1;
-    }
-    
-    @Override
-    public void start() {
-        timer = new Timer(0, (e) -> {
-            gameMap.update(null);
-            if (listener != null) {
-                listener.tick(gameMap.getTankGroup().getTanksInfo(), gameMap.getBulletGroup().getBulletNum());
-            }
-        });
-        timer.setRepeats(true);
-        timer.start();
     }
 }

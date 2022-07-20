@@ -17,7 +17,6 @@ import org.jetbrains.annotations.Nullable;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
@@ -30,13 +29,13 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.IntStream;
 
 public class TankBase implements CharWithRectangle {
-    public static final String imgFilePath = "res/Tank.png";
+    public static final String imgFilePath = "img/Tank.png";
     protected static final BufferedImage rawImg;
     private static final SeqModule seqModule = new SeqModule();
     
     static {
         try {
-            rawImg = ImageIO.read(new File(imgFilePath));
+            rawImg = ImageIO.read(Tools.getFileURL(imgFilePath));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -244,7 +243,7 @@ public class TankBase implements CharWithRectangle {
     }
     
     public TankInfo getInfo() {
-        return new TankInfo();
+        return new TankInfo(this);
     }
     
     public int getSeq() {
@@ -268,23 +267,38 @@ public class TankBase implements CharWithRectangle {
     /**
      * 用于序列化坦克与提供信息
      */
-    public class TankInfo implements Serializable {
-        protected final int totalEndurance = enduranceModule.maxEndurance;
-        protected final int nowEndurance = enduranceModule.getEndurance();
-        protected final Rectangle rect = new Rectangle(TankBase.this.rect);
-        protected final double orientation = orientationModule.getOrientation();
-        protected final int seq = TankBase.this.seq;
-        protected final String tankBitmapFilePath = imgFilePath;
-        protected final String nickname = name; // 坦克昵称
-        protected long livingTime = enduranceModule.getLivingTime();
-        protected int rank; // 排名(由死亡顺序计算) (产生后由 TankGroup 分配其值)
+    public static class TankInfo implements Serializable {
+        protected final int totalEndurance;
+        protected final int nowEndurance;
+        protected final Rectangle rect;
+        protected final double orientation;
+        protected final int seq;
+        protected final String nickname; // 坦克昵称
+        protected final long livingTime;
+        protected int rank = -1; // 排名(由死亡顺序计算) (产生后由 TankGroup 分配其值)
         
-        protected TankInfo() {
+        protected TankInfo(TankBase tank) {
+            totalEndurance = tank.enduranceModule.maxEndurance;
+            nowEndurance = tank.enduranceModule.getEndurance();
+            rect = new Rectangle(tank.rect);
+            orientation = tank.orientationModule.getOrientation();
+            seq = tank.seq;
+            nickname = tank.name;
+            livingTime = tank.enduranceModule.getLivingTime();
         }
         
         @Override
         public String toString() {
-            return "TankInfo{" + "totalEndurance=" + totalEndurance + ", nowEndurance=" + nowEndurance + ", rect=" + rect + ", orientation=" + orientation + ", livingTime=" + livingTime + ", seq=" + seq + ", tankBitmapFilePath='" + tankBitmapFilePath + '\'' + '}';
+            return "TankInfo{" +
+                    "totalEndurance=" + totalEndurance +
+                    ", nowEndurance=" + nowEndurance +
+                    ", rect=" + rect +
+                    ", orientation=" + orientation +
+                    ", seq=" + seq +
+                    ", nickname='" + nickname + '\'' +
+                    ", livingTime=" + livingTime +
+                    ", rank=" + rank +
+                    '}';
         }
         
         public long getLivingTime() {
@@ -309,10 +323,6 @@ public class TankBase implements CharWithRectangle {
         
         public int getSeq() {
             return seq;
-        }
-        
-        public String getTankBitmapFilePath() {
-            return tankBitmapFilePath;
         }
         
         public int getRank() {

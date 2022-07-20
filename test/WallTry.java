@@ -1,13 +1,14 @@
+import com.azazo1.util.Tools;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 
 public class WallTry implements Runnable {
-    public BufferedImage wallImg = ImageIO.read(new File("res/SingleWall.png"));
-    public BufferedImage tankImg = ImageIO.read(new File("res/Tank.png"));
+    public BufferedImage wallImg = ImageIO.read(Tools.getFileURL("img/SingleWall.png"));
+    public BufferedImage tankImg = ImageIO.read(Tools.getFileURL("img/Tank.png"));
     
     public WallTry() throws IOException {
     }

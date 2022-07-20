@@ -1,23 +1,34 @@
-import org.junit.jupiter.api.Test;
+import com.azazo1.base.ConstantVal;
 import com.azazo1.util.Tools;
+import org.junit.jupiter.api.Test;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 class ToolsTest {
+    
+    @Test
+    void getFileURL() {
+        assertNotNull(Tools.getFileURL("img/Bullet.png"));
+    }
+    
+    @Test
+    void getFileURLs() throws IOException {
+        var fileURLs = Tools.getFileURLs("wallmap", (dir, name) -> name.endsWith(ConstantVal.WALL_MAP_FILE_SUFFIX)); // 获得所有墙图
+        System.out.println(fileURLs);
+        assertFalse(fileURLs.isEmpty());
+    }
     
     @Test
     void deepCopy() {
         BufferedImage img;
         try {
-            img = ImageIO.read(new File("res/com.azazo1.game.tank.png"));
+            img = ImageIO.read(Tools.getFileURL("img/Tank.png"));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

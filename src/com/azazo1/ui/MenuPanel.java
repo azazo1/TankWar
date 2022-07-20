@@ -14,7 +14,7 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.File;
+import java.net.URL;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -27,7 +27,7 @@ public class MenuPanel extends MyPanel {
     private static MyPanel instance;
     private final AtomicBoolean attached = new AtomicBoolean(false); // 是否曾被设置为 MyFrame 的 contentPanel
     private final Vector<Box> localPlayerNames = new Vector<>();
-    private JComboBox<File> wallMapFilesComboBox;
+    private JComboBox<URL> wallMapFilesComboBox;
     private JRadioButtonGroup buttonGroup;
     private JComboBox<Integer> playerNumComboBox;
     private final ActionListener launchButtonListener = (e) -> {
@@ -36,12 +36,13 @@ public class MenuPanel extends MyPanel {
             JOptionPane.showConfirmDialog(this, Config.translation.playingModeNotChosen,
                     Config.translation.errorTitle, JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
         } else if (command.equals(PlayingMode.LOCAL)) {
+            // 启动本地游戏
             try {
                 @SuppressWarnings("ConstantConditions")
                 GameSession.LocalSession session = GameSession.LocalSession.createLocalSession(
                         (Integer) playerNumComboBox.getSelectedItem(),
                         getLocalPlayerNames(),
-                        (File) wallMapFilesComboBox.getSelectedItem());
+                        ((URL) wallMapFilesComboBox.getSelectedItem()).openStream());
                 // 切换到GamePanel
                 GamePanel gamePanel = new GamePanel(session);
                 MyFrame.getInstance().setContentPane(gamePanel);
@@ -54,6 +55,7 @@ public class MenuPanel extends MyPanel {
                         Config.translation.errorTitle, JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
             }
         } else if (buttonGroup.getSelectedActionCommand().equals(PlayingMode.ONLINE)) {
+            // 启动在线游戏
             JOptionPane.showConfirmDialog(this, Config.translation.onlineModeStillDeveloping,
                     Config.translation.errorTitle, JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
             // todo invoke online game
@@ -98,7 +100,7 @@ public class MenuPanel extends MyPanel {
         JPanel localPlayingPanel = new JPanel();
         localPlayerNamesBox = Box.createVerticalBox();
         playerNumComboBox = new JComboBox<>(new Integer[]{2, 3});
-        wallMapFilesComboBox = new JComboBox<>(WallGroup.scanBinaryBitmapFiles("res"));
+        wallMapFilesComboBox = new JComboBox<>(WallGroup.scanBinaryBitmapFiles());
         JRadioButton localPlayingRadioButton = new JRadioButton(PlayingMode.LOCAL);
         JPanel onlinePlayingPanel = new JPanel();
         JTextField serverIPTextField = new JTextField();

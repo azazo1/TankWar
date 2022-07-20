@@ -13,8 +13,8 @@ import org.jetbrains.annotations.Nullable;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Vector;
 
 /**
@@ -79,7 +79,9 @@ public abstract class GameSession implements SingleInstance {
      */
     public GameMap.GameInfo stop() {
         timer.stop();
-        return gameMap.getInfo();
+        GameMap.GameInfo rst = gameMap.getInfo();
+        gameMap.dispose();
+        return rst;
     }
     
     /**
@@ -116,9 +118,9 @@ public abstract class GameSession implements SingleInstance {
          *
          * @param tankNum   坦克(玩家)数量
          * @param tankNames 各个坦克名称, 但如果不为 null, 其长度要符合 tankNum
-         * @param wallMap   游戏墙图文件, 用于读取产生 {@link WallGroup}
+         * @param wallMap   游戏墙图文件输入流, 用于读取产生 {@link WallGroup}
          */
-        public static @NotNull LocalSession createLocalSession(int tankNum, @Nullable String[] tankNames, @NotNull File wallMap) throws IOException {
+        public static @NotNull LocalSession createLocalSession(int tankNum, @Nullable String[] tankNames, @NotNull InputStream wallMap) throws IOException {
             GameSession.clearInstance();
             LocalSession session = new LocalSession();
             
