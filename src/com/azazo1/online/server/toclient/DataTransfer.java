@@ -5,14 +5,18 @@ import com.azazo1.online.Communicator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.SocketTimeoutException;
 import java.util.HashMap;
 import java.util.concurrent.LinkedTransferQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-public class DataTransfer {
-    
+/**
+ * 异步地传输数据
+ */
+public class DataTransfer implements Closeable {
     protected final HashMap<ClientHandler, Communicator> communicators = new HashMap<>();
     /**
      * 接收到但是未被提取的对象
@@ -22,6 +26,84 @@ public class DataTransfer {
      * 等待被发送的对象
      */
     protected final HashMap<ClientHandler, LinkedTransferQueue<Serializable>> toBeSent = new HashMap<>();
+    private final AtomicBoolean alive = new AtomicBoolean(true);
+    
+    public DataTransfer() {
+        readingThread.start();
+        sendingThread.start();
+    }
+    
+    /**
+     * 将可序列化对象添加到待发送列表
+     *
+     * @param client 指定要被发送的客户端
+     * @param obj    将要被发送的对象
+     */
+    public void sendObject(@NotNull ClientHandler client, @NotNull Serializable obj) {
+        if (!alive.get()) {
+            throw new IllegalStateException("DataTransfer has closed.");
+        }
+        toBeSent.get(client).add(obj);
+    }
+    
+    /**
+     * 提取待提取列表中的已读信息
+     *
+     * @return 若待提取列表为空则返回 null
+     */
+    public @Nullable Serializable readObject(@NotNull ClientHandler client) {
+        if (!alive.get()) {
+            throw new IllegalStateException("DataTransfer has closed.");
+        } else if (!client.getAlive()) {
+            throw new IllegalArgumentException("Closed clientHandler");
+        }
+        return received.get(client).poll();
+    }
+    
+    /**
+     * 添加客户端
+     *
+     * @return 是否成功添加
+     */
+    public boolean addClient(@NotNull ClientHandler client) {
+        if (!alive.get()) {
+            throw new IllegalStateException("DataTransfer has closed.");
+        } else if (!client.getAlive()) {
+            throw new IllegalArgumentException("Closed clientHandler");
+        }
+        Communicator comm;
+        try {
+            comm = new Communicator(client.getSocket());
+        } catch (IOException e) {
+            return false;
+        }
+        communicators.put(client, comm);
+        received.put(client, new LinkedTransferQueue<>());
+        toBeSent.put(client, new LinkedTransferQueue<>());
+        return true;
+        
+    }
+    
+    /**
+     * 结束使用
+     */
+    @Override
+    public void close() {
+        for (Communicator c : communicators.values()) {
+            c.close();
+        }
+        communicators.clear();
+        received.clear();
+        toBeSent.clear();
+        readingThread.interrupt();
+        sendingThread.interrupt();
+        alive.set(false);
+    }
+    
+    public boolean getAlive() {
+        return alive.get();
+    }
+    
     /**
      * 持续接收对象
      */
@@ -49,13 +131,17 @@ public class DataTransfer {
                     
                 }
                 try {
+                    //noinspection BusyWait
                     Thread.sleep((long) (550.0 / Config.FPS)); // 要以略快于游戏事件循环的速度进行
                 } catch (InterruptedException e) {
+                    close();
                     break;
                 }
             }
         }
     };
+    
+    
     /**
      * 持续发送对象
      *
@@ -85,69 +171,13 @@ public class DataTransfer {
                     }
                 }
                 try {
+                    //noinspection BusyWait
                     Thread.sleep((long) (550.0 / Config.FPS)); // 要以略快于游戏事件循环的速度进行
                 } catch (InterruptedException e) {
+                    close();
                     break;
                 }
             }
         }
     };
-    
-    public DataTransfer() {
-        readingThread.start();
-        sendingThread.start();
-    }
-    
-    /**
-     * 将可序列化对象添加到待发送列表
-     *
-     * @param client 指定要被发送的客户端
-     * @param obj    将要被发送的对象
-     */
-    public void sendObject(@NotNull ClientHandler client, @NotNull Serializable obj) {
-        toBeSent.get(client).add(obj);
-    }
-    
-    /**
-     * 提取待提取列表中的已读信息
-     *
-     * @return 若待提取列表为空则返回 null
-     */
-    public @Nullable Object readObject(@NotNull ClientHandler client) {
-        return received.get(client).poll();
-    }
-    
-    /**
-     * 添加客户端
-     *
-     * @return 是否成功添加
-     */
-    public boolean addClient(@NotNull ClientHandler client) {
-        Communicator comm;
-        try {
-            comm = new Communicator(client.getSocket());
-        } catch (IOException e) {
-            return false;
-        }
-        communicators.put(client, comm);
-        received.put(client, new LinkedTransferQueue<>());
-        toBeSent.put(client, new LinkedTransferQueue<>());
-        return true;
-        
-    }
-    
-    /**
-     * 结束使用
-     */
-    public void close() {
-        for (Communicator c : communicators.values()) {
-            c.close();
-        }
-        communicators.clear();
-        received.clear();
-        toBeSent.clear();
-        readingThread.interrupt();
-        sendingThread.interrupt();
-    }
-    
 }

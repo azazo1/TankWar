@@ -158,7 +158,14 @@ public final class Tools {
      * 获得真实的时间
      */
     public static long getRealTimeInMillis() {
-        return System.currentTimeMillis() + bias.get();
+        return getRealTimeInMillis(bias.get());
+    }
+    
+    /**
+     * 获得真实时间, 可设置时间偏差
+     */
+    public static long getRealTimeInMillis(long bias) {
+        return System.currentTimeMillis() + bias;
     }
     
     /**

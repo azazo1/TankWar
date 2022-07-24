@@ -142,7 +142,7 @@ public class Server implements Closeable {
         ClientHandler cHandler = new ClientHandler(this, client);
         if (dataTransfer.addClient(cHandler)) {
             clients.add(cHandler);
-            Tools.logLn("Get client: " + cHandler.getAddress());
+            Tools.logLn("Get client: " + cHandler.getAddress() + ", " + cHandler.getPort());
         } else {
             cHandler.close();
         }
@@ -170,6 +170,4 @@ public class Server implements Closeable {
     public String getState() {
         return currentState;
     }
-    
-    
 }

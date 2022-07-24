@@ -70,6 +70,10 @@ public final class Config {
      * @apiNote 在客户端使用
      */
     public static final int CLIENT_SOCKET_TIMEOUT = 500;
+    /**
+     * Msg对象有效时间, 超过该时间将被丢弃
+     */
+    public static final long MSG_OUTDATED_TIME = 5000;
     
     private Config() {
     }
