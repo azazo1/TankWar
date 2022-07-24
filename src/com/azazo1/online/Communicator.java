@@ -3,23 +3,21 @@ package com.azazo1.online;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.net.Socket;
+import java.util.Base64;
 
 /**
- * 兼顾对象和字符串输出
+ * 进行 Java 对象的传输 (兼顾对象和字符串), 将 Java 对象通过 ObjectOutputStream 序列化后再进行 Base64 编码, 然后传输
  */
-public class Communicator {
-    private final ObjectInputStream objIn;
-    private final ObjectOutputStream objOut;
+public class Communicator implements Closeable {
+    private final BufferedReader in;
+    private final PrintWriter out;
     
     public Communicator(@NotNull Socket soc) throws IOException {
         super();
-        objOut = new ObjectOutputStream(soc.getOutputStream());
-        objIn = new ObjectInputStream(soc.getInputStream());
+        out = new PrintWriter(soc.getOutputStream());
+        in = new BufferedReader(new InputStreamReader(soc.getInputStream()));
     }
     
     /**
@@ -28,28 +26,39 @@ public class Communicator {
      * @param obj 将要被发送的对象
      */
     public void sendObject(@NotNull Serializable obj) throws IOException {
-        objOut.writeObject(obj);
-        objOut.flush();
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        try (ObjectOutputStream objOut = new ObjectOutputStream(bytes)) {
+            objOut.writeObject(obj);
+        }
+        out.println(Base64.getEncoder().encodeToString(bytes.toByteArray()));
+        out.flush();
     }
     
     /**
      * 读取一个对象
+     *
+     * @throws NullPointerException 连接已经断开
      */
     public @Nullable Serializable readObject() throws IOException {
         try {
-            return (Serializable) objIn.readObject();
+            String line = in.readLine();
+            ByteArrayInputStream bytes = new ByteArrayInputStream(Base64.getDecoder().decode(line));
+            try (ObjectInputStream objIn = new ObjectInputStream(bytes)) {
+                return (Serializable) objIn.readObject();
+            }
         } catch (ClassNotFoundException e) {
             return null; // 一般不会到这
         }
     }
     
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void close() {
+        out.close();
         try {
-            objOut.close();
-        } catch (IOException ignore) {
-        }
-        try {
-            objIn.close();
+            in.close();
         } catch (IOException ignore) {
         }
     }

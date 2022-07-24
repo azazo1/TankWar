@@ -4,15 +4,20 @@ package com.azazo1.online.server.toclient;
 import com.azazo1.Config;
 import com.azazo1.util.Tools;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Vector;
 
-public class Server {
+/**
+ * 服务器对象的所有操作都在子线程异步进行
+ */
+public class Server implements Closeable {
     /**
      * 服务器状态: 等待客户端加入, 等待游戏开始
      */
@@ -22,52 +27,70 @@ public class Server {
      */
     public static final String GAMING = "g";
     /**
-     * 当前服务器状态
-     */
-    protected volatile String currentState = WAITING;
-    /**
-     * 客户端接收器
-     */
-    protected Timer acceptor = new Timer("acceptor", true);
-    /**
      * 和客户端套接字进行数据交换的窗口
      */
-    protected DataTransfer dataTransfer = new DataTransfer();
-    /**
-     * 客户端信息处理器, 用于和客户端进行交互
-     */
-    protected Timer handler = new Timer("handler", true);
+    protected final DataTransfer dataTransfer = new DataTransfer();
     /**
      * 服务器套接字, 绑定了某一端口
      */
-    protected ServerSocket socket = new ServerSocket(0) {{
+    protected final ServerSocket socket = new ServerSocket(0) {{
         setSoTimeout(Config.SERVER_SOCKET_TIMEOUT);
     }};
     /**
      * 储存客户端套接字
      */
-    protected Vector<ClientHandler> clients = new Vector<>();
+    protected final Vector<ClientHandler> clients = new Vector<>();
+    /**
+     * 客户端接收器, WAITING 时接收玩家和旁观者, GAMING 时接收旁观者
+     */
+    protected Timer acceptor;
+    /**
+     * 客户端信息处理器, 用于和客户端进行交互
+     */
+    protected Timer handler;
+    /**
+     * 当前服务器状态
+     */
+    protected volatile String currentState = WAITING;
     
     public Server() throws IOException {
         initHandler();
+        Tools.logLn("Server Opened at Port: " + socket.getLocalPort());
     }
     
-    public static void main(String[] args) {
-        // new Server().start();
+    public static void main(String[] args) throws IOException {
+        Server server = new Server();
+        server.changeToWaitingState();
+        Scanner scanner = new Scanner(System.in);
+        while (scanner.hasNextLine()) {
+            String get = scanner.nextLine();
+            if (get.equalsIgnoreCase("q") || get.equals("quit")) {
+                server.close();
+                break;
+            }
+        }
     }
     
     /**
      * 初始化客户端信息处理器, 处理周期要略短于游戏事件周期
+     *
+     * @apiNote 此方法只能调用一次
      */
     protected void initHandler() {
-        handler.cancel();
-        handler.schedule(new TimerTask() {
+        if (handler != null) {
+            handler.cancel();
+        }
+        handler = new Timer("handler", true);
+        // 不用 schedule, 防止处理过慢
+        handler.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 for (int i = 0; i < clients.size(); i++) {
                     ClientHandler client = clients.get(i);
                     if (!client.handle()) {
-                        clients.remove(i);
+                        client.close();
+                        clients.remove(i); // todo 检查移除是否对游戏产生影响
+                        Tools.logLn("Client: \"" + client.getSeq() + "\" was removed.");
                         i--;
                     }
                 }
@@ -95,7 +118,10 @@ public class Server {
      * 初始化客户端接收器
      */
     protected void initAcceptor() {
-        acceptor.cancel();
+        if (acceptor != null) {
+            acceptor.cancel();
+        }
+        acceptor = new Timer("acceptor", true);
         acceptor.schedule(new TimerTask() {
             @Override
             public void run() {
@@ -106,7 +132,7 @@ public class Server {
                     close();
                 }
             }
-        }, 0, 100);
+        }, 0, 100); // socket.accept() 已有阻塞
     }
     
     /**
@@ -116,17 +142,21 @@ public class Server {
         ClientHandler cHandler = new ClientHandler(this, client);
         if (dataTransfer.addClient(cHandler)) {
             clients.add(cHandler);
-        }else {
+            Tools.logLn("Get client: " + cHandler.getAddress());
+        } else {
             cHandler.close();
         }
-        Tools.logLn("Get client: " + cHandler.getAddress());
     }
     
     /**
      * 结束 Server 的使用
+     * <p>{@inheritDoc}
      */
+    @Override
     public void close() {
+        handler.cancel();
         acceptor.cancel();
+        dataTransfer.close();
         try {
             socket.close();
         } catch (IOException ignore) {
@@ -136,4 +166,10 @@ public class Server {
     public DataTransfer getDataTransfer() {
         return dataTransfer;
     }
+    
+    public String getState() {
+        return currentState;
+    }
+    
+    
 }

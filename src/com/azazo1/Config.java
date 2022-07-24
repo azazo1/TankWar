@@ -56,11 +56,20 @@ public final class Config {
     /**
      * 服务端套接字超时 ms
      */
-    public static final int SERVER_SOCKET_TIMEOUT = 100;
+    public static final int SERVER_SOCKET_TIMEOUT = 500;
     /**
-     * 客户端处理器对应套接字超时事件 ms
+     * 客户端处理器对应套接字超时时间 ms<br>
+     * 客户端较多, 超时设置短些
+     *
+     * @apiNote 在服务端使用
      */
-    public static final int CLIENT_HANDLER_SOCKET_TIMEOUT = 100;
+    public static final int CLIENT_HANDLER_SOCKET_TIMEOUT = 500;
+    /**
+     * 客户端套接字超时时间 ms
+     *
+     * @apiNote 在客户端使用
+     */
+    public static final int CLIENT_SOCKET_TIMEOUT = 500;
     
     private Config() {
     }

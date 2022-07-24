@@ -25,6 +25,7 @@ public final class Tools {
     private static final AtomicInteger framesCounter = new AtomicInteger(0);
     private static final Vector<Long> lastTickTimes = new Vector<>(10); // 最后10次 tickFrame 时间戳, 真实时间
     private static final AtomicLong firstTickTime = new AtomicLong(-1); // 真实时间
+    private static final AtomicLong bias = new AtomicLong();
     
     /**
      * 当以 Jar 包形式运行时, 读取 Jar 包内的文件 URL, 当直接运行时直接获取文件 URL<br>
@@ -157,7 +158,7 @@ public final class Tools {
      * 获得真实的时间
      */
     public static long getRealTimeInMillis() {
-        return System.currentTimeMillis();
+        return System.currentTimeMillis() + bias.get();
     }
     
     /**
@@ -196,5 +197,12 @@ public final class Tools {
         });
         timer.setRepeats(true);
         timer.start();
+    }
+    
+    /**
+     * 调整时间偏差, 用于同步客户端和服务端的时间
+     */
+    public static void setTimeBias(long bias) {
+        Tools.bias.set(bias);
     }
 }

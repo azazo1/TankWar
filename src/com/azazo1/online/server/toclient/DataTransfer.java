@@ -1,7 +1,9 @@
 package com.azazo1.online.server.toclient;
 
+import com.azazo1.Config;
 import com.azazo1.online.Communicator;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -11,19 +13,19 @@ import java.util.concurrent.LinkedTransferQueue;
 
 public class DataTransfer {
     
-    protected HashMap<ClientHandler, Communicator> communicators;
+    protected final HashMap<ClientHandler, Communicator> communicators = new HashMap<>();
     /**
      * 接收到但是未被提取的对象
      */
-    protected HashMap<ClientHandler, LinkedTransferQueue<Serializable>> received = new HashMap<>();
+    protected final HashMap<ClientHandler, LinkedTransferQueue<Serializable>> received = new HashMap<>();
     /**
      * 等待被发送的对象
      */
-    protected HashMap<ClientHandler, LinkedTransferQueue<Serializable>> toBeSent = new HashMap<>();
+    protected final HashMap<ClientHandler, LinkedTransferQueue<Serializable>> toBeSent = new HashMap<>();
     /**
      * 持续接收对象
      */
-    protected Thread readingThread = new Thread() {
+    protected final Thread readingThread = new Thread() {
         {
             setDaemon(true);
         }
@@ -34,15 +36,22 @@ public class DataTransfer {
                 for (ClientHandler client : communicators.keySet()) {
                     Communicator comm = communicators.get(client);
                     try {
-                        Serializable get = comm.readObject();
+                        Serializable get = comm.readObject(); // 每个连接每次只读取一个对象
                         if (get != null) {
                             received.get(client).add(get);
                         }
+                    } catch (NullPointerException e) { // 连接断开
+                        client.close();
                     } catch (SocketTimeoutException ignore) {
                     } catch (IOException e) {
                         client.close();
                     }
                     
+                }
+                try {
+                    Thread.sleep((long) (550.0 / Config.FPS)); // 要以略快于游戏事件循环的速度进行
+                } catch (InterruptedException e) {
+                    break;
                 }
             }
         }
@@ -52,7 +61,7 @@ public class DataTransfer {
      *
      * @apiNote 对于特定一个客户端的信息, 由于超时影响, 发送先后顺序可能不确定
      */
-    protected Thread sendingThread = new Thread() {
+    protected final Thread sendingThread = new Thread() {
         {
             setDaemon(true);
         }
@@ -64,7 +73,8 @@ public class DataTransfer {
                     Communicator comm = communicators.get(client);
                     Serializable obj;
                     LinkedTransferQueue<Serializable> targets = toBeSent.get(client);
-                    while ((obj = targets.poll()) != null) {
+                    // 由于异步问题, 新客户端加入时 targets 可能为 null, 但后来就会被赋予相应的值
+                    if (targets != null && (obj = targets.poll()) != null) { // 每个连接每次只发送一个对象
                         try {
                             comm.sendObject(obj);
                         } catch (SocketTimeoutException e) {
@@ -73,6 +83,11 @@ public class DataTransfer {
                             client.close();
                         }
                     }
+                }
+                try {
+                    Thread.sleep((long) (550.0 / Config.FPS)); // 要以略快于游戏事件循环的速度进行
+                } catch (InterruptedException e) {
+                    break;
                 }
             }
         }
@@ -98,7 +113,7 @@ public class DataTransfer {
      *
      * @return 若待提取列表为空则返回 null
      */
-    public Object readObject(@NotNull ClientHandler client) {
+    public @Nullable Object readObject(@NotNull ClientHandler client) {
         return received.get(client).poll();
     }
     
@@ -107,15 +122,18 @@ public class DataTransfer {
      *
      * @return 是否成功添加
      */
-    public boolean addClient(ClientHandler client) {
+    public boolean addClient(@NotNull ClientHandler client) {
+        Communicator comm;
         try {
-            communicators.put(client, new Communicator(client.getSocket()));
-            received.put(client, new LinkedTransferQueue<>());
-            toBeSent.put(client, new LinkedTransferQueue<>());
-            return true;
+            comm = new Communicator(client.getSocket());
         } catch (IOException e) {
             return false;
         }
+        communicators.put(client, comm);
+        received.put(client, new LinkedTransferQueue<>());
+        toBeSent.put(client, new LinkedTransferQueue<>());
+        return true;
+        
     }
     
     /**
