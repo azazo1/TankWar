@@ -15,6 +15,8 @@ import java.net.SocketException;
 import java.text.DateFormat;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.azazo1.online.msg.RegisterMsg.RegisterResponseMsg.SUCCEED;
+
 public class ClientHandler implements Closeable {
     private static final SeqModule seqModule = new SeqModule();
     protected final int seq;
@@ -31,7 +33,7 @@ public class ClientHandler implements Closeable {
     /**
      * 游戏模式是否为玩家, false 则为旁观者
      */
-    protected volatile AtomicBoolean isPlayer = null; // 用原子 null 原因: 有 null(未确定) false true 三种状态
+    protected volatile AtomicBoolean _isPlayer = null; // 用原子 null 原因: 有 null(未确定) false true 三种状态
     /**
      * 客户端昵称
      */
@@ -99,16 +101,23 @@ public class ClientHandler implements Closeable {
             if (obj instanceof FetchSeqMsg) { // 获取 seq
                 toBeSent = new FetchSeqMsg.FetchSeqResponseMsg(seq);
             } else if (obj instanceof RegisterMsg msg) { // 注册
-                //todo 注册
-                isPlayer = new AtomicBoolean(msg.isPlayer);
-                name = msg.name;
-                toBeSent = new RegisterMsg.RegisterResponseMsg(RegisterMsg.RegisterResponseMsg.SUCCEED, msg); // todo 修改返回值
+                int rst;
+                if (msg.isPlayer) {
+                    rst = server.registerPlayer(seq, msg.name); // 注册玩家模式
+                } else {
+                    rst = SUCCEED; // 申请旁观模式成功
+                }
+                if (rst == SUCCEED) { // 成功则记录信息
+                    _isPlayer = new AtomicBoolean(msg.isPlayer);
+                    name = msg.name;
+                }
+                toBeSent = new RegisterMsg.RegisterResponseMsg(rst, msg);
             } else if (obj instanceof FetchGameIntroMsg) {
-                // todo 获取游戏信息
-                toBeSent = new FetchGameIntroMsg.FetchGameIntroResponseMsg("wallmap/WallMap.mwal"); // todo 修改返回值
+                toBeSent = new FetchGameIntroMsg.FetchGameIntroResponseMsg(server.getWallMapFile());
             } else if (obj instanceof QueryClientsMsg) {
                 toBeSent = new QueryClientsMsg.QueryClientsResponseMsg(server.getClientsInfo());
             }
+            // todo 提供 WallMap 选择接口 (仅房主)
             // todo 给 Server 提供向客户端 (玩家/旁观者) 发送游戏信息 (Tank/Bullet/Msg) 方法
         }
         if (toBeSent != null) {
@@ -154,6 +163,10 @@ public class ClientHandler implements Closeable {
         return _isHost.get();
     }
     
+    public AtomicBoolean isPlayer() {
+        return _isPlayer;
+    }
+    
     /**
      * {@link ClientHandler} 对象的基本信息
      */
@@ -167,7 +180,7 @@ public class ClientHandler implements Closeable {
         
         public ClientHandlerInfo(@NotNull ClientHandler c) {
             this.isHost = c._isHost.get();
-            this.isPlayer = c.isPlayer;
+            this.isPlayer = c._isPlayer;
             this.name = c.name;
             this.address = c.getAddress();
             this.port = c.getPort();

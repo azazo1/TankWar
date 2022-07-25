@@ -4,7 +4,9 @@ package com.azazo1.online.server.toclient;
 import com.azazo1.Config;
 import com.azazo1.base.SingleInstance;
 import com.azazo1.game.session.ServerSessionConfig;
+import com.azazo1.online.msg.RegisterMsg;
 import com.azazo1.util.Tools;
+import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Closeable;
@@ -17,6 +19,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static com.azazo1.online.msg.RegisterMsg.RegisterResponseMsg.*;
 
 /**
  * 服务器对象的所有操作都在子线程异步进行
@@ -134,22 +138,30 @@ public class Server implements Closeable, SingleInstance {
                     for (int i = 0; i < clients.size(); i++) {
                         ClientHandler client = clients.get(i);
                         if (!client.handle()) { // todo 抽象移除客户端方法
-                            client.close();
-                            clients.remove(i); // todo 检查移除是否对游戏产生影响
-                            Tools.logLn("Client: \"" + client.getSeq() + "\" was removed.");
-                            if (client.isHost()) { // 重新设置房主, 如果 clients 为空, 则变为 null, 会在新客户端加入时重新设置
-                                if (clients.isEmpty()) {
-                                    setHost(null);
-                                } else {
-                                    setHost(clients.get(0));
-                                }
-                            }
-                            i--;
+                            removeClient(i);
+                            i--; // 该元素被移除了后来的元素顶替该位置
                         }
                     }
                 }
             }
         }, 0, (long) (650.0 / Config.FPS)); // 要以略快于游戏事件循环的速度进行
+    }
+    
+    private void removeClient(int i) {
+        ClientHandler client = clients.get(i);
+        client.close();
+        clients.remove(i); // todo 检查移除是否对游戏产生影响
+        Tools.logLn("Client: \"" + client.getSeq() + "\" was removed.");
+        if (client.isHost()) { // 重新设置房主, 如果 clients 为空, 则变为 null, 会在新客户端加入时重新设置
+            if (clients.isEmpty()) {
+                setHost(null);
+            } else {
+                setHost(clients.get(0));
+            }
+        }
+        if (client.isPlayer() != null && client.isPlayer().get()) {
+            unregisterPlayer(client.getSeq());
+        }
     }
     
     protected void changeToWaitingState() {
@@ -204,6 +216,37 @@ public class Server implements Closeable, SingleInstance {
         } else {
             cHandler.close();
         }
+    }
+    
+    /**
+     * 注册玩家
+     *
+     * @return 状态码 见: {@link RegisterMsg.RegisterResponseMsg} 的常量
+     */
+    @MagicConstant(intValues = {SUCCEED, NAME_OR_SEQ_OCCUPIED, PLAYER_MAXIMUM})
+    public int registerPlayer(int seq, String name) {
+        try {
+            config.addTank(seq, name);
+            return SUCCEED;
+        } catch (IllegalArgumentException e) {
+            return NAME_OR_SEQ_OCCUPIED;
+        } catch (IllegalStateException e) {
+            return PLAYER_MAXIMUM;
+        }
+    }
+    
+    /**
+     * 取消注册玩家
+     */
+    public void unregisterPlayer(int seq) {
+        config.removeTank(seq);
+    }
+    
+    /**
+     * 从 {@link #config} 获得游戏墙图文件路径
+     */
+    public String getWallMapFile() {
+        return config.getWallMapFile();
     }
     
     /**

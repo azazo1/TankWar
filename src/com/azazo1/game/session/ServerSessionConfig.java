@@ -1,5 +1,6 @@
 package com.azazo1.game.session;
 
+import com.azazo1.Config;
 import com.azazo1.online.server.toclient.Server;
 
 import java.util.HashMap;
@@ -35,8 +36,16 @@ public class ServerSessionConfig {
     
     /**
      * 添加坦克(玩家)
+     *
+     * @throws IllegalArgumentException 待添加的坦克 seq 或 name 已存在
+     * @throws IllegalStateException    玩家数量过多
      */
     public void addTank(int seq, String name) {
+        if (tanks.containsKey(seq) || tanks.containsValue(name)) {
+            throw new IllegalArgumentException("Information collision.");
+        } else if (tanks.size() >= Config.MAX_SERVER_SESSION_PLAYER_NUM) {
+            throw new IllegalStateException("Too many players.");
+        }
         tanks.put(seq, name);
     }
     

@@ -39,6 +39,7 @@ public class Client implements Closeable {
         if (obj instanceof FetchSeqMsg.FetchSeqResponseMsg msg) {
             seq.set(msg.seq);
         } else if (obj instanceof RegisterMsg.RegisterResponseMsg msg) {
+            System.out.println(msg.code);
             switch (msg.code) {
                 case SUCCEED -> {/*todo 提醒用户*/}
                 case PLAYER_MAXIMUM -> {/*todo 提醒用户更换游戏模式*/}
@@ -48,7 +49,7 @@ public class Client implements Closeable {
             // todo 处理游戏信息
             Tools.logLn("Wallmap: " + msg.wallMapFilePath);
         } else if (obj instanceof QueryClientsMsg.QueryClientsResponseMsg msg) {
-            // todo 处理所有客户端信息
+            // todo 处理所有客户端信息, 注意重点标记自身
             System.out.println(msg.multiInfo.toString());
         } else { // 此处表示 obj 为 null 或不是可被客户端处理的 Msg
             return null;

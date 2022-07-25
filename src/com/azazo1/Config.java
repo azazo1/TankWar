@@ -74,6 +74,10 @@ public final class Config {
      * Msg对象有效时间, 超过该时间将被丢弃
      */
     public static final long MSG_OUTDATED_TIME = 5000;
+    /**
+     * 服务端最大允许注册玩家数量
+     */
+    public static final int MAX_SERVER_SESSION_PLAYER_NUM = 5;
     
     private Config() {
     }
