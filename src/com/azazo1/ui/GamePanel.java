@@ -3,7 +3,7 @@ package com.azazo1.ui;
 import com.azazo1.Config;
 import com.azazo1.base.PlayingMode;
 import com.azazo1.game.GameMap;
-import com.azazo1.game.GameSession;
+import com.azazo1.game.session.GameSession;
 import com.azazo1.game.tank.TankBase;
 import com.azazo1.game.tank.TankGroup;
 import com.azazo1.util.Tools;

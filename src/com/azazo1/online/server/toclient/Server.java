@@ -2,7 +2,10 @@ package com.azazo1.online.server.toclient;
 
 
 import com.azazo1.Config;
+import com.azazo1.base.SingleInstance;
+import com.azazo1.game.session.ServerSessionConfig;
 import com.azazo1.util.Tools;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -13,11 +16,12 @@ import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Vector;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 服务器对象的所有操作都在子线程异步进行
  */
-public class Server implements Closeable {
+public class Server implements Closeable, SingleInstance {
     /**
      * 服务器状态: 等待客户端加入, 等待游戏开始
      */
@@ -27,19 +31,35 @@ public class Server implements Closeable {
      */
     public static final String GAMING = "g";
     /**
+     * 服务器实例
+     */
+    public static Server instance;
+    /**
      * 和客户端套接字进行数据交换的窗口
      */
     protected final DataTransfer dataTransfer = new DataTransfer();
     /**
      * 服务器套接字, 绑定了某一端口
      */
-    protected final ServerSocket socket = new ServerSocket(0) {{
-        setSoTimeout(Config.SERVER_SOCKET_TIMEOUT);
-    }};
+    protected final ServerSocket socket;
     /**
      * 储存客户端套接字
      */
     protected final Vector<ClientHandler> clients = new Vector<>();
+    private final AtomicBoolean alive = new AtomicBoolean(true);
+    /**
+     * 游戏配置
+     */
+    protected volatile ServerSessionConfig config;
+    /**
+     * 房主, 可以:
+     * <ol>
+     *     <li>todo 控制游戏开始</li>
+     *     <li>todo 踢出玩家</li>
+     *     <li>todo 选择游戏墙图</li>
+     * </ol>
+     */
+    protected volatile ClientHandler host = null;
     /**
      * 客户端接收器, WAITING 时接收玩家和旁观者, GAMING 时接收旁观者
      */
@@ -53,13 +73,21 @@ public class Server implements Closeable {
      */
     protected volatile String currentState = WAITING;
     
-    public Server() throws IOException {
+    /**
+     * @param port 端口号, 为 0 则自动分配
+     */
+    public Server(int port) throws IOException {
+        checkInstance();
+        instance = this;
+        socket = new ServerSocket(port) {{
+            setSoTimeout(Config.SERVER_SOCKET_TIMEOUT);
+        }};
         initHandler();
         Tools.logLn("Server Opened at Port: " + socket.getLocalPort());
     }
     
     public static void main(String[] args) throws IOException {
-        Server server = new Server();
+        Server server = new Server(60000);
         server.changeToWaitingState();
         Scanner scanner = new Scanner(System.in);
         while (scanner.hasNextLine()) {
@@ -72,7 +100,24 @@ public class Server implements Closeable {
     }
     
     /**
+     * 设置房主客户端
+     */
+    public void setHost(@Nullable ClientHandler host) {
+        if (this.host != null) {
+            this.host.setIsHost(false); // 取消之前的房主
+        }
+        this.host = host;
+        if (host != null) {
+            host.setIsHost(true);
+            Tools.logLn("Host changed to: " + host.getInfo());
+        } else {
+            Tools.logLn("Host lost.");
+        }
+    }
+    
+    /**
      * 初始化客户端信息处理器, 处理周期要略短于游戏事件周期
+     * todo 若房主退出, 重新设定房主 (WAITING 和 GAMING 都生效)
      *
      * @apiNote 此方法只能调用一次
      */
@@ -85,13 +130,22 @@ public class Server implements Closeable {
         handler.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                for (int i = 0; i < clients.size(); i++) {
-                    ClientHandler client = clients.get(i);
-                    if (!client.handle()) {
-                        client.close();
-                        clients.remove(i); // todo 检查移除是否对游戏产生影响
-                        Tools.logLn("Client: \"" + client.getSeq() + "\" was removed.");
-                        i--;
+                if (alive.get()) {
+                    for (int i = 0; i < clients.size(); i++) {
+                        ClientHandler client = clients.get(i);
+                        if (!client.handle()) { // todo 抽象移除客户端方法
+                            client.close();
+                            clients.remove(i); // todo 检查移除是否对游戏产生影响
+                            Tools.logLn("Client: \"" + client.getSeq() + "\" was removed.");
+                            if (client.isHost()) { // 重新设置房主, 如果 clients 为空, 则变为 null, 会在新客户端加入时重新设置
+                                if (clients.isEmpty()) {
+                                    setHost(null);
+                                } else {
+                                    setHost(clients.get(0));
+                                }
+                            }
+                            i--;
+                        }
                     }
                 }
             }
@@ -101,6 +155,7 @@ public class Server implements Closeable {
     protected void changeToWaitingState() {
         resetClients();
         initAcceptor();
+        initGameConfig();
         currentState = WAITING;
     }
     
@@ -141,8 +196,11 @@ public class Server implements Closeable {
     protected void acceptClient(Socket client) throws IOException {
         ClientHandler cHandler = new ClientHandler(this, client);
         if (dataTransfer.addClient(cHandler)) {
+            Tools.logLn("Get client: " + cHandler.getInfo());
+            if (clients.isEmpty()) {
+                setHost(cHandler); // 设定为房主
+            }
             clients.add(cHandler);
-            Tools.logLn("Get client: " + cHandler.getAddress() + ", " + cHandler.getPort());
         } else {
             cHandler.close();
         }
@@ -161,6 +219,7 @@ public class Server implements Closeable {
             socket.close();
         } catch (IOException ignore) {
         }
+        alive.set(false);
     }
     
     public DataTransfer getDataTransfer() {
@@ -170,4 +229,36 @@ public class Server implements Closeable {
     public String getState() {
         return currentState;
     }
+    
+    public Vector<ClientHandler.ClientHandlerInfo> getClientsInfo() {
+        Vector<ClientHandler.ClientHandlerInfo> rst = new Vector<>();
+        for (ClientHandler c : clients) {
+            rst.add(c.getInfo());
+        }
+        return rst;
+    }
+    
+    @Override
+    public void checkInstance() {
+        if (instance != null) {
+            throw new IllegalStateException("Server can be created only once");
+        }
+    }
+    
+    @Override
+    public boolean hasInstance() {
+        return instance != null;
+    }
+    
+    public ServerSessionConfig getConfig() {
+        return config;
+    }
+    
+    /**
+     * 初始化游戏配置
+     */
+    public void initGameConfig() {
+        this.config = new ServerSessionConfig();
+    }
+    //todo 向config中添加玩家
 }

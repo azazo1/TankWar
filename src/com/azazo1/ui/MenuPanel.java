@@ -2,7 +2,7 @@ package com.azazo1.ui;
 
 import com.azazo1.Config;
 import com.azazo1.base.PlayingMode;
-import com.azazo1.game.GameSession;
+import com.azazo1.game.session.GameSession;
 import com.azazo1.game.wall.WallGroup;
 import com.azazo1.util.JRadioButtonGroup;
 import org.jetbrains.annotations.NotNull;

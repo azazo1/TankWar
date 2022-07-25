@@ -8,8 +8,8 @@ public class ServerTank extends TankBase {
         doPaint.set(false);
     }
     
-    public ServerTank() {
-        super();
+    public ServerTank(int seq) {
+        super(seq);
     }
     
     public void adaptFromInfo(@NotNull TankInfo info) {

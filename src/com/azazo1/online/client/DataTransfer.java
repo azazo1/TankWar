@@ -100,6 +100,7 @@ public class DataTransfer implements Closeable {
     protected final Thread readingThread = new Thread() {
         {
             setDaemon(true);
+            setName("reading");
         }
         
         @Override
@@ -136,6 +137,7 @@ public class DataTransfer implements Closeable {
     protected final Thread sendingThread = new Thread() {
         {
             setDaemon(true);
+            setName("sending");
         }
         
         @Override

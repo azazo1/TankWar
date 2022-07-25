@@ -9,6 +9,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.SocketTimeoutException;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -110,32 +111,36 @@ public class DataTransfer implements Closeable {
     protected final Thread readingThread = new Thread() {
         {
             setDaemon(true);
+            setName("reading");
         }
         
         @Override
         public void run() {
             while (!this.isInterrupted()) {
-                for (ClientHandler client : communicators.keySet()) {
-                    Communicator comm = communicators.get(client);
-                    try {
-                        Serializable get = comm.readObject(); // 每个连接每次只读取一个对象
-                        if (get != null) {
-                            received.get(client).add(get);
-                        }
-                    } catch (NullPointerException e) { // 连接断开
-                        client.close();
-                    } catch (SocketTimeoutException ignore) {
-                    } catch (IOException e) {
-                        client.close();
-                    }
-                    
-                }
                 try {
-                    //noinspection BusyWait
-                    Thread.sleep((long) (550.0 / Config.FPS)); // 要以略快于游戏事件循环的速度进行
-                } catch (InterruptedException e) {
-                    close();
-                    break;
+                    for (ClientHandler client : communicators.keySet()) {
+                        Communicator comm = communicators.get(client);
+                        try {
+                            Serializable get = comm.readObject(); // 每个连接每次只读取一个对象
+                            if (get != null) {
+                                received.get(client).add(get);
+                            }
+                        } catch (NullPointerException e) { // 连接断开
+                            client.close();
+                        } catch (SocketTimeoutException ignore) {
+                        } catch (IOException e) {
+                            client.close();
+                        }
+                        
+                    }
+                    try {
+                        //noinspection BusyWait
+                        Thread.sleep((long) (550.0 / Config.FPS)); // 要以略快于游戏事件循环的速度进行
+                    } catch (InterruptedException e) {
+                        close();
+                        break;
+                    }
+                } catch (ConcurrentModificationException ignore) { // 客户端加入或被移除
                 }
             }
         }
@@ -150,32 +155,36 @@ public class DataTransfer implements Closeable {
     protected final Thread sendingThread = new Thread() {
         {
             setDaemon(true);
+            setName("sending");
         }
         
         @Override
         public void run() {
             while (!this.isInterrupted()) {
-                for (ClientHandler client : communicators.keySet()) {
-                    Communicator comm = communicators.get(client);
-                    Serializable obj;
-                    LinkedTransferQueue<Serializable> targets = toBeSent.get(client);
-                    // 由于异步问题, 新客户端加入时 targets 可能为 null, 但后来就会被赋予相应的值
-                    if (targets != null && (obj = targets.poll()) != null) { // 每个连接每次只发送一个对象
-                        try {
-                            comm.sendObject(obj);
-                        } catch (SocketTimeoutException e) {
-                            targets.add(obj);
-                        } catch (IOException e) {
-                            client.close();
+                try {
+                    for (ClientHandler client : communicators.keySet()) {
+                        Communicator comm = communicators.get(client);
+                        Serializable obj;
+                        LinkedTransferQueue<Serializable> targets = toBeSent.get(client);
+                        // 由于异步问题, 新客户端加入时 targets 可能为 null, 但后来就会被赋予相应的值
+                        if (targets != null && (obj = targets.poll()) != null) { // 每个连接每次只发送一个对象
+                            try {
+                                comm.sendObject(obj);
+                            } catch (SocketTimeoutException e) {
+                                targets.add(obj);
+                            } catch (IOException e) {
+                                client.close();
+                            }
                         }
                     }
-                }
-                try {
-                    //noinspection BusyWait
-                    Thread.sleep((long) (550.0 / Config.FPS)); // 要以略快于游戏事件循环的速度进行
-                } catch (InterruptedException e) {
-                    close();
-                    break;
+                    try {
+                        //noinspection BusyWait
+                        Thread.sleep((long) (550.0 / Config.FPS)); // 要以略快于游戏事件循环的速度进行
+                    } catch (InterruptedException e) {
+                        close();
+                        break;
+                    }
+                } catch (ConcurrentModificationException ignore) { // 客户端加入或被移除
                 }
             }
         }

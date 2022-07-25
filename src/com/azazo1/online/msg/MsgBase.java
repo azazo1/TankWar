@@ -24,4 +24,12 @@ public abstract class MsgBase implements Serializable {
     public MsgBase(int code) {
         this.code = code;
     }
+    
+    /**
+     * 获取本消息的类型名 如: {@link FetchGameIntroMsg} -> "FetchGameIntroMsg"
+     */
+    public final String getShortTypeName() {
+        String totalName = this.getClass().getName();
+        return totalName.substring(totalName.lastIndexOf('.') + 1);
+    }
 }

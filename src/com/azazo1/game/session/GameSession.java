@@ -1,7 +1,8 @@
-package com.azazo1.game;
+package com.azazo1.game.session;
 
 import com.azazo1.Config;
 import com.azazo1.base.SingleInstance;
+import com.azazo1.game.GameMap;
 import com.azazo1.game.bullet.BulletGroup;
 import com.azazo1.game.tank.TankBase;
 import com.azazo1.game.tank.TankGroup;
@@ -22,7 +23,7 @@ import java.util.Vector;
  */
 public abstract class GameSession implements SingleInstance {
     protected static GameSession instance = null;
-    protected final GameMap gameMap;
+    protected GameMap gameMap; // 只供子类初始化时更改
     protected int totalTankNum = 0; // 总共的坦克数量
     protected Timer timer;
     protected FrameListener listener;

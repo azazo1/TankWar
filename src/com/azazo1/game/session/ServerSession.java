@@ -1,47 +1,47 @@
-package com.azazo1.online.server;
+package com.azazo1.game.session;
 
-import com.azazo1.game.GameSession;
+import com.azazo1.Config;
+import com.azazo1.online.server.ServerGameMap;
 import com.azazo1.online.server.bullet.ServerBulletGroup;
 import com.azazo1.online.server.tank.ServerTank;
 import com.azazo1.online.server.tank.ServerTankGroup;
 import com.azazo1.online.server.wall.ServerWallGroup;
+import com.azazo1.util.Tools;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import javax.imageio.ImageIO;
-import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 
 public class ServerSession extends GameSession {
     protected ServerSession() {
         super();
+        gameMap = new ServerGameMap();
+        gameMap.setSize(Config.MAP_WIDTH, Config.MAP_HEIGHT);
     }
     
     /**
      * 创建一局在线服务端游戏会话<br>
      * 该方法应在所有玩家都加入游戏并注册后被调用
      *
-     * @param tankNum   坦克(玩家)数量
-     * @param tankNames 各个坦克名称, 但如果不为 null, 其长度要符合 tankNum
-     * @param wallMap   游戏墙图文件, 用于读取产生 {@link ServerWallGroup}
+     * @param config 游戏配置
      */
-    public static @NotNull ServerSession createServerSession(int tankNum, @Nullable String[] tankNames, @NotNull File wallMap) throws IOException {
+    public static @NotNull ServerSession createServerSession(@NotNull ServerSessionConfig config) throws IOException {
         GameSession.clearInstance();
         ServerSession session = new ServerSession();
         
-        ServerWallGroup wallG = ServerWallGroup.parseFromBitmap(ImageIO.read(wallMap));
+        ServerWallGroup wallG = ServerWallGroup.parseFromBitmap(ImageIO.read(Tools.getFileURL(config.getWallMapFile())));
         session.gameMap.setWallGroup(wallG);
         
         session.gameMap.setBulletGroup(new ServerBulletGroup());
         
         ServerTankGroup tankG = new ServerTankGroup();
         session.gameMap.setTankGroup(tankG);
-        session.totalTankNum = tankNum;
-        for (int i = 0; i < tankNum; i++) {
-            ServerTank tank = new ServerTank();
-            if (tankNames != null) {
-                tank.setName(tankNames[i]);
-            }
+        HashMap<Integer, String> tanks = config.getTanks();
+        session.totalTankNum = tanks.size();
+        for (int seq : tanks.keySet()) {
+            ServerTank tank = new ServerTank(seq);
+            tank.setName(tanks.get(seq));
             tankG.addTank(tank);
             tank.randomlyTeleport(); // 要在其他内容都设置完毕后调用
         }

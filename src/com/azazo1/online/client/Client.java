@@ -4,6 +4,7 @@ import com.azazo1.Config;
 import com.azazo1.online.Communicator;
 import com.azazo1.online.msg.*;
 import com.azazo1.util.Tools;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -28,7 +29,12 @@ public class Client implements Closeable {
         fetchSeq();
     }
     
-    public void handle() {
+    /**
+     * 处理来自服务端的信息
+     *
+     * @return 被处理的 {@link MsgBase}
+     */
+    public @Nullable MsgBase handle() {
         Object obj = dataTransfer.readObject(false);
         if (obj instanceof FetchSeqMsg.FetchSeqResponseMsg msg) {
             seq.set(msg.seq);
@@ -42,8 +48,12 @@ public class Client implements Closeable {
             // todo 处理游戏信息
             Tools.logLn("Wallmap: " + msg.wallMapFilePath);
         } else if (obj instanceof QueryClientsMsg.QueryClientsResponseMsg msg) {
-            // todo 处理客户端信息
+            // todo 处理所有客户端信息
+            System.out.println(msg.multiInfo.toString());
+        } else { // 此处表示 obj 为 null 或不是可被客户端处理的 Msg
+            return null;
         }
+        return (MsgBase) obj;
     }
     
     /**
@@ -116,6 +126,5 @@ public class Client implements Closeable {
     public int getSeq() {
         return seq.get();
     }
-// todo 所有玩家信息读取
 // todo 接收游戏信息 (Tank/Bullet/Msg) 方法
 }

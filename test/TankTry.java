@@ -81,7 +81,7 @@ public class TankTry {
                     orientation = Math.atan2(dy, dx);
                 }
             });
-            // todo<notice> 到时按键分别设置是否按下的布尔变量,否则按键效果一卡一卡,也不能实现同时按多键
+            // <notice> 到时按键分别设置是否按下的布尔变量,否则按键效果一卡一卡,也不能实现同时按多键
             addKeyListener(new KeyListener() {
                 @Override
                 public void keyTyped(KeyEvent e) {

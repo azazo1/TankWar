@@ -1,5 +1,7 @@
 package com.azazo1.online.msg;
 
+import com.azazo1.online.server.toclient.ClientHandler;
+
 import java.util.Vector;
 
 /**
@@ -11,8 +13,11 @@ public class QueryClientsMsg extends MsgBase {
     }
     
     public static final class QueryClientsResponseMsg extends MsgBase {
-        public QueryClientsResponseMsg() {
+        public final Vector<ClientHandler.ClientHandlerInfo> multiInfo;
+        
+        public QueryClientsResponseMsg(Vector<ClientHandler.ClientHandlerInfo> clientsInfo) {
             super();
+            multiInfo = clientsInfo;
         }
     }
     
