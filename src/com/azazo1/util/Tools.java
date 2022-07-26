@@ -134,6 +134,11 @@ public final class Tools {
             double sleepTime = (1000.0 / Config.FPS);
             while (nowTime - lastTime < sleepTime) { // 循环等待
                 nowTime = getRealTimeInMillis();
+                try {
+                    Thread.sleep(1); // 减少 cpu 占用
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
         framesCounter.incrementAndGet();
