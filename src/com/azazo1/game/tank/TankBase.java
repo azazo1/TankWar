@@ -35,7 +35,7 @@ public class TankBase implements CharWithRectangle {
     
     static {
         try {
-            rawImg = ImageIO.read(Tools.getFileURL(imgFilePath));
+            rawImg = ImageIO.read(Tools.getFileURL(imgFilePath).url());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -30,7 +30,7 @@ public class ServerSession extends GameSession {
         GameSession.clearInstance();
         ServerSession session = new ServerSession();
         
-        ServerWallGroup wallG = ServerWallGroup.parseFromBitmap(ImageIO.read(Tools.getFileURL(config.getWallMapFile())));
+        ServerWallGroup wallG = ServerWallGroup.parseFromBitmap(ImageIO.read(Tools.getFileURL(config.getWallMapFile()).url()));
         session.gameMap.setWallGroup(wallG);
         
         session.gameMap.setBulletGroup(new ServerBulletGroup());

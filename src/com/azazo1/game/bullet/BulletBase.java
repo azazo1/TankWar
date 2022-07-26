@@ -25,7 +25,7 @@ public class BulletBase {
     
     static {
         try {
-            rawImg = ImageIO.read(Tools.getFileURL(imgFileName)); // 为了保证子弹反射正常进行, 建议子弹图像为方形
+            rawImg = ImageIO.read(Tools.getFileURL(imgFileName).url()); // 为了保证子弹反射正常进行, 建议子弹图像为方形
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

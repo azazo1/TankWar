@@ -19,7 +19,7 @@ public class MyFrame extends JFrame implements SingleInstance {
         checkInstance();
         instance = this;
         setTitle(Config.translation.frameTitle);
-        setIconImage(ImageIO.read(Tools.getFileURL("img/FrameIcon.png")));
+        setIconImage(ImageIO.read(Tools.getFileURL("img/FrameIcon.png").url()));
         setContentPane(new MyPanel() { // 显示加载中画面
             @Override
             public void setupUI() {

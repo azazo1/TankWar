@@ -3,6 +3,7 @@ package com.azazo1.game.wall;
 import com.azazo1.Config;
 import com.azazo1.base.ConstantVal;
 import com.azazo1.game.GameMap;
+import com.azazo1.util.MyURL;
 import com.azazo1.util.Tools;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -139,7 +140,7 @@ public class WallGroup {
     /**
      * 扫描当前文件夹(或 Jar 内路径)下可用的游戏墙图文件
      */
-    public static @Nullable Vector<URL> scanBinaryBitmapFiles(String scanPath) {
+    public static @Nullable Vector<MyURL> scanBinaryBitmapFiles(String scanPath) {
         try {
             return Tools.getFileURLs(scanPath, (dir, name) -> name.endsWith(ConstantVal.WALL_MAP_FILE_SUFFIX));
         } catch (IOException e) {
@@ -150,7 +151,7 @@ public class WallGroup {
     /**
      * 从项目根目录查找
      */
-    public static @Nullable Vector<URL> scanBinaryBitmapFiles() {
+    public static @Nullable Vector<MyURL> scanBinaryBitmapFiles() {
         return scanBinaryBitmapFiles("wallmap");
     }
     

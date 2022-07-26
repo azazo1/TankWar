@@ -15,7 +15,7 @@ public class Wall implements CharWithRectangle {
     
     static {
         try {
-            img = ImageIO.read(Tools.getFileURL("img/SingleWall.png"));
+            img = ImageIO.read(Tools.getFileURL("img/SingleWall.png").url());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

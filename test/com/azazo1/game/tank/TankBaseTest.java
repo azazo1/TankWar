@@ -35,7 +35,7 @@ class TankBaseTest {
         Tools.tickFrame();
         BufferedImage image;
         try {
-            image = ImageIO.read(Tools.getFileURL("wallmap/wallmap.mwal"));
+            image = ImageIO.read(Tools.getFileURL("wallmap/wallmap.mwal").url());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -5,6 +5,7 @@ import com.azazo1.base.PlayingMode;
 import com.azazo1.game.session.GameSession;
 import com.azazo1.game.wall.WallGroup;
 import com.azazo1.util.JRadioButtonGroup;
+import com.azazo1.util.MyURL;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -14,7 +15,6 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import java.awt.*;
 import java.awt.event.*;
-import java.net.URL;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -27,7 +27,10 @@ public class MenuPanel extends MyPanel {
     private static MyPanel instance;
     private final AtomicBoolean attached = new AtomicBoolean(false); // 是否曾被设置为 MyFrame 的 contentPanel
     private final Vector<Box> localPlayerNames = new Vector<>();
-    private JComboBox<URL> wallMapFilesComboBox;
+    /**
+     * 显示各个墙图文件路径
+     */
+    private JComboBox<MyURL> wallMapFilesComboBox;
     private JRadioButtonGroup buttonGroup;
     private JComboBox<Integer> playerNumComboBox;
     private final ActionListener launchButtonListener = (e) -> {
@@ -42,7 +45,7 @@ public class MenuPanel extends MyPanel {
                 GameSession.LocalSession session = GameSession.LocalSession.createLocalSession(
                         (Integer) playerNumComboBox.getSelectedItem(),
                         getLocalPlayerNames(),
-                        ((URL) wallMapFilesComboBox.getSelectedItem()).openStream());
+                        ((MyURL) wallMapFilesComboBox.getSelectedItem()).url().openStream());
                 // 切换到GamePanel
                 GamePanel gamePanel = new GamePanel(session);
                 MyFrame.getInstance().setContentPane(gamePanel);
