@@ -1,7 +1,9 @@
 package com.azazo1.online.msg;
 
+import com.azazo1.game.session.ServerGameSessionIntro;
+
 /**
- * 客户端向服务器申请获取游戏基本信息 (非 GameInfo (-> 游戏结局信息)) 的消息
+ * 客户端向服务器申请获取单局游戏基本配置 (非 GameInfo (-> 游戏结局信息)) 的消息
  */
 public class FetchGameIntroMsg extends MsgBase {
     public FetchGameIntroMsg() {
@@ -9,14 +11,14 @@ public class FetchGameIntroMsg extends MsgBase {
     }
     
     public static final class FetchGameIntroResponseMsg extends MsgBase {
-        public final String wallMapFilePath;
+        public final ServerGameSessionIntro intro;
         
         /**
-         * @param wallMapFilePath 墙图文件在 Jar 内的路径
+         * @param intro 单局游戏配置
          */
-        public FetchGameIntroResponseMsg(String wallMapFilePath) {
+        public FetchGameIntroResponseMsg(ServerGameSessionIntro intro) {
             super();
-            this.wallMapFilePath = wallMapFilePath;
+            this.intro = intro;
         }
     }
 }

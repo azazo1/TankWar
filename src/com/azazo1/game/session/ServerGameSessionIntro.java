@@ -2,21 +2,43 @@ package com.azazo1.game.session;
 
 import com.azazo1.Config;
 import com.azazo1.online.server.toclient.Server;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.io.Serializable;
 import java.util.HashMap;
 
 /**
  * 服务端一局游戏的配置, 由 {@link Server} 管理
  */
-public class ServerSessionConfig {
+public class ServerGameSessionIntro implements Serializable {
     /**
      * 坦克的:
      * seq -> name
      */
     private final HashMap<Integer, String> tanks = new HashMap<>();
-    private volatile String wallMapFile = null;
+    /**
+     * 墙图文件
+     */
+    private volatile String wallMapFile;
     
-    public ServerSessionConfig() {
+    /**
+     * 拷贝 {@link ServerGameSessionIntro}, 若参数为 null 则与默认初始化无异
+     */
+    public ServerGameSessionIntro(@Nullable ServerGameSessionIntro intro) {
+        if (intro != null) {
+            copyFrom(intro);
+        }
+    }
+    
+    public ServerGameSessionIntro() {
+        this(null);
+    }
+    
+    public void copyFrom(@NotNull ServerGameSessionIntro intro) {
+        tanks.clear();
+        tanks.putAll(intro.getTanks());
+        wallMapFile = intro.getWallMapFile();
     }
     
     public HashMap<Integer, String> getTanks() {

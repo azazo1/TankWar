@@ -113,9 +113,13 @@ public class ClientHandler implements Closeable {
                 }
                 toBeSent = new RegisterMsg.RegisterResponseMsg(rst, msg);
             } else if (obj instanceof FetchGameIntroMsg) {
-                toBeSent = new FetchGameIntroMsg.FetchGameIntroResponseMsg(server.getWallMapFile());
+                toBeSent = new FetchGameIntroMsg.FetchGameIntroResponseMsg(server.getGameSessionIntro());
             } else if (obj instanceof QueryClientsMsg) {
                 toBeSent = new QueryClientsMsg.QueryClientsResponseMsg(server.getClientsInfo());
+            } else if (obj instanceof PostGameIntroMsg msg) {
+                if (isHost()) {
+                    server.modifyGameSessionIntro(msg.intro);
+                }
             }
             // todo 提供 WallMap 选择接口 (仅房主)
             // todo 给 Server 提供向客户端 (玩家/旁观者) 发送游戏信息 (Tank/Bullet/Msg) 方法
@@ -179,7 +183,7 @@ public class ClientHandler implements Closeable {
         public final AtomicBoolean isPlayer;
         
         public ClientHandlerInfo(@NotNull ClientHandler c) {
-            this.isHost = c._isHost.get();
+            this.isHost = c.isHost();
             this.isPlayer = c._isPlayer;
             this.name = c.name;
             this.address = c.getAddress();

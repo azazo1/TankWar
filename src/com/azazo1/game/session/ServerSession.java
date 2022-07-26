@@ -26,7 +26,7 @@ public class ServerSession extends GameSession {
      *
      * @param config 游戏配置
      */
-    public static @NotNull ServerSession createServerSession(@NotNull ServerSessionConfig config) throws IOException {
+    public static @NotNull ServerSession createServerSession(@NotNull ServerGameSessionIntro config) throws IOException {
         GameSession.clearInstance();
         ServerSession session = new ServerSession();
         

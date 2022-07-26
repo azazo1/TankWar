@@ -1,8 +1,11 @@
 package com.azazo1.online.client;
 
 import com.azazo1.Config;
+import com.azazo1.game.session.ServerGameSessionIntro;
 import com.azazo1.online.Communicator;
 import com.azazo1.online.msg.*;
+import com.azazo1.online.server.toclient.ClientHandler;
+import com.azazo1.online.server.toclient.Server;
 import com.azazo1.util.Tools;
 import org.jetbrains.annotations.Nullable;
 
@@ -16,10 +19,12 @@ import static com.azazo1.online.msg.RegisterMsg.RegisterResponseMsg.*;
 
 
 public class Client implements Closeable {
+    protected final Socket socket;
+    protected final DataTransfer dataTransfer;
+    protected final ServerGameSessionIntro intro = new ServerGameSessionIntro();
     private final AtomicBoolean alive = new AtomicBoolean(true);
     private final AtomicInteger seq = new AtomicInteger(-1);
-    protected Socket socket;
-    protected DataTransfer dataTransfer;
+    private final AtomicBoolean _isHost = new AtomicBoolean(false);
     
     public Client(String host, int port) throws IOException {
         socket = new Socket(host, port);
@@ -46,11 +51,12 @@ public class Client implements Closeable {
                 case NAME_OR_SEQ_OCCUPIED -> {/*todo 提醒用户改名*/}
             }
         } else if (obj instanceof FetchGameIntroMsg.FetchGameIntroResponseMsg msg) {
-            // todo 处理游戏信息
-            Tools.logLn("Wallmap: " + msg.wallMapFilePath);
+            intro.copyFrom(msg.intro);
         } else if (obj instanceof QueryClientsMsg.QueryClientsResponseMsg msg) {
-            // todo 处理所有客户端信息, 注意重点标记自身
-            System.out.println(msg.multiInfo.toString());
+            // todo 处理所有客户端信息, 注意重点标记显示自身
+            ClientHandler.ClientHandlerInfo thisInfo = msg.multiInfo.get(seq.get());
+            _isHost.set(thisInfo.isHost);
+            System.out.println(msg.multiInfo);
         } else { // 此处表示 obj 为 null 或不是可被客户端处理的 Msg
             return null;
         }
@@ -102,6 +108,17 @@ public class Client implements Closeable {
     public void queryClients() {
         QueryClientsMsg msg = new QueryClientsMsg();
         dataTransfer.sendObject(msg);
+    }
+    
+    /**
+     * 向服务器请求修改本局游戏配置 ({@link Server#WAITING} 时, 仅房主可用)
+     */
+    public void postGameIntro() {
+        if (_isHost.get()) {
+            PostGameIntroMsg msg = new PostGameIntroMsg(intro);
+        } else {
+            // todo 提示用户
+        }
     }
     
     /**

@@ -3,10 +3,11 @@ package com.azazo1.online.server.toclient;
 
 import com.azazo1.Config;
 import com.azazo1.base.SingleInstance;
-import com.azazo1.game.session.ServerSessionConfig;
+import com.azazo1.game.session.ServerGameSessionIntro;
 import com.azazo1.online.msg.RegisterMsg;
 import com.azazo1.util.Tools;
 import org.intellij.lang.annotations.MagicConstant;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Closeable;
@@ -14,10 +15,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.util.Scanner;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.Vector;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.azazo1.online.msg.RegisterMsg.RegisterResponseMsg.*;
@@ -54,7 +52,7 @@ public class Server implements Closeable, SingleInstance {
     /**
      * 游戏配置
      */
-    protected volatile ServerSessionConfig config;
+    protected volatile ServerGameSessionIntro intro;
     /**
      * 房主, 可以:
      * <ol>
@@ -226,7 +224,7 @@ public class Server implements Closeable, SingleInstance {
     @MagicConstant(intValues = {SUCCEED, NAME_OR_SEQ_OCCUPIED, PLAYER_MAXIMUM})
     public int registerPlayer(int seq, String name) {
         try {
-            config.addTank(seq, name);
+            intro.addTank(seq, name);
             return SUCCEED;
         } catch (IllegalArgumentException e) {
             return NAME_OR_SEQ_OCCUPIED;
@@ -239,14 +237,22 @@ public class Server implements Closeable, SingleInstance {
      * 取消注册玩家
      */
     public void unregisterPlayer(int seq) {
-        config.removeTank(seq);
+        intro.removeTank(seq);
     }
     
     /**
-     * 从 {@link #config} 获得游戏墙图文件路径
+     * 从 {@link #intro} 获得单局游戏配置备份
      */
-    public String getWallMapFile() {
-        return config.getWallMapFile();
+    public ServerGameSessionIntro getGameSessionIntro() {
+        return new ServerGameSessionIntro(intro);
+    }
+    
+    /**
+     * 房主设置单局游戏配置, (tanks 无法更改)
+     */
+    public void modifyGameSessionIntro(@NotNull ServerGameSessionIntro intro) {
+        this.intro.setWallMapFile(intro.getWallMapFile());
+        // 以后可能还有其他配置
     }
     
     /**
@@ -273,10 +279,10 @@ public class Server implements Closeable, SingleInstance {
         return currentState;
     }
     
-    public Vector<ClientHandler.ClientHandlerInfo> getClientsInfo() {
-        Vector<ClientHandler.ClientHandlerInfo> rst = new Vector<>();
+    public HashMap<Integer, ClientHandler.ClientHandlerInfo> getClientsInfo() {
+        HashMap<Integer, ClientHandler.ClientHandlerInfo> rst = new HashMap<>();
         for (ClientHandler c : clients) {
-            rst.add(c.getInfo());
+            rst.put(c.getSeq(), c.getInfo());
         }
         return rst;
     }
@@ -293,15 +299,11 @@ public class Server implements Closeable, SingleInstance {
         return instance != null;
     }
     
-    public ServerSessionConfig getConfig() {
-        return config;
-    }
-    
     /**
      * 初始化游戏配置
      */
     public void initGameConfig() {
-        this.config = new ServerSessionConfig();
+        this.intro = new ServerGameSessionIntro();
     }
     //todo 向config中添加玩家
 }
