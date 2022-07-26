@@ -38,7 +38,7 @@ public class ServerSession extends GameSession {
         ServerTankGroup tankG = new ServerTankGroup();
         session.gameMap.setTankGroup(tankG);
         HashMap<Integer, String> tanks = config.getTanks();
-        session.totalTankNum = tanks.size();
+        session.totalTankNum.set(tanks.size());
         for (int seq : tanks.keySet()) {
             ServerTank tank = new ServerTank(seq);
             tank.setName(tanks.get(seq));

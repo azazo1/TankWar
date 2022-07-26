@@ -17,14 +17,15 @@ import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Vector;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 此类用于管理一局游戏
  */
 public abstract class GameSession implements SingleInstance {
     protected static GameSession instance = null;
-    protected GameMap gameMap; // 只供子类初始化时更改
-    protected int totalTankNum = 0; // 总共的坦克数量
+    protected volatile GameMap gameMap; // 只供子类初始化时更改
+    protected final AtomicInteger totalTankNum = new AtomicInteger(0); // 总共的坦克数量
     protected Timer timer;
     protected FrameListener listener;
     
@@ -92,7 +93,7 @@ public abstract class GameSession implements SingleInstance {
     public abstract boolean isOver();
     
     public int getTotalTankNum() {
-        return totalTankNum;
+        return totalTankNum.get();
     }
     
     /**
@@ -132,7 +133,7 @@ public abstract class GameSession implements SingleInstance {
             
             TankGroup tankG = new TankGroup();
             session.gameMap.setTankGroup(tankG);
-            session.totalTankNum = tankNum;
+            session.totalTankNum.set(tankNum);
             for (int i = 0; i < tankNum; i++) {
                 TankBase tank = new TankBase();
                 if (tankNames != null) {
