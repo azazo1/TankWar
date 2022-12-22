@@ -7,8 +7,8 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 
 public class WallTry implements Runnable {
-    public BufferedImage wallImg = ImageIO.read(Tools.getFileURL("img/SingleWall.png"));
-    public BufferedImage tankImg = ImageIO.read(Tools.getFileURL("img/Tank.png"));
+    public BufferedImage wallImg = ImageIO.read(Tools.getFileURL("img/SingleWall.png").url());
+    public BufferedImage tankImg = ImageIO.read(Tools.getFileURL("img/Tank.png").url());
     
     public WallTry() throws IOException {
     }

@@ -14,7 +14,7 @@ import java.util.Vector;
 public class TankGroup {
     protected final HashMap<Integer, TankBase> tanks = new HashMap<>(); // 所有坦克 <序号, tank>
     protected final Vector<Integer> tankDeathSequence = new Vector<>(); // 用于储存坦克死亡顺序(用坦克 Seq 表示坦克), 索引 0 为最先死亡
-    private final HashSet<Integer> livingTanks = new HashSet<>(); // 存活的坦克
+    protected final HashSet<Integer> livingTanks = new HashSet<>(); // 存活的坦克
     protected final KeyListener keyListener = new KeyAdapter() {
         @Override
         public void keyPressed(KeyEvent e) {

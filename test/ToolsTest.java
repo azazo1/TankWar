@@ -28,7 +28,7 @@ class ToolsTest {
     void deepCopy() {
         BufferedImage img;
         try {
-            img = ImageIO.read(Tools.getFileURL("img/Tank.png"));
+            img = ImageIO.read(Tools.getFileURL("img/Tank.png").url());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

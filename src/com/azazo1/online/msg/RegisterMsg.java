@@ -12,15 +12,15 @@ import org.jetbrains.annotations.NotNull;
 public final class RegisterMsg extends MsgBase {
     public final boolean isPlayer;
     public final String name;
-    
+
     public RegisterMsg(boolean isPlayer, String name) {
         super();
         this.isPlayer = isPlayer;
         this.name = name;
     }
-    
+
     /**
-     * 注册结果
+     * 注册结果，但是并不包括是否为房主
      */
     public static final class RegisterResponseMsg extends MsgBase {
         public static final int PLAYER_MAXIMUM = 1;
@@ -29,8 +29,8 @@ public final class RegisterMsg extends MsgBase {
         /**
          * 对应的原始消息, 此 {@link RegisterResponseMsg} 是 origin 消息的返回值
          */
-        public final RegisterMsg origin;
-        
+        public final @NotNull RegisterMsg origin;
+
         public RegisterResponseMsg(@MagicConstant(intValues = {PLAYER_MAXIMUM, NAME_OR_SEQ_OCCUPIED, SUCCEED})
                                    int code, @NotNull RegisterMsg origin) {
             super(code);

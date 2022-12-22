@@ -1,6 +1,7 @@
 package com.azazo1.online.msg;
 
 import com.azazo1.util.Tools;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
 
@@ -28,7 +29,7 @@ public abstract class MsgBase implements Serializable {
     /**
      * 获取本消息的类型名 如: {@link FetchGameIntroMsg} -> "FetchGameIntroMsg"
      */
-    public final String getShortTypeName() {
+    public final @NotNull String getShortTypeName() {
         String totalName = this.getClass().getName();
         return totalName.substring(totalName.lastIndexOf('.') + 1);
     }

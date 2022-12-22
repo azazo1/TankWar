@@ -19,7 +19,7 @@ class QNode {
     private QNode second;
     private QNode third;
     private QNode fourth;
-    
+
     public QNode(@NotNull Rectangle rect, int curDepth) {
         if (rect.width == 0 || rect.height == 0) {
             throw new IllegalArgumentException("Illegal rect size 0");
@@ -27,7 +27,7 @@ class QNode {
         this.curDepth = curDepth;
         this.rect.setRect(rect);
     }
-    
+
     /**
      * 新建对象填充四个子节点
      */
@@ -43,7 +43,7 @@ class QNode {
         subRect.translate(-halfW, 0);
         setThird(new QNode(subRect, curDepth + 1));
     }
-    
+
     /**
      * 填充子节点，直到指定深度, 此方法会标记节点为叶节点
      */
@@ -60,7 +60,7 @@ class QNode {
             get(i).fillSonsToDepth(depth);
         }
     }
-    
+
     /**
      * 将 {@link Wall} 对象分配到 {@link QNode} 叶节点
      *
@@ -94,7 +94,7 @@ class QNode {
         }
         return dispatched;
     }
-    
+
     /**
      * 选择包含指定坐标的叶节点
      */
@@ -116,8 +116,8 @@ class QNode {
             return null;
         }
     }
-    
-    
+
+
     /**
      * 判断该 {@link Wall} 对象是否可以分配到此节点
      */
@@ -125,65 +125,65 @@ class QNode {
         Rectangle wRect = wall.getRect();
         return rect.contains(wRect.getCenterX(), wRect.getCenterY());
     }
-    
+
     /**
      * 判断该 {@link Point} 对象是否可以分配到此节点
      */
     public boolean inThisNode(@NotNull Point pos) {
         return rect.contains(pos.getX(), pos.getY());
     }
-    
+
     public boolean isLeave() {
         return walls != null;
     }
-    
+
     /**
      * 取消对子节点的引用
      */
     public void dispose() {
         first = second = third = fourth = null;
     }
-    
+
     public QNode getFirst() {
         return first;
     }
-    
+
     public void setFirst(QNode first) {
         this.first = first;
     }
-    
+
     public QNode getSecond() {
         return second;
     }
-    
+
     public void setSecond(QNode second) {
         this.second = second;
     }
-    
+
     public QNode getThird() {
         return third;
     }
-    
+
     public void setThird(QNode third) {
         this.third = third;
     }
-    
+
     public QNode getForth() {
         return fourth;
     }
-    
+
     public void setForth(QNode fourth) {
         this.fourth = fourth;
     }
-    
+
     public int getCurDepth() {
         return curDepth;
     }
-    
+
     public Rectangle copyRect() {
         return new Rectangle(rect);
     }
-    
+
     public QNode get(int i) {
         return switch (i) {
             case 0 -> first;
@@ -193,11 +193,11 @@ class QNode {
             default -> null;
         };
     }
-    
+
     public QNode[] getSons() {
         return new QNode[]{first, second, third, fourth};
     }
-    
+
     public Vector<Wall> getWalls() throws IllegalAccessException {
         if (!isLeave()) {
             throw new IllegalAccessException("Trying to get walls on a not-leave QNode.");
@@ -209,23 +209,23 @@ class QNode {
 public class QTreeWallStorage extends QNode {
     public final int width;
     public final int height;
-    
-    
+
+
     public QTreeWallStorage(int width, int height, int treeDepth) {
         super(new Rectangle(width, height), 0);
         this.height = height;
         this.width = width;
         fillSonsToDepth(treeDepth);
     }
-    
+
     public QTreeWallStorage(int width, int height) {
         this(width, height, 2); // 只创建一层子节点
     }
-    
+
     public int dispatch(Wall wall) {
         return dispatch(wall, -1);
     }
-    
+
     /**
      * 将 int(2进制) 路线转化成对应 QNode 数组, 从前向后深度增加
      *
@@ -241,7 +241,7 @@ public class QTreeWallStorage extends QNode {
         }
         return rst;
     }
-    
+
     /**
      * 将 int(2进制) 路线转化成对应 QNode 叶节点
      *

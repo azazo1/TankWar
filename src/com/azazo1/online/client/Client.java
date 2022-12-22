@@ -25,7 +25,14 @@ public class Client implements Closeable {
     private final AtomicBoolean alive = new AtomicBoolean(true);
     private final AtomicInteger seq = new AtomicInteger(-1);
     private final AtomicBoolean _isHost = new AtomicBoolean(false);
-    
+
+    public boolean isHost() {
+        return _isHost.get();
+    }
+
+    /**
+     * 创建 Client 时会自动同步时间
+     */
     public Client(String host, int port) throws IOException {
         socket = new Socket(host, port);
         socket.setSoTimeout(Config.CLIENT_SOCKET_TIMEOUT);
@@ -33,14 +40,14 @@ public class Client implements Closeable {
         syncTime();
         fetchSeq();
     }
-    
+
     /**
-     * 处理来自服务端的信息
+     * 处理来自服务端的信息(一个)
      *
      * @return 被处理的 {@link MsgBase}
      */
-    public @Nullable MsgBase handle() {
-        Object obj = dataTransfer.readObject(false);
+    public @Nullable MsgBase handle(boolean wait) {
+        Object obj = dataTransfer.readObject(wait);
         if (obj instanceof FetchSeqMsg.FetchSeqResponseMsg msg) {
             seq.set(msg.seq);
         } else if (obj instanceof RegisterMsg.RegisterResponseMsg msg) {
@@ -57,12 +64,18 @@ public class Client implements Closeable {
             ClientHandler.ClientHandlerInfo thisInfo = msg.multiInfo.get(seq.get());
             _isHost.set(thisInfo.isHost);
             System.out.println(msg.multiInfo);
+        } else if (obj instanceof GameStartMsg) {
+            // todo 开始游戏的画面
         } else { // 此处表示 obj 为 null 或不是可被客户端处理的 Msg
             return null;
         }
         return (MsgBase) obj;
     }
-    
+
+    public @Nullable MsgBase handle() {
+        return handle(false);
+    }
+
     /**
      * 向服务端同步时间
      */
@@ -77,7 +90,7 @@ public class Client implements Closeable {
             Tools.setTimeBias(bias);
         }
     }
-    
+
     /**
      * 向服务器请求客户端序号
      */
@@ -85,7 +98,7 @@ public class Client implements Closeable {
         FetchSeqMsg msg = new FetchSeqMsg();
         dataTransfer.sendObject(msg);
     }
-    
+
     /**
      * 向服务器注册
      */
@@ -93,7 +106,7 @@ public class Client implements Closeable {
         RegisterMsg msg = new RegisterMsg(isPlayer, name);
         dataTransfer.sendObject(msg);
     }
-    
+
     /**
      * 向服务器请求游戏基本信息
      */
@@ -101,7 +114,7 @@ public class Client implements Closeable {
         FetchGameIntroMsg msg = new FetchGameIntroMsg();
         dataTransfer.sendObject(msg);
     }
-    
+
     /**
      * 向服务器查询服务器连接下所有客户端信息
      */
@@ -109,7 +122,7 @@ public class Client implements Closeable {
         QueryClientsMsg msg = new QueryClientsMsg();
         dataTransfer.sendObject(msg);
     }
-    
+
     /**
      * 向服务器请求修改本局游戏配置 ({@link Server#WAITING} 时, 仅房主可用)
      */
@@ -120,7 +133,7 @@ public class Client implements Closeable {
             // todo 提示用户
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -133,11 +146,11 @@ public class Client implements Closeable {
         dataTransfer.close();
         alive.set(false);
     }
-    
+
     public boolean getAlive() {
         return alive.get();
     }
-    
+
     /**
      * 获取客户端序号, 在 {@link #fetchSeq()} 返回值到来前调用将会得到错误的值 (-1)
      */
