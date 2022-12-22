@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TankTry {
-    public BufferedImage rawTankImg = ImageIO.read(Tools.getFileURL("img/Tank.png"));
+    public BufferedImage rawTankImg = ImageIO.read(Tools.getFileURL("img/Tank.png").url());
     public Rectangle tankRect = new Rectangle(rawTankImg.getWidth(), rawTankImg.getHeight());
     public TankDrawer canvas = new TankDrawer();
     public AtomicBoolean doPaint = new AtomicBoolean(true);

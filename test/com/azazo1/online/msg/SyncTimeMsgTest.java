@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 class SyncTimeMsgTest {
     @Test
     void syncTime() throws IOException {
-        Communicator comm = new Communicator(new Socket("localhost", 30043)); // 记得调整服务器地址
+        Communicator comm = new Communicator(new Socket("localhost", 60000)); // 记得调整服务器地址
         long strangeBias = -16000000000000L;
         Tools.setTimeBias(strangeBias); // 先设置一个离谱的时间偏移值
         SyncTimeMsg localMsg = new SyncTimeMsg();

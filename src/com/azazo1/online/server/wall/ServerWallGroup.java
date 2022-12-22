@@ -4,20 +4,26 @@ import com.azazo1.Config;
 import com.azazo1.game.wall.WallGroup;
 import org.jetbrains.annotations.NotNull;
 
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.Raster;
 
 public class ServerWallGroup extends WallGroup {
     // 墙位置信息只在游戏开局共享 (共享墙图文件)
-    
+
     public ServerWallGroup() {
         super();
     }
-    
+
+    @Override
+    public void update(Graphics graphics) {
+
+    }
+
     public ServerWallGroup(int qTreeDepth) {
         super(qTreeDepth);
     }
-    
+
     /**
      * 将 墙图文件 解析为 {@link ServerWallGroup}
      *
@@ -44,7 +50,7 @@ public class ServerWallGroup extends WallGroup {
             }
         }};
     }
-    
+
     public static @NotNull ServerWallGroup parseFromBitmap(@NotNull BufferedImage image) {
         return parseFromBitmap(image, Config.MAP_WIDTH, Config.MAP_HEIGHT);
     }

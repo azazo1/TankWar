@@ -17,7 +17,7 @@ class BulletTest {
     public static void main(String[] args) {
         GameMap map = new GameMap();
         map.setSize(Config.MAP_WIDTH, Config.MAP_HEIGHT);
-        
+
         TankBase tank = new TankBase();
         TankBase tank2 = new TankBase();
         tank2.turn(Math.toRadians(45));
@@ -25,22 +25,22 @@ class BulletTest {
         tank2.turn(Math.toRadians(-45));
         tank2.go(50);
         TankGroup tankG = new TankGroup();
-        
+
         WallGroup wallG;
         try {
-            wallG = WallGroup.parseFromBitmap(ImageIO.read(Tools.getFileURL("wallmap/WallMap.mwal")), map.getWidth(), map.getHeight());
+            wallG = WallGroup.parseFromBitmap(ImageIO.read(Tools.getFileURL("wallmap/WallMap.mwal").url()), map.getWidth(), map.getHeight());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         BulletGroup bulletG = new BulletGroup();
-        
+
         bulletG.addBullet(new BulletBase(50, 50, Math.toRadians(45), 2)); // test Bullet
         tankG.addTank(tank);
         tankG.addTank(tank2);
         map.setTankGroup(tankG);
         map.setWallGroup(wallG);
         map.setBulletGroup(bulletG);
-        
+
         JFrame frame = new JFrame();
         // GameMap 居中
         Box hBox = Box.createHorizontalBox();
@@ -50,7 +50,7 @@ class BulletTest {
         hBox.add(vBox);
         vBox.add(map);
         frame.add(hBox);
-        
+
         Timer t = new Timer((int) (1.0 / Config.FPS * 1000), (listener) -> {
             map.update(null);
             Tools.tickFrame();

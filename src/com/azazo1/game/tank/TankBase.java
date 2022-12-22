@@ -32,7 +32,7 @@ public class TankBase implements CharWithRectangle {
     public static final String imgFilePath = "img/Tank.png";
     protected static final BufferedImage rawImg;
     private static final SeqModule seqModule = new SeqModule();
-    
+
     static {
         try {
             rawImg = ImageIO.read(Tools.getFileURL(imgFilePath).url());
@@ -40,7 +40,7 @@ public class TankBase implements CharWithRectangle {
             throw new RuntimeException(e);
         }
     }
-    
+
     protected final AtomicBoolean leftTurningKeyPressed = new AtomicBoolean(false);
     protected final AtomicBoolean rightTurningKeyPressed = new AtomicBoolean(false);
     protected final AtomicBoolean forwardGoingKeyPressed = new AtomicBoolean(false);
@@ -53,19 +53,19 @@ public class TankBase implements CharWithRectangle {
     protected final FireModule fireModule = new FireModule();
     protected final Rectangle rect = new Rectangle(0, 0, rawImg.getWidth(), rawImg.getHeight());
     protected final AtomicBoolean doPaint = new AtomicBoolean(true); // 是否显示, 服务端子类设为 false
-    private final CollisionAndMotionModule collisionAndMotionModule = new CollisionAndMotionModule();
+    protected final CollisionAndMotionModule collisionAndMotionModule = new CollisionAndMotionModule();
     private final int seq;
     protected TankGroup tankGroup; // 用于统一处理数据和显示
     protected String name; // 坦克昵称, 可能为 null
     private HashMap<Integer, TankAction> actionKeyMap; // 默认按键映射
-    
+
     /**
      * @implNote 当为 Online 模式时, 客户端子类无参构造函数要禁用, 因为 seq 由服务端控制
      */
     public TankBase() {
         this(seqModule.next());
     }
-    
+
     public TankBase(int seq) {
         seqModule.use(seq); // 若序号已经在使用会报错
         this.seq = seq;
@@ -73,11 +73,11 @@ public class TankBase implements CharWithRectangle {
             setActionKeyMap(Config.TANK_ACTION_KEY_MAPS.get(seq));
         }
     }
-    
+
     public static SeqModule getSeqModule() {
         return seqModule;
     }
-    
+
     /**
      * 激发坦克对应运动状态: {@link TankAction}
      * 值得注意的是按键映射的选择应由子代继承后实现
@@ -100,8 +100,8 @@ public class TankBase implements CharWithRectangle {
             case FIRE -> toggleTrigger(true); // 开火在每次按下对应键时只会启动一次
         }
     }
-    
-    
+
+
     /**
      * 解除坦克对应运动状态: {@link TankAction}
      * 值得注意的是按键映射的选择应由子代继承后实现
@@ -124,14 +124,14 @@ public class TankBase implements CharWithRectangle {
             case FIRE -> toggleTrigger(false);
         }
     }
-    
+
     /**
      * 选择按键映射
      */
     public void setActionKeyMap(HashMap<Integer, TankAction> keyMap) {
         this.actionKeyMap = keyMap;
     }
-    
+
     /**
      * 设置本坦克所属的 group,本操作不保证真的从 group 对象中添加本坦克
      * <br>本方法应由 {@link com.azazo1.game.tank.TankGroup#addTank(TankBase)} 调用
@@ -139,7 +139,7 @@ public class TankBase implements CharWithRectangle {
     public void setTankGroup(TankGroup tankGroup) {
         this.tankGroup = tankGroup;
     }
-    
+
     /**
      * 将本坦克所属的 group 设置为 null,本操作不保证真的从 group 对象中移除本坦克
      * <br>本方法应由 {@link com.azazo1.game.tank.TankGroup#removeTank(TankBase)} 调用
@@ -147,7 +147,7 @@ public class TankBase implements CharWithRectangle {
     public void clearTankGroup() {
         this.tankGroup = null;
     }
-    
+
     /**
      * @param state true: 扣下开火扳机, 若原来已经按下则不会开火<br>
      *              false: 松开扳机
@@ -158,7 +158,7 @@ public class TankBase implements CharWithRectangle {
         }
         firingKeyPressed.set(state);
     }
-    
+
     /**
      * 向坦克面朝方向运动
      *
@@ -169,7 +169,7 @@ public class TankBase implements CharWithRectangle {
         // 移动
         rect.translate((int) (length * Math.cos(orientationModule.getOrientation())), (int) (length * Math.sin(orientationModule.getOrientation())));
     }
-    
+
     /**
      * 随机瞬移到一个地方, 且不会与墙/其他坦克重叠
      *
@@ -190,7 +190,7 @@ public class TankBase implements CharWithRectangle {
             randomlyTeleport(); // 重试直到没有发生碰撞
         }
     }
-    
+
     /**
      * 坦克转弯
      *
@@ -199,8 +199,8 @@ public class TankBase implements CharWithRectangle {
     public void turn(double theta) {
         orientationModule.setOrientation(orientationModule.getOrientation() + theta);
     }
-    
-    
+
+
     public void update(Graphics g) {
         if (enduranceModule.isDead()) {
             throw new IllegalStateException(this + " has died.");
@@ -211,10 +211,10 @@ public class TankBase implements CharWithRectangle {
         fireModule.updateFireState();
         // 更新生命状态
         enduranceModule.updateEndurance();
-        
+
         paint(g);
     }
-    
+
     protected void paint(@NotNull Graphics g) {
         if (doPaint.get()) {
             Graphics2D g2d = (Graphics2D) g;
@@ -222,7 +222,7 @@ public class TankBase implements CharWithRectangle {
             double dy = rect.getCenterY();
             g2d.translate(dx, dy); // 移动初始位置
             Graphics2D g2dBak = (Graphics2D) g2d.create(); // 未旋转的备份
-            
+
             g2d.rotate(orientationModule.getOrientation());
             // 注意负值使图像中点落在初始位置上, 使旋转锚点正确在图像中央
             g.drawImage(enduranceModule.adjustEnduranceImage(), -rect.width / 2, -rect.height / 2, rect.width, rect.height, null);
@@ -230,40 +230,40 @@ public class TankBase implements CharWithRectangle {
             g2dBak.setColor(Config.TANK_SEQ_COLOR);
             g2dBak.setFont(Config.TANK_SEQ_FONT);
             g2dBak.drawString(seq + "", -rect.width / 2, -rect.height / 2);
-            
+
             // 显示坦克子弹数
             g2dBak.setColor(Config.TANK_CLIP_COLOR);
             g2dBak.setFont(Config.TANK_CLIP_FONT); // 降低字体大小
             g2dBak.drawString(Config.translation.hasBulletChar.repeat(fireModule.getSpareBulletNum()) + Config.translation.emptyBulletChar.repeat(fireModule.getUsedBulletNum()), -rect.width / 4, -rect.height / 4);
         }
     }
-    
+
     public EnduranceModule getEnduranceManager() {
         return enduranceModule;
     }
-    
+
     public TankInfo getInfo() {
         return new TankInfo(this);
     }
-    
+
     public int getSeq() {
         return seq;
     }
-    
+
     @NotNull
     public Rectangle getRect() {
         return new Rectangle(rect);
     }
-    
+
     @Nullable
     public String getName() {
         return name;
     }
-    
+
     public void setName(@Nullable String name) {
         this.name = name;
     }
-    
+
     /**
      * 用于序列化坦克与提供信息
      */
@@ -276,7 +276,7 @@ public class TankBase implements CharWithRectangle {
         protected final String nickname; // 坦克昵称
         protected final long livingTime;
         protected int rank = -1; // 排名(由死亡顺序计算) (产生后由 TankGroup 分配其值)
-        
+
         protected TankInfo(TankBase tank) {
             totalEndurance = tank.enduranceModule.maxEndurance;
             nowEndurance = tank.enduranceModule.getEndurance();
@@ -286,7 +286,7 @@ public class TankBase implements CharWithRectangle {
             nickname = tank.name;
             livingTime = tank.enduranceModule.getLivingTime();
         }
-        
+
         @Override
         public String toString() {
             return "TankInfo{" +
@@ -300,60 +300,60 @@ public class TankBase implements CharWithRectangle {
                     ", rank=" + rank +
                     '}';
         }
-        
+
         public long getLivingTime() {
             return livingTime;
         }
-        
+
         public double getOrientation() {
             return orientation;
         }
-        
+
         public Rectangle getRect() {
             return rect;
         }
-        
+
         public int getNowEndurance() {
             return nowEndurance;
         }
-        
+
         public int getTotalEndurance() {
             return totalEndurance;
         }
-        
+
         public int getSeq() {
             return seq;
         }
-        
+
         public int getRank() {
             return rank;
         }
-        
+
         public String getNickname() {
             return nickname;
         }
     }
-    
+
     /**
      * 坦克生命模块
      */
-    protected class EnduranceModule {
+    public class EnduranceModule {
         protected final AtomicLong lastInjuredTime = new AtomicLong(0);
         protected final int maxEndurance = Config.TANK_MAX_ENDURANCE;
         protected final AtomicInteger endurance = new AtomicInteger(maxEndurance); // 血量, 一般此数值不会小于零
         protected final AtomicLong livingTime = new AtomicLong(); // 存活时间 _ ms
-        
+
         public EnduranceModule() {
         }
-        
+
         public void updateEndurance() {
             livingTime.set(Tools.getFrameTimeInMillis());
         }
-        
+
         public int getEndurance() {
             return endurance.get();
         }
-        
+
         /**
          * 尝试使坦克受伤, 血量低于 1 时自动调用 {@link #makeDie()}
          *
@@ -370,7 +370,7 @@ public class TankBase implements CharWithRectangle {
             }
             return false;
         }
-        
+
         /**
          * 使坦克死亡(无视其血量), 本操作不保证坦克从 {@link TankGroup} 中移除
          * <br>但死亡的坦克会自动被处在事件调度时的 {@link TankGroup} 清除
@@ -381,14 +381,14 @@ public class TankBase implements CharWithRectangle {
             endurance.set(0);
             seqModule.dispose(seq);
         }
-        
+
         /**
          * 查看坦克是否死亡
          */
         public boolean isDead() {
             return endurance.get() <= 0;
         }
-        
+
         /**
          * 返回坦克当前生命值对应的图片 (血量越低越透明)
          */
@@ -401,20 +401,20 @@ public class TankBase implements CharWithRectangle {
             r.setPixels(0, 0, r.getWidth(), r.getHeight(), newData.toArray());
             return img;
         }
-        
+
         public long getLivingTime() {
             return livingTime.get();
         }
     }
-    
+
     /**
      * 自动校准坦克朝向，防止 orientation 小角度的偏离坐标轴却平行坐标轴行驶
      */
-    protected class OrientationModule {
+    public class OrientationModule {
         protected static final double ignoredRad = Math.toRadians(10); // 将被忽略的距离坐标轴的偏差
         protected static final int intervalFrames = 10; // 每隔一定帧就尝试校准一次
         protected final AtomicDouble orientation = new AtomicDouble(0); // 0 向右,顺时针为正向
-        
+
         public void adjust() {
             if (Tools.getFrameCounts() % intervalFrames != 0 || leftTurningKeyPressed.get() || rightTurningKeyPressed.get()) {
                 return;
@@ -432,23 +432,26 @@ public class TankBase implements CharWithRectangle {
                 orientation.set(_orientation + Math.PI / 2 - delta);
             }
         }
-        
+
         public double getOrientation() {
             return orientation.get();
         }
-        
+
         public void setOrientation(double orientation) {
             this.orientation.set(orientation % (Math.PI * 2));
         }
     }
-    
-    protected class FireModule {
+
+    /**
+     * 开火模块
+     */
+    public class FireModule {
         protected final AtomicLong lastIncrementTime = new AtomicLong(0); // 上次弹夹数量增加时间戳 (FrameTime)
         protected final AtomicInteger spareBulletNum = new AtomicInteger(0); // 弹夹内子弹数量, 有最大值, 见 Config
-        
+
         public FireModule() {
         }
-        
+
         public void fire(@NotNull Class<? extends BulletBase> T) {
             if (spareBulletNum.get() <= 0) {
                 return;
@@ -460,7 +463,7 @@ public class TankBase implements CharWithRectangle {
                 int cx = (int) (rect.getCenterX() + Math.cos(orientation) * rect.width);
                 int cy = (int) (rect.getCenterY() + Math.sin(orientation) * rect.width);
                 BulletBase bullet = constructor.newInstance(cx, cy, orientation);
-                
+
                 spareBulletNum.getAndDecrement();
                 tankGroup.getGameMap().getBulletGroup().addBullet(bullet);
             } catch (NoSuchMethodException | InvocationTargetException | InstantiationException |
@@ -468,7 +471,7 @@ public class TankBase implements CharWithRectangle {
                 throw new RuntimeException(e); // 一般不会到达此处
             }
         }
-        
+
         /**
          * 管理弹夹
          */
@@ -482,7 +485,7 @@ public class TankBase implements CharWithRectangle {
                 lastIncrementTime.set(nowTime);
             }
         }
-        
+
         /**
          * 坦克开火
          * 子代可以继承来修改子弹的类型
@@ -490,17 +493,17 @@ public class TankBase implements CharWithRectangle {
         public void fire() {
             fire(BulletBase.class);
         }
-        
+
         public int getSpareBulletNum() {
             return spareBulletNum.get();
         }
-        
+
         public int getUsedBulletNum() {
             return Config.TANK_MAX_FIRE_CAPACITY - spareBulletNum.get();
         }
     }
-    
-    protected class CollisionAndMotionModule {
+
+    public class CollisionAndMotionModule {
         protected static final int UP = 3;
         protected static final int DOWN = 2;
         protected static final int LEFT = 1;
@@ -510,14 +513,14 @@ public class TankBase implements CharWithRectangle {
          * 正常情况下每次 {@link #updateMotion()} 都会重置, 且使用者都在同一线程.
          */
         protected int collision = 0;
-        
+
         /**
          * 记录碰撞方向
          */
         public void markCollision(@MagicConstant(intValues = {UP, DOWN, LEFT, RIGHT}) int DIRECTION) {
             collision |= 1 << DIRECTION;
         }
-        
+
         /**
          * 判断碰撞中心在自身的方向并记录碰撞方向
          */
@@ -542,21 +545,21 @@ public class TankBase implements CharWithRectangle {
                 }
             }
         }
-        
+
         /**
          * 获得某一方向是否发生碰撞
          */
         public boolean getCollision(@MagicConstant(intValues = {UP, DOWN, LEFT, RIGHT}) int DIRECTION) {
             return (collision >> DIRECTION) % 2 == 1;
         }
-        
+
         /**
          * 清空碰撞情况
          */
         public void clearCollision() {
             collision = 0;
         }
-        
+
         /**
          * 执行在碰撞下发生的动作
          * todo 解决抖震问题
@@ -582,8 +585,8 @@ public class TankBase implements CharWithRectangle {
                 rect.translate(1, 0);
             }
         }
-        
-        
+
+
         /**
          * 检测是否碰撞
          *
@@ -598,7 +601,7 @@ public class TankBase implements CharWithRectangle {
             }
             return null;
         }
-        
+
         /**
          * 检测与 {@link GameMap} 下所有的墙和坦克发生的碰撞
          *
@@ -627,7 +630,7 @@ public class TankBase implements CharWithRectangle {
             }
             return rst;
         }
-        
+
         /**
          * 检测碰撞并更新位置状态
          */
@@ -636,7 +639,7 @@ public class TankBase implements CharWithRectangle {
             // 位置备份
             Rectangle rectBak = getRect();
             double orientationBak = orientationModule.getOrientation();
-            
+
             // 移动
             if (forwardGoingKeyPressed.get()) {
                 go(goingSpeed.get());
@@ -649,13 +652,13 @@ public class TankBase implements CharWithRectangle {
             if (rightTurningKeyPressed.get()) {
                 turn(turningSpeed.get());
             }
-            
+
             // 与墙和坦克进行碰撞检测
             Vector<Point> collisions = detectAllCollision();
             collisions.forEach((this::markCollision));// 记录碰撞方向
             performCollisionMotion(rectBak, orientationBak);
-            
-            
+
+
             // 与子弹进行碰撞检测
             for (BulletBase b : tankGroup.getGameMap().getBulletGroup().getBullets()) {
                 Point center = detectCollision(b.getRect());

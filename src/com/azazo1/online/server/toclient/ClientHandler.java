@@ -38,18 +38,18 @@ public class ClientHandler implements Closeable {
      * 客户端昵称
      */
     protected volatile String name = null;
-    
+
     public ClientHandler(Server server, Socket client) throws SocketException {
         this.server = server;
         socket = client;
         socket.setSoTimeout(Config.CLIENT_HANDLER_SOCKET_TIMEOUT);
         seqModule.use(seq = seqModule.next()); // 先赋值后标记使用
     }
-    
+
     public void setIsHost(boolean host) {
         _isHost.set(host);
     }
-    
+
     @Override
     public void close() {
         try {
@@ -59,7 +59,7 @@ public class ClientHandler implements Closeable {
         // seqModule.dispose(seq); 考虑到旁观者新加入, 不取消序号的占用
         alive.set(false);
     }
-    
+
     /**
      * 处理客户端信息
      *
@@ -79,14 +79,14 @@ public class ClientHandler implements Closeable {
         }
         return alive.get();
     }
-    
+
     /**
      * 在游戏进行时的处理方法
      */
     protected void handleOnGaming(@NotNull DataTransfer dt, @NotNull MsgBase obj) {
-    
+
     }
-    
+
     /**
      * 在等待玩家加入时的处理方法
      */
@@ -94,10 +94,10 @@ public class ClientHandler implements Closeable {
         String shortClassName = obj.getShortTypeName();
         MsgBase toBeSent = null;
         if (obj instanceof SyncTimeMsg) { // 同步时间, 不检查其有效期
-            Tools.logLn("Got Msg: " + shortClassName);
+            Tools.logLn("Got Msg(From " + seq + "): " + shortClassName);
             toBeSent = new SyncTimeMsg.SyncTimeResponseMsg();
         } else if (Tools.getRealTimeInMillis() - obj.createdTime <= Config.MSG_OUTDATED_TIME) { // 在有效期内
-            Tools.logLn("Got Msg: " + shortClassName + ", created on: " + obj.createdTime + " (" + DateFormat.getInstance().format(obj.createdTime) + ")");
+            Tools.logLn("Got Msg(From " + seq + "): " + shortClassName + ", created on: " + obj.createdTime + " (" + DateFormat.getInstance().format(obj.createdTime) + ")");
             if (obj instanceof FetchSeqMsg) { // 获取 seq
                 toBeSent = new FetchSeqMsg.FetchSeqResponseMsg(seq);
             } else if (obj instanceof RegisterMsg msg) { // 注册
@@ -120,57 +120,68 @@ public class ClientHandler implements Closeable {
                 if (isHost()) {
                     server.modifyGameSessionIntro(msg.intro);
                 }
+            } else if (obj instanceof ReqGameStartMsg) {
+                boolean ret = server.startGame();
+                toBeSent = new ReqGameStartMsg.ReqGameStartMsgResponse(ret);
             }
             // todo 提供 WallMap 选择接口 (仅房主)
             // todo 给 Server 提供向客户端 (玩家/旁观者) 发送游戏信息 (Tank/Bullet/Msg) 方法
         }
         if (toBeSent != null) {
             dt.sendObject(this, toBeSent);
-            Tools.logLn("Sent Msg: " + toBeSent.getShortTypeName() + ", created on: " + toBeSent.createdTime + " (" + DateFormat.getInstance().format(toBeSent.createdTime) + ")");
+            Tools.logLn("Sent Msg(To " + seq + "): " + toBeSent.getShortTypeName() + ", created on: " + toBeSent.createdTime + " (" + DateFormat.getInstance().format(toBeSent.createdTime) + ")");
         }
     }
-    
+
     /**
      * 获取客户端套接字的远程地址
      */
     public InetAddress getAddress() {
         return socket.getInetAddress();
     }
-    
+
     /**
      * 获取客户端套接字的远程端口
      */
     public int getPort() {
         return socket.getPort();
     }
-    
+
     /**
      * 获得此对象的基本信息
      */
     public ClientHandlerInfo getInfo() {
         return new ClientHandlerInfo(this);
     }
-    
+
     public Socket getSocket() {
         return socket;
     }
-    
+
     public int getSeq() {
         return seq;
     }
-    
+
     public boolean getAlive() {
         return alive.get();
     }
-    
+
     public boolean isHost() {
         return _isHost.get();
     }
-    
+
     public AtomicBoolean isPlayer() {
         return _isPlayer;
     }
-    
+
+    public boolean isAlive() {
+        return alive.get();
+    }
+
+    public String getName() {
+        return name;
+    }
+
     /**
      * {@link ClientHandler} 对象的基本信息
      */
@@ -181,7 +192,7 @@ public class ClientHandler implements Closeable {
         public final InetAddress address;
         public final int port;
         public final AtomicBoolean isPlayer;
-        
+
         public ClientHandlerInfo(@NotNull ClientHandler c) {
             this.isHost = c.isHost();
             this.isPlayer = c._isPlayer;
@@ -190,7 +201,7 @@ public class ClientHandler implements Closeable {
             this.port = c.getPort();
             this.seq = c.seq;
         }
-        
+
         @Override
         public String toString() {
             return "ClientHandlerInfo{" + "name='" + name + '\'' + ", seq=" + seq + ", isHost=" + isHost + ", address=" + address + ", port=" + port + ", isPlayer=" + isPlayer + '}';
