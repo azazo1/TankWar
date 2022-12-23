@@ -1,8 +1,6 @@
 package com.azazo1.online.client;
 
-import com.azazo1.online.msg.GameStartMsg;
-import com.azazo1.online.msg.QueryClientsMsg;
-import com.azazo1.online.msg.ReqGameStartMsg;
+import com.azazo1.online.msg.*;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -60,14 +58,42 @@ class ClientTest {
             c.handle(true);
             c.handle(true);
             c.handle(true);
-            c.dataTransfer.sendObject(new ReqGameStartMsg());
+            c.reqStartGame();
             if (c.isHost()) {
                 while (!(c.handle() instanceof GameStartMsg)) {
-                    Thread.sleep(1);
+                    Thread.sleep(10);
                 }
             } else {
                 fail();
             }
+        }
+    }
+
+    @Test
+    void tankFire() throws IOException, InterruptedException {
+        try (Client c = new Client("localhost", 60000)) {
+            c.register(true, "hello");
+            c.reqStartGame();
+            while (!(c.handle() instanceof GameStartMsg)) {
+                Thread.sleep(10);
+            }
+            Thread.sleep(10000);
+            c.dataTransfer.sendObject(new TankFireActionMsg());
+            Thread.sleep(10000);
+        }
+    }
+
+    @Test
+    void tankMotion() throws IOException, InterruptedException {
+        try (Client c = new Client("localhost", 60000)) {
+            c.register(true, "hello");
+            c.reqStartGame();
+            while (!(c.handle() instanceof GameStartMsg)) {
+                Thread.sleep(10);
+            }
+            Thread.sleep(10000);
+            c.dataTransfer.sendObject(new KeyPressChangeMsg(true, false, true, false));
+            Thread.sleep(10000);
         }
     }
 }

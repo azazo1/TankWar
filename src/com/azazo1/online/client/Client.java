@@ -108,6 +108,13 @@ public class Client implements Closeable {
     }
 
     /**
+     * 向服务器请求启动本局游戏
+     */
+    public void reqStartGame() {
+        dataTransfer.sendObject(new ReqGameStartMsg());
+    }
+
+    /**
      * 向服务器请求游戏基本信息
      */
     public void fetchGameIntro() {

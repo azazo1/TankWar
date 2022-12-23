@@ -24,8 +24,15 @@ public class ServerTank extends TankBase {
         // 更新生命状态
         enduranceModule.updateEndurance();
     }
-    @Override
-    protected void paint(@NotNull Graphics g) {
+
+    /**
+     * 改变按键按下状态
+     */
+    public void keyChange(boolean left, boolean right, boolean forward, boolean backward) {
+        leftTurningKeyPressed.set(left);
+        rightTurningKeyPressed.set(right);
+        forwardGoingKeyPressed.set(forward);
+        backwardGoingKeyPressed.set(backward);
     }
 
     public ServerTank(int seq) {

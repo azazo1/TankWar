@@ -2,6 +2,8 @@ package com.azazo1.online.server.toclient;
 
 import com.azazo1.Config;
 import com.azazo1.online.msg.*;
+import com.azazo1.online.server.bullet.ServerBullet;
+import com.azazo1.online.server.tank.ServerTank;
 import com.azazo1.util.SeqModule;
 import com.azazo1.util.Tools;
 import org.jetbrains.annotations.NotNull;
@@ -84,7 +86,23 @@ public class ClientHandler implements Closeable {
      * 在游戏进行时的处理方法
      */
     protected void handleOnGaming(@NotNull DataTransfer dt, @NotNull MsgBase obj) {
-
+        String shortClassName = obj.getShortTypeName();
+        MsgBase toBeSent = null;
+        if (Tools.getRealTimeInMillis() - obj.createdTime <= Config.MSG_OUTDATED_TIME) { // 在有效期内
+            Tools.logLn("Got Msg(From " + seq + "): " + shortClassName + ", created on: " + obj.createdTime + " (" + DateFormat.getInstance().format(obj.createdTime) + ")");
+            if (obj instanceof TankFireActionMsg) {
+                server.letMeHandle(() -> server.getGameMap().getTankGroup().getTank(seq).fireModule.fire(ServerBullet.class));
+            } else if (obj instanceof KeyPressChangeMsg msg) {
+                server.letMeHandle(() -> {
+                    ServerTank tank = (ServerTank) server.gameMap.getTankGroup().getTank(seq);
+                    tank.keyChange(msg.leftTurningKeyPressed, msg.rightTurningKeyPressed, msg.forwardGoingKeyPressed, msg.backwardGoingKeyPressed);
+                });
+            }
+        }
+        if (toBeSent != null) {
+            dt.sendObject(this, toBeSent);
+            Tools.logLn("Sent Msg(To " + seq + "): " + toBeSent.getShortTypeName() + ", created on: " + toBeSent.createdTime + " (" + DateFormat.getInstance().format(toBeSent.createdTime) + ")");
+        }
     }
 
     /**
@@ -121,8 +139,12 @@ public class ClientHandler implements Closeable {
                     server.modifyGameSessionIntro(msg.intro);
                 }
             } else if (obj instanceof ReqGameStartMsg) {
-                boolean ret = server.startGame();
-                toBeSent = new ReqGameStartMsg.ReqGameStartMsgResponse(ret);
+                if (isHost()) {
+                    server.letMeHandle(server::startGame);
+                    toBeSent = new ReqGameStartMsg.ReqGameStartMsgResponseMsg(true);
+                } else {
+                    toBeSent = new ReqGameStartMsg.ReqGameStartMsgResponseMsg(false);
+                }
             }
             // todo 提供 WallMap 选择接口 (仅房主)
             // todo 给 Server 提供向客户端 (玩家/旁观者) 发送游戏信息 (Tank/Bullet/Msg) 方法

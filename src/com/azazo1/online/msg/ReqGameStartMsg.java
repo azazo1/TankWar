@@ -1,10 +1,6 @@
 package com.azazo1.online.msg;
 
 
-import com.azazo1.online.server.toclient.ClientHandler;
-
-import java.util.HashMap;
-
 /**
  * 房主请求游戏开始
  */
@@ -13,10 +9,10 @@ public class ReqGameStartMsg extends MsgBase {
         super();
     }
 
-    public static final class ReqGameStartMsgResponse extends MsgBase {
+    public static final class ReqGameStartMsgResponseMsg extends MsgBase {
         public final boolean successful;
 
-        public ReqGameStartMsgResponse(boolean successful) {
+        public ReqGameStartMsgResponseMsg(boolean successful) {
             super();
             this.successful = successful;
         }

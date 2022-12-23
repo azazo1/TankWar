@@ -46,11 +46,11 @@ public class TankBase implements CharWithRectangle {
     protected final AtomicBoolean forwardGoingKeyPressed = new AtomicBoolean(false);
     protected final AtomicBoolean backwardGoingKeyPressed = new AtomicBoolean(false);
     protected final AtomicBoolean firingKeyPressed = new AtomicBoolean(false); // 当对应按键按下后停止开火动作
-    protected final OrientationModule orientationModule = new OrientationModule(); // 用于将方向校准于坐标轴
+    public final OrientationModule orientationModule = new OrientationModule(); // 用于将方向校准于坐标轴
     protected final AtomicDouble goingSpeed = new AtomicDouble(4); // 行动速度 pixels/帧
     protected final AtomicDouble turningSpeed = new AtomicDouble(Math.toRadians(7)); // 转向速度 rad/帧
-    protected final EnduranceModule enduranceModule = new EnduranceModule();
-    protected final FireModule fireModule = new FireModule();
+    public final EnduranceModule enduranceModule = new EnduranceModule();
+    public final FireModule fireModule = new FireModule();
     protected final Rectangle rect = new Rectangle(0, 0, rawImg.getWidth(), rawImg.getHeight());
     protected final AtomicBoolean doPaint = new AtomicBoolean(true); // 是否显示, 服务端子类设为 false
     protected final CollisionAndMotionModule collisionAndMotionModule = new CollisionAndMotionModule();

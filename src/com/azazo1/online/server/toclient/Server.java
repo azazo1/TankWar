@@ -27,6 +27,7 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiConsumer;
 
 import static com.azazo1.online.msg.RegisterMsg.RegisterResponseMsg.*;
 
@@ -81,6 +82,10 @@ public class Server implements Closeable, SingleInstance {
      */
     protected Timer handler;
     /**
+     * 待执行，在 handler 循环中被执行
+     */
+    protected Vector<Runnable> handleList = new Vector<>();
+    /**
      * 当前服务器状态
      */
     protected volatile String currentState = WAITING;
@@ -131,7 +136,6 @@ public class Server implements Closeable, SingleInstance {
 
     /**
      * 初始化客户端信息处理器, 处理周期要略短于游戏事件周期
-     * todo 若房主退出, 重新设定房主 (WAITING 和 GAMING 都生效)
      *
      * @apiNote 此方法只能调用一次
      */
@@ -145,6 +149,10 @@ public class Server implements Closeable, SingleInstance {
             @Override
             public void run() {
                 if (alive.get()) {
+                    // 执行 handle list, 一下执行空, 防止请求量多于循环速度导致堵塞
+                    while (!handleList.isEmpty()) {
+                        handleList.remove(0).run();
+                    }
                     // 检查客户端状态
                     for (int i = 0; i < clients.size(); i++) {
                         ClientHandler client = clients.get(i);
@@ -155,7 +163,8 @@ public class Server implements Closeable, SingleInstance {
                     }
                     if (currentState.equals(GAMING)) {
                         gameMap.update(null);
-                        // todo 向客户端发送信息a
+                        Tools.tickFrame();
+                        // todo 向客户端发送信息
                     }
                 }
             }
@@ -198,15 +207,14 @@ public class Server implements Closeable, SingleInstance {
         ServerTankGroup serverTankGroup = new ServerTankGroup();
         gameMap.setTankGroup(serverTankGroup);
         gameMap.setBulletGroup(new ServerBulletGroup());
-        // todo 使用户改变墙图
-        gameMap.setWallGroup(ServerWallGroup.parseFromBitmap(ImageIO.read(Tools.getFileURL("wallmap/WallMap.mwal").url())));
-
-        for (ClientHandler c : clients) {
-            ServerTank tank = new ServerTank(c.getSeq());
-            tank.setName(c.getName());
+        gameMap.setWallGroup(ServerWallGroup.parseFromBitmap(ImageIO.read(Tools.getFileURL(intro.getWallMapFile()).url())));
+        HashMap<Integer, String> tanks = intro.getTanks();
+        tanks.forEach((seq, name) -> {
+            ServerTank tank = new ServerTank(seq);
+            tank.setName(name);
             serverTankGroup.addTank(tank);
             tank.randomlyTeleport();
-        }
+        });
     }
 
     /**
@@ -371,5 +379,16 @@ public class Server implements Closeable, SingleInstance {
                 dataTransfer.sendObject(c, msg);
             }
         }
+    }
+
+    public ServerGameMap getGameMap() {
+        return gameMap;
+    }
+
+    /**
+     * 解决多线程下方法调用后结果在内存不同步的问题，
+     */
+    public void letMeHandle(Runnable runnable) {
+        handleList.add(runnable);
     }
 }

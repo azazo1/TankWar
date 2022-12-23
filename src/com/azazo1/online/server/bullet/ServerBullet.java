@@ -9,6 +9,10 @@ public class ServerBullet extends BulletBase {
         doPaint.set(false);
     }
 
+    public ServerBullet(int centerX, int centerY, double orientation) {
+        super(centerX, centerY, orientation);
+    }
+
     @Override
     public void update(Graphics graphics) {
         lifeModule.updateLife();

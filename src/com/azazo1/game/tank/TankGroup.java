@@ -20,21 +20,21 @@ public class TankGroup {
         public void keyPressed(KeyEvent e) {
             livingTanks.forEach((seq) -> tanks.get(seq).pressKey(e.getKeyCode()));
         }
-        
+
         @Override
         public void keyReleased(KeyEvent e) {
             livingTanks.forEach((seq) -> tanks.get(seq).releaseKey(e.getKeyCode()));
         }
     };
     protected GameMap map;
-    
+
     public TankGroup() {
     }
-    
+
     public GameMap getGameMap() {
         return map;
     }
-    
+
     /**
      * 不保证真的能从 map 中添加,本方法应由 {@link GameMap#setTankGroup(TankGroup)} 调用
      */
@@ -42,7 +42,7 @@ public class TankGroup {
         this.map = map;
         this.getGameMap().addKeyListener(keyListener);
     }
-    
+
     /**
      * 不保证真的能从 map 中去除,本方法应由 {@link GameMap#setTankGroup(TankGroup)} 调用
      */
@@ -50,13 +50,13 @@ public class TankGroup {
         this.getGameMap().removeKeyListener(keyListener);
         this.map = null;
     }
-    
+
     public void addTank(@NotNull TankBase tank) {
         tanks.put(tank.getSeq(), tank);
         livingTanks.add(tank.getSeq());
         tank.setTankGroup(this);
     }
-    
+
     /**
      * 移除坦克
      * 此方法不会在游戏进行时被调用
@@ -68,7 +68,7 @@ public class TankGroup {
         tank.clearTankGroup();
         tank.getEnduranceManager().makeDie(); // 强行销毁坦克
     }
-    
+
     public void update(Graphics g) {
         if (tanks.isEmpty()) {
             return;
@@ -84,14 +84,14 @@ public class TankGroup {
             }
         }
     }
-    
+
     /**
      * 获得现在存活的坦克数量
      */
     public int getLivingTankNum() {
         return tanks.size() - tankDeathSequence.size();
     }
-    
+
     /**
      * 获得所有坦克信息<br>
      * 同时将排名分配到每个 {@link TankBase.TankInfo} 上
@@ -114,10 +114,14 @@ public class TankGroup {
         }
         return infoSequence;
     }
-    
+
     public Vector<TankBase> getLivingTanks() {
         Vector<TankBase> _livingTanks = new Vector<>();
         livingTanks.forEach((integer -> _livingTanks.add(tanks.get(integer))));
         return _livingTanks;
+    }
+
+    public TankBase getTank(int seq) {
+        return tanks.get(seq);
     }
 }
