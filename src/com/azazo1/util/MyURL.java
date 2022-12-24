@@ -15,7 +15,7 @@ public record MyURL(@NotNull URL url) {
     public @NotNull String toString() {
         String path = url.getPath();
         return url.getPath()
-                .substring(path.lastIndexOf('/') + 1)
+                .substring(path.lastIndexOf('/', path.lastIndexOf('/') - 1) + 1) // 倒数两个路径,获得上一层的文件夹
                 .substring(path.lastIndexOf('\\') + 1);
     }
 }

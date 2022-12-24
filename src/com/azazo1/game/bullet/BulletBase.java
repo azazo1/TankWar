@@ -22,7 +22,7 @@ public class BulletBase {
     protected static final String imgFileName = "img/Bullet.png";
     protected static final BufferedImage rawImg;
     private static final SeqModule seqModule = new SeqModule();
-    
+
     static {
         try {
             rawImg = ImageIO.read(Tools.getFileURL(imgFileName).url()); // 为了保证子弹反射正常进行, 建议子弹图像为方形
@@ -30,7 +30,7 @@ public class BulletBase {
             throw new RuntimeException(e);
         }
     }
-    
+
     protected final AtomicInteger speed = new AtomicInteger(10);
     protected final AtomicBoolean finished = new AtomicBoolean(false); // 子弹是否已经击中目标或到达飞行时间上限
     protected final AtomicDouble orientation = new AtomicDouble(0); // 0 向右,顺时针为正向
@@ -41,7 +41,7 @@ public class BulletBase {
     protected final AtomicBoolean doPaint = new AtomicBoolean(true); // 是否显示, 服务端子类设为 false
     private final int seq;
     protected BulletGroup bulletGroup;
-    
+
     /**
      * 子代都应继承这个构造函数
      */
@@ -52,7 +52,7 @@ public class BulletBase {
         seqModule.use(seq);
         this.seq = seq;
     }
-    
+
     /**
      * @implNote 当为 Online 模式时, 客户端子类无 seq 参构造函数要禁用, 因为 seq 由服务端控制
      */
@@ -60,37 +60,37 @@ public class BulletBase {
         this(seqModule.next(), centerX, centerY, orientation);
         setSpeed(speed);
     }
-    
+
     /**
      * @implNote 当为 Online 模式时, 客户端子类无 seq 参构造函数要禁用, 因为 seq 由服务端控制
      */
     public BulletBase(int centerX, int centerY, double orientation) {
         this(seqModule.next(), centerX, centerY, orientation);
     }
-    
+
     public static SeqModule getSeqModule() {
         return seqModule;
     }
-    
+
     public int getSeq() {
         return seq;
     }
-    
+
     public Rectangle getRect() {
         return new Rectangle(rect);
     }
-    
+
     /**
      * 子弹滴任务完成啦！
      */
     public void finish() {
         finished.set(true);
     }
-    
+
     public void setSpeed(int speed) {
         this.speed.set(speed);
     }
-    
+
     public void update(Graphics graphics) {
         lifeModule.updateLife();
         if (!finished.get()) {
@@ -102,7 +102,7 @@ public class BulletBase {
             paint(graphics);
         }
     }
-    
+
     protected void paint(@NotNull Graphics graphics) {
         if (doPaint.get()) {
             graphics.translate(rect.x, rect.y);
@@ -110,11 +110,11 @@ public class BulletBase {
             graphics.drawImage(rawImg, -rect.width / 2, -rect.height / 2, rect.width, rect.height, null);
         }
     }
-    
+
     public boolean isFinished() {
         return finished.get();
     }
-    
+
     /**
      * 设置本子弹所属的 group, 本操作不保证真的从 group 对象中添加本子弹
      * 本方法应由 {@link BulletGroup#addBullet(BulletBase)} 调用
@@ -122,58 +122,63 @@ public class BulletBase {
     public void setBulletGroup(BulletGroup bulletGroup) {
         this.bulletGroup = bulletGroup;
     }
-    
+
     /**
      * 清除本子弹所属的 group, 本操作不保证真的从 group 对象中移除本子弹
      * 本方法应由 {@link BulletGroup#removeBullet(BulletBase)} 调用
      */
     public void clearBulletGroup() {
         this.bulletGroup = null;
-        
+
     }
-    
+
     public int getDamage() {
         return damage.get();
     }
-    
+
+    public BulletInfo getInfo() {
+        return new BulletInfo(this);
+    }
+
+    /**
+     * 储存子弹信息，用于序列化子弹
+     */
     public class BulletInfo {
-        protected final int seq = BulletBase.this.seq;
-        protected final double orientation = BulletBase.this.orientation.get();
-        protected final Rectangle rect = new Rectangle(BulletBase.this.rect);
-        protected final long createdTime = lifeModule.createdTime;
-        protected final String bulletBitmapFileName = imgFileName;
-        
-        protected BulletInfo() {
-        
+        protected final int seq;
+        protected final double orientation;
+        protected final Rectangle rect;
+        protected final long createdTime;
+
+        protected BulletInfo(BulletBase bullet) {
+            seq = bullet.seq;
+            orientation = bullet.orientation.get();
+            rect = new Rectangle(bullet.rect);
+            createdTime = lifeModule.createdTime;
         }
-        
+
         public double getOrientation() {
             return orientation;
         }
-        
+
         public Rectangle getRect() {
             return rect;
         }
-        
+
         public long getCreatedTime() {
             return createdTime;
         }
-        
-        public String getBulletBitmapFileName() {
-            return bulletBitmapFileName;
-        }
-        
+
         public int getSeq() {
             return seq;
         }
     }
-    
+
     /**
      * 子弹生命模块
      */
     protected class LifeModule {
         protected final long createdTime = Tools.getFrameTimeInMillis();
-        
+
         public void updateLife() {
             int width = bulletGroup.getGameMap().getWidth();
             int height = bulletGroup.getGameMap().getHeight();
@@ -186,18 +191,18 @@ public class BulletBase {
             }
         }
     }
-    
+
     /**
      * 子弹（轨迹）反射模块
      * todo 子弹反射有异常
      */
     protected class ReflectionModule {
         protected final AtomicInteger reflectionTimes = new AtomicInteger(0); // 发生发射次数
-        
+
         public int getReflectionTimes() {
             return reflectionTimes.get();
         }
-        
+
         /**
          * 用下一帧的位置查找子弹是否和墙发生碰撞
          *
@@ -222,7 +227,7 @@ public class BulletBase {
             }
             return rst;
         }
-        
+
         /**
          * 用下一帧的位置计算碰撞重叠区域
          *
@@ -233,7 +238,7 @@ public class BulletBase {
             Rectangle intersection = rect.intersection(wallRect);
             return new Point((int) intersection.getCenterX(), (int) intersection.getCenterY());
         }
-        
+
         /**
          * 反射, 法线只有水平和垂直两种<br>
          * 通过判断 重叠中心点(intersectionCenterPoint) 处在子弹矩形的四个方位 (U R D L) 中的一个方位来判断法线<br>
@@ -255,11 +260,11 @@ public class BulletBase {
             boolean horizontal = Math.abs(X) < Math.abs(Y); // 法线是否是水平的, 当重叠中心点在 U D 区域时法线就是水平的
             double orientation = BulletBase.this.orientation.get();
             double theta = horizontal ? 0 : Math.PI / 2;
-            
+
             double dstOrientation = theta - (orientation - theta); // 反向
             BulletBase.this.orientation.set(dstOrientation % (2 * Math.PI));
         }
-        
+
         /**
          * 尝试进行反射
          *

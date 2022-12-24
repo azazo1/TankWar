@@ -9,6 +9,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.awt.font.TextLayout;
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -123,11 +125,14 @@ public class GameMap extends Canvas {
         bulletGroup.setGameMap(this);
     }
 
+    /**
+     * 一局游戏的结局
+     */
     public GameInfo getInfo() {
         return new GameInfo(this);
     }
 
-    public static class GameInfo {
+    public static class GameInfo implements Serializable {
         protected final Vector<TankBase.TankInfo> tanksInfo;
         protected final int mapHeight;
         protected final int mapWidth;

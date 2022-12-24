@@ -2,6 +2,7 @@ package com.azazo1.online.client;
 
 import com.azazo1.Config;
 import com.azazo1.online.Communicator;
+import com.azazo1.util.Tools;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,14 +32,14 @@ public class DataTransfer implements Closeable {
      */
     protected final Client client;
     private final AtomicBoolean alive = new AtomicBoolean(true);
-    
+
     public DataTransfer(@NotNull Client client, @NotNull Communicator communicator) {
         this.client = client;
         this.communicator = communicator;
         readingThread.start();
         sendingThread.start();
     }
-    
+
     /**
      * 将可序列化对象添加到待发送列表
      *
@@ -50,7 +51,7 @@ public class DataTransfer implements Closeable {
         }
         toBeSent.add(obj);
     }
-    
+
     /**
      * 提取待提取列表中的已读信息
      *
@@ -80,7 +81,7 @@ public class DataTransfer implements Closeable {
             }
         }
     }
-    
+
     /**
      * 结束使用
      */
@@ -93,7 +94,7 @@ public class DataTransfer implements Closeable {
         sendingThread.interrupt();
         alive.set(false);
     }
-    
+
     /**
      * 持续接收对象
      */
@@ -102,7 +103,7 @@ public class DataTransfer implements Closeable {
             setDaemon(true);
             setName("reading");
         }
-        
+
         @Override
         public void run() {
             while (!this.isInterrupted()) {
@@ -111,7 +112,7 @@ public class DataTransfer implements Closeable {
                     if (get != null) {
                         received.add(get);
                     }
-                } catch (NullPointerException e) { // 连接断开
+                } catch (NullPointerException e) {// 连接断开
                     close();
                     client.close();
                 } catch (SocketTimeoutException ignore) {
@@ -129,8 +130,8 @@ public class DataTransfer implements Closeable {
             }
         }
     };
-    
-    
+
+
     /**
      * 持续发送对象
      */
@@ -139,7 +140,7 @@ public class DataTransfer implements Closeable {
             setDaemon(true);
             setName("sending");
         }
-        
+
         @Override
         public void run() {
             while (!this.isInterrupted()) {
@@ -163,6 +164,6 @@ public class DataTransfer implements Closeable {
             }
         }
     };
-    
-    
+
+
 }

@@ -20,17 +20,17 @@ class SyncTimeMsgTest {
         Tools.setTimeBias(strangeBias); // 先设置一个离谱的时间偏移值
         SyncTimeMsg localMsg = new SyncTimeMsg();
         long startTime = localMsg.createdTime;
-        System.out.println("Local Msg Time = " + startTime);
+        Tools.logLn("Local Msg Time = " + startTime);
         comm.sendObject(localMsg);
         Object get = comm.readObject();
         if (get instanceof SyncTimeMsg.SyncTimeResponseMsg msg) {
             long endTime = Tools.getRealTimeInMillis();
-            System.out.println("Server Response Time: " + msg.createdTime);
+            Tools.logLn("Server Response Time: " + msg.createdTime);
             long bias = msg.createdTime - (endTime - startTime) / 2 - localMsg.createdTime;
-            System.out.println("Bias: " + bias);
-            System.out.println("Before Adjust: " + Tools.getRealTimeInMillis());
+            Tools.logLn("Bias: " + bias);
+            Tools.logLn("Before Adjust: " + Tools.getRealTimeInMillis());
             Tools.setTimeBias(strangeBias + bias);
-            System.out.println("After Adjust: " + Tools.getRealTimeInMillis());
+            Tools.logLn("After Adjust: " + Tools.getRealTimeInMillis());
         } else {
             fail();
         }
@@ -43,6 +43,6 @@ class SyncTimeMsgTest {
         try (ObjectOutputStream out = new ObjectOutputStream(bytes)) {
             out.writeObject(new SyncTimeMsg());
         }
-        System.out.println(Base64.getEncoder().encodeToString(bytes.toByteArray()));
+        Tools.logLn(""+Base64.getEncoder().encodeToString(bytes.toByteArray()));
     }
 }

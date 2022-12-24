@@ -3,12 +3,10 @@ package com.azazo1.online.server.toclient;
 
 import com.azazo1.Config;
 import com.azazo1.base.SingleInstance;
+import com.azazo1.game.GameMap;
 import com.azazo1.game.session.ServerGameSessionIntro;
-import com.azazo1.game.tank.TankBase;
-import com.azazo1.game.wall.WallGroup;
-import com.azazo1.online.msg.GameStartMsg;
-import com.azazo1.online.msg.MsgBase;
-import com.azazo1.online.msg.RegisterMsg;
+import com.azazo1.online.msg.*;
+import com.azazo1.online.server.GameState;
 import com.azazo1.online.server.ServerGameMap;
 import com.azazo1.online.server.bullet.ServerBulletGroup;
 import com.azazo1.online.server.tank.ServerTank;
@@ -27,7 +25,6 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.BiConsumer;
 
 import static com.azazo1.online.msg.RegisterMsg.RegisterResponseMsg.*;
 
@@ -43,6 +40,10 @@ public class Server implements Closeable, SingleInstance {
      * 服务器状态: 游戏进行时
      */
     public static final String GAMING = "g";
+    /**
+     * 服务器状态：游戏结束（只供游戏结果查询）
+     */
+    public static final String OVER = "o";
     /**
      * 服务器实例
      */
@@ -67,9 +68,9 @@ public class Server implements Closeable, SingleInstance {
     /**
      * 房主, 可以:
      * <ol>
-     *     <li>控制游戏开始 todo 仍未完善</li>
+     *     <li>控制游戏开始</li>
      *     <li>todo 踢出玩家</li>
-     *     <li>todo 选择游戏墙图</li>
+     *     <li>选择游戏墙图</li>
      * </ol>
      */
     protected volatile ClientHandler host = null;
@@ -91,6 +92,10 @@ public class Server implements Closeable, SingleInstance {
     protected volatile String currentState = WAITING;
 
     protected ServerGameMap gameMap;
+    /**
+     * 游戏结果，在游戏结束前都是null
+     */
+    protected GameMap.GameInfo gameResult;
 
     /**
      * @param port 端口号, 为 0 则自动分配
@@ -159,17 +164,31 @@ public class Server implements Closeable, SingleInstance {
                         if (!client.handle()) {
                             removeClient(i);
                             i--; // 该元素被移除了后来的元素顶替该位置
+                            if (clients.size() == 0 && currentState.equals(OVER)) { // 游戏结束，所有用户退出，服务段生命走到尽头
+                                close();
+                            }
                         }
                     }
                     if (currentState.equals(GAMING)) {
                         gameMap.update(null);
                         Tools.tickFrame();
-                        // todo 向客户端发送信息
+                        broadcast(new GameStateMsg(new GameState(
+                                Tools.getFrameTimeInMillis(),
+                                gameMap.getTankGroup().getTanksInfo(),
+                                gameMap.getBulletGroup().getBulletInfo()
+                        )), false);
+                        if (gameMap.getTankGroup().getLivingTankNum() <= 1) { // 游戏结束
+                            Tools.logLn("Game Over.");
+                            gameResult = gameMap.getInfo();
+                            broadcast(new GameOverMsg(gameResult), false);
+                            changeToOverState();
+                        }
                     }
                 }
             }
         }, 0, (long) (650.0 / Config.FPS)); // 要以略快于游戏事件循环的速度进行
     }
+
 
     private void removeClient(int i) {
         ClientHandler client = clients.get(i);
@@ -186,6 +205,10 @@ public class Server implements Closeable, SingleInstance {
         if (client.isPlayer() != null && client.isPlayer().get()) {
             unregisterPlayer(client.getSeq());
         }
+    }
+
+    protected void changeToOverState() {
+        currentState = OVER;
     }
 
     protected void changeToWaitingState() {
@@ -327,6 +350,10 @@ public class Server implements Closeable, SingleInstance {
         return currentState;
     }
 
+    public GameMap.GameInfo getGameResult() {
+        return gameResult;
+    }
+
     public HashMap<Integer, ClientHandler.ClientHandlerInfo> getClientsInfo() {
         HashMap<Integer, ClientHandler.ClientHandlerInfo> rst = new HashMap<>();
         for (ClientHandler c : clients) {
@@ -351,7 +378,8 @@ public class Server implements Closeable, SingleInstance {
      * 初始化游戏配置
      */
     protected void initGameConfig() {
-        this.intro = new ServerGameSessionIntro();
+        intro = new ServerGameSessionIntro();
+        intro.setWallMapFile("wallmap/WallMap.mwal");
     }
 
     /**

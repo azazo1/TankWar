@@ -17,7 +17,9 @@ import java.net.SocketException;
 import java.text.DateFormat;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.azazo1.online.msg.RegisterMsg.RegisterResponseMsg.HAVING_REGISTERED;
 import static com.azazo1.online.msg.RegisterMsg.RegisterResponseMsg.SUCCEED;
+import static com.azazo1.online.server.toclient.Server.GAMING;
 
 public class ClientHandler implements Closeable {
     private static final SeqModule seqModule = new SeqModule();
@@ -54,6 +56,12 @@ public class ClientHandler implements Closeable {
 
     @Override
     public void close() {
+        if (isPlayer() != null && isPlayer().get()) { // 客户端断开连接时，坦克自动死亡
+            server.letMeHandle(() -> {
+                if (server.currentState.equals(GAMING))
+                    server.getGameMap().getTankGroup().getTank(seq).enduranceModule.makeDie();
+            });
+        }
         try {
             socket.close();
         } catch (IOException ignore) {
@@ -76,10 +84,29 @@ public class ClientHandler implements Closeable {
         if (obj instanceof MsgBase msg) { // 同时检查了 !=null
             switch (server.getState()) {
                 case Server.WAITING -> handleOnWaiting(dt, msg);
-                case Server.GAMING -> handleOnGaming(dt, msg);
+                case GAMING -> handleOnGaming(dt, msg);
+                case Server.OVER -> handleOnOver(dt, msg);
             }
         }
         return alive.get();
+    }
+
+    /**
+     * 在游戏结束时的处理方法
+     */
+    protected void handleOnOver(@NotNull DataTransfer dt, @NotNull MsgBase obj) {
+        String shortClassName = obj.getShortTypeName();
+        MsgBase toBeSent = null;
+        if (Tools.getRealTimeInMillis() - obj.createdTime <= Config.MSG_OUTDATED_TIME) { // 在有效期内
+            Tools.logLn("Got Msg(From " + seq + "): " + shortClassName + ", created on: " + obj.createdTime + " (" + DateFormat.getInstance().format(obj.createdTime) + ")");
+            if (obj instanceof QueryGameResultMsg) {
+                toBeSent = new QueryGameResultMsg.QueryGameResultResponseMsg(server.getGameResult());
+            }
+        }
+        if (toBeSent != null) {
+            dt.sendObject(this, toBeSent);
+            Tools.logLn("Sent Msg(To " + seq + "): " + toBeSent.getShortTypeName() + ", created on: " + toBeSent.createdTime + " (" + DateFormat.getInstance().format(toBeSent.createdTime) + ")");
+        }
     }
 
     /**
@@ -91,12 +118,16 @@ public class ClientHandler implements Closeable {
         if (Tools.getRealTimeInMillis() - obj.createdTime <= Config.MSG_OUTDATED_TIME) { // 在有效期内
             Tools.logLn("Got Msg(From " + seq + "): " + shortClassName + ", created on: " + obj.createdTime + " (" + DateFormat.getInstance().format(obj.createdTime) + ")");
             if (obj instanceof TankFireActionMsg) {
-                server.letMeHandle(() -> server.getGameMap().getTankGroup().getTank(seq).fireModule.fire(ServerBullet.class));
+                if (isPlayer().get()) {
+                    server.letMeHandle(() -> server.getGameMap().getTankGroup().getTank(seq).fireModule.fire(ServerBullet.class));
+                }
             } else if (obj instanceof KeyPressChangeMsg msg) {
-                server.letMeHandle(() -> {
-                    ServerTank tank = (ServerTank) server.gameMap.getTankGroup().getTank(seq);
-                    tank.keyChange(msg.leftTurningKeyPressed, msg.rightTurningKeyPressed, msg.forwardGoingKeyPressed, msg.backwardGoingKeyPressed);
-                });
+                if (isPlayer().get()) {
+                    server.letMeHandle(() -> {
+                        ServerTank tank = (ServerTank) server.gameMap.getTankGroup().getTank(seq);
+                        tank.keyChange(msg.leftTurningKeyPressed, msg.rightTurningKeyPressed, msg.forwardGoingKeyPressed, msg.backwardGoingKeyPressed);
+                    });
+                }
             }
         }
         if (toBeSent != null) {
@@ -119,17 +150,21 @@ public class ClientHandler implements Closeable {
             if (obj instanceof FetchSeqMsg) { // 获取 seq
                 toBeSent = new FetchSeqMsg.FetchSeqResponseMsg(seq);
             } else if (obj instanceof RegisterMsg msg) { // 注册
-                int rst;
-                if (msg.isPlayer) {
-                    rst = server.registerPlayer(seq, msg.name); // 注册玩家模式
+                if (isPlayer() == null) {
+                    int rst;
+                    if (msg.isPlayer) {
+                        rst = server.registerPlayer(seq, msg.name); // 注册玩家模式
+                    } else {
+                        rst = SUCCEED; // 申请旁观模式成功
+                    }
+                    if (rst == SUCCEED) { // 成功则记录信息
+                        _isPlayer = new AtomicBoolean(msg.isPlayer);
+                        name = msg.name;
+                    }
+                    toBeSent = new RegisterMsg.RegisterResponseMsg(rst, msg);
                 } else {
-                    rst = SUCCEED; // 申请旁观模式成功
+                    toBeSent = new RegisterMsg.RegisterResponseMsg(HAVING_REGISTERED, msg);
                 }
-                if (rst == SUCCEED) { // 成功则记录信息
-                    _isPlayer = new AtomicBoolean(msg.isPlayer);
-                    name = msg.name;
-                }
-                toBeSent = new RegisterMsg.RegisterResponseMsg(rst, msg);
             } else if (obj instanceof FetchGameIntroMsg) {
                 toBeSent = new FetchGameIntroMsg.FetchGameIntroResponseMsg(server.getGameSessionIntro());
             } else if (obj instanceof QueryClientsMsg) {

@@ -3,7 +3,7 @@
     <output-path>$PROJECT_DIR$/out/artifacts/TankWar_jar</output-path>
     <root id="archive" name="TankWar.jar">
       <element id="module-output" name="TankWar" />
-      <element id="file-copy" path="$MAVEN_REPOSITORY$/org/jetbrains/annotations/20.1.0/annotations-20.1.0.jar" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/jetbrains/annotations/16.0.2/annotations-16.0.2.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

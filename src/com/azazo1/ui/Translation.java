@@ -38,13 +38,37 @@ public class Translation {
     public String resultTitle = "Game Result";
     public String onlineModeStillDeveloping = "Online mode is still developing";
     public String localPlayerNamesBoxHint = "Player Name List (Click me to refresh):";
-    
+    public String onlineClientListTitle = "Clients";
+    public String onlinePlayerListTitle = "Players";
+    public String gameModeSelectorTitle = "Select Game Mode";
+    public String registerButtonText = "Register";
+    public String wallMapSelectorTitle = "Select Wall Map";
+    public String wallMapSelectButtonText = "Select (only Host)";
+    public String startGameButtonText = "Start Game (only Host)";
+    public String nicknameInputTitle = "Input Nickname:";
+    public String yourProfileFormat = """
+            <html>
+            Your nickname: %s<br>
+            Your seq: %d<br>
+            Are you host: %s<br>
+            Your playing mode: %s
+            </html>
+            """;
+    public String spectatorMode = "Spectator Mode";
+    public String playerMode = "Player Mode";
+    public String connectionInfoFormat = "Connected to: [%s:%d]";
+    public String succeedTitle = "Succeed";
+    public String registerSucceeded = "Registered succeeded";
+    public String playerMaximum = "Maximum number of players, please switch to spectator mode";
+    public String nameCollision = "Your nickname is the same as the other one, please change";
+    public String notDecided = "Not Decided Yet";
+
     public Translation() {
     }
-    
+
     public static class Chinese extends Translation {
         public static final Chinese instance = new Chinese();
-        
+
         public Chinese() {
             localPlayingPanelTitle = "本地游戏";
             launchButtonText = "启动";
@@ -79,7 +103,30 @@ public class Translation {
             resultTitle = "游戏结果";
             onlineModeStillDeveloping = "在线模式仍在开发中";
             localPlayerNamesBoxHint = "玩家列表 (点我刷新):";
+            onlineClientListTitle = "客户端";
+            onlinePlayerListTitle = "玩家";
+            gameModeSelectorTitle = "选择游戏模式";
+            registerButtonText = "注册";
+            wallMapSelectorTitle = "选择墙图";
+            wallMapSelectButtonText = "选择 (仅许房主)";
+            startGameButtonText = "启动游戏 (仅许房主)";
+            nicknameInputTitle = "输入昵称:";
+            yourProfileFormat = """
+                    <html>
+                    你的昵称: %s<br>
+                    你的序号: %d<br>
+                    你是否是房主: %s<br>
+                    你的游戏模式: %s
+                    </html>
+                    """;
+            spectatorMode = "旁观者模式";
+            playerMode = "玩家模式";
+            connectionInfoFormat = "连接到: [%s:%d]";
+            succeedTitle = "成功";
+            registerSucceeded = "注册成功";
+            playerMaximum = "游戏玩家数量达到最大值, 请切换到旁观者模式";
+            nameCollision = "你的昵称和他人重名了, 请更改";
+            notDecided = "仍未决定";
         }
-        
     }
 }

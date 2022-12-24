@@ -20,7 +20,7 @@ class ToolsTest {
     @Test
     void getFileURLs() throws IOException {
         var fileURLs = Tools.getFileURLs("wallmap", (dir, name) -> name.endsWith(ConstantVal.WALL_MAP_FILE_SUFFIX)); // 获得所有墙图
-        System.out.println(fileURLs);
+        Tools.logLn(""+fileURLs);
         assertFalse(fileURLs.isEmpty());
     }
     
