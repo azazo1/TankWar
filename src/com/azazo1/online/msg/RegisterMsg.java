@@ -25,6 +25,7 @@ public final class RegisterMsg extends MsgBase {
     public static final class RegisterResponseMsg extends MsgBase {
         public static final int PLAYER_MAXIMUM = 1;
         public static final int NAME_OR_SEQ_OCCUPIED = 2;
+        public static final int HAVING_REGISTERED = 3;
         public static final int SUCCEED = 0;
         /**
          * 对应的原始消息, 此 {@link RegisterResponseMsg} 是 origin 消息的返回值

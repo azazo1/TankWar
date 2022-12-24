@@ -9,9 +9,11 @@ import com.azazo1.online.server.toclient.Server;
 import com.azazo1.util.Tools;
 import org.jetbrains.annotations.Nullable;
 
+import javax.security.auth.callback.Callback;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -43,6 +45,7 @@ public class Client implements Closeable {
 
     /**
      * 处理来自服务端的信息(一个)
+     * (可通过返回值自行处理, 故不设回调)
      *
      * @return 被处理的 {@link MsgBase}
      */
@@ -51,21 +54,26 @@ public class Client implements Closeable {
         if (obj instanceof FetchSeqMsg.FetchSeqResponseMsg msg) {
             seq.set(msg.seq);
         } else if (obj instanceof RegisterMsg.RegisterResponseMsg msg) {
-            System.out.println(msg.code);
+            Tools.logLn("" + msg.code);
             switch (msg.code) {
-                case SUCCEED -> {/*todo 提醒用户*/}
-                case PLAYER_MAXIMUM -> {/*todo 提醒用户更换游戏模式*/}
-                case NAME_OR_SEQ_OCCUPIED -> {/*todo 提醒用户改名*/}
+                case SUCCEED -> {/* 提醒用户*/}
+                case PLAYER_MAXIMUM -> {/* 提醒用户更换游戏模式*/}
+                case NAME_OR_SEQ_OCCUPIED -> {/* 提醒用户改名*/}
             }
         } else if (obj instanceof FetchGameIntroMsg.FetchGameIntroResponseMsg msg) {
             intro.copyFrom(msg.intro);
         } else if (obj instanceof QueryClientsMsg.QueryClientsResponseMsg msg) {
-            // todo 处理所有客户端信息, 注意重点标记显示自身
+            //  处理所有客户端信息, 注意重点标记显示自身
             ClientHandler.ClientHandlerInfo thisInfo = msg.multiInfo.get(seq.get());
             _isHost.set(thisInfo.isHost);
-            System.out.println(msg.multiInfo);
+            Tools.logLn("" + msg.multiInfo);
         } else if (obj instanceof GameStartMsg) {
-            // todo 开始游戏的画面
+            //  开始游戏的画面
+        } else if (obj instanceof GameStateMsg) {
+            // 显示游戏画面
+        } else if (obj instanceof GameOverMsg msg) {
+            Tools.logLn("Game over.");
+            Tools.logLn("" + msg);
         } else { // 此处表示 obj 为 null 或不是可被客户端处理的 Msg
             return null;
         }
@@ -128,6 +136,16 @@ public class Client implements Closeable {
     public void queryClients() {
         QueryClientsMsg msg = new QueryClientsMsg();
         dataTransfer.sendObject(msg);
+    }
+
+    /**
+     * 向服务器提交选择墙图的请求(仅房主可完成)
+     * 服务器只会读取intro内的部分内容,不会更改游戏玩家列表
+     */
+    public void selectWallMap(String wallMap) {
+        ServerGameSessionIntro intro = new ServerGameSessionIntro();
+        intro.setWallMapFile(wallMap);
+        dataTransfer.sendObject(new PostGameIntroMsg(intro));
     }
 
     /**

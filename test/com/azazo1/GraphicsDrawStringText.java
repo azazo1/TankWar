@@ -18,7 +18,7 @@ class GraphicsDrawStringText {
     JFrame frame;
     long t1;
     Vector<Long> times = new Vector<>(60);
-    
+
     @BeforeEach
     void setUp() {
         frame = new JFrame();
@@ -26,7 +26,7 @@ class GraphicsDrawStringText {
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         t1 = Tools.getRealTimeInMillis();
     }
-    
+
     @Test
     void drawString() {
         Graphics2D g2d = (Graphics2D) frame.getGraphics().create();
@@ -40,13 +40,13 @@ class GraphicsDrawStringText {
             times.add(Tools.getRealTimeInMillis() - start);
         }
     }
-    
+
     @AfterEach
     void tearDown() {
         long deltaTime = Tools.getRealTimeInMillis() - t1;
-        System.out.println("First: " + times.get(0));
-        System.out.println("Max: " + Collections.max(times));
-        System.out.println("Total: " + times.stream().reduce(Long::sum));
+        Tools.logLn("First: " + times.get(0));
+        Tools.logLn("Max: " + Collections.max(times));
+        Tools.logLn("Total: " + times.stream().reduce(Long::sum));
         if (deltaTime > 1000) {
             fail(deltaTime + "");
         }

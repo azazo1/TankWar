@@ -1,6 +1,8 @@
 package com.azazo1.online.client;
 
 import com.azazo1.online.msg.*;
+import com.azazo1.online.server.GameState;
+import com.azazo1.util.Tools;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -24,7 +26,7 @@ class ClientTest {
                 c.handle();
                 Thread.sleep(1);
             }
-            System.out.println("requestSeq succeed: " + c.getSeq());
+            Tools.logLn("requestSeq succeed: " + c.getSeq());
         }
     }
 
@@ -94,6 +96,36 @@ class ClientTest {
             Thread.sleep(10000);
             c.dataTransfer.sendObject(new KeyPressChangeMsg(true, false, true, false));
             Thread.sleep(10000);
+        }
+    }
+
+    @Test
+    void recvGameState() throws IOException, InterruptedException {
+        try (Client c = new Client("localhost", 60000)) {
+            c.register(true, "hello");
+            c.reqStartGame();
+            while (!(c.handle() instanceof GameStartMsg)) {
+                Thread.sleep(10);
+            }
+            c.dataTransfer.sendObject(new KeyPressChangeMsg(true, false, false, false));
+            while (true) {
+                c.handle();
+                Thread.sleep(10);
+            }
+        }
+    }
+
+    @Test
+    void recvGameOver() throws IOException, InterruptedException  {
+        try (Client c = new Client("localhost", 60000)) {
+            c.register(true, "hello");
+            c.reqStartGame();
+            while (!(c.handle() instanceof GameStartMsg)) {
+                Thread.sleep(10);
+            }
+            while (!(c.handle() instanceof GameOverMsg)) {
+                Thread.sleep(10);
+            }
         }
     }
 }

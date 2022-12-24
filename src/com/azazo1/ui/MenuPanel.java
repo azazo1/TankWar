@@ -15,9 +15,11 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.azazo1.util.Tools.resizeFrame;
 import static java.awt.GridBagConstraints.REMAINDER;
 
 /**
@@ -33,6 +35,9 @@ public class MenuPanel extends MyPanel {
     private JComboBox<MyURL> wallMapFilesComboBox;
     private JRadioButtonGroup buttonGroup;
     private JComboBox<Integer> playerNumComboBox;
+    private Box localPlayerNamesBox;
+    private JTextField serverPortTextField;
+    private JTextField serverIPTextField;
     private final ActionListener launchButtonListener = (e) -> {
         String command = buttonGroup.getSelectedActionCommand();
         if (command == null) {
@@ -59,23 +64,32 @@ public class MenuPanel extends MyPanel {
             }
         } else if (buttonGroup.getSelectedActionCommand().equals(PlayingMode.ONLINE)) {
             // 启动在线游戏
-            JOptionPane.showConfirmDialog(this, Config.translation.onlineModeStillDeveloping,
-                    Config.translation.errorTitle, JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
-            // todo invoke online game
+            try {
+                OnlineWaitingRoomPanel panel = new OnlineWaitingRoomPanel(serverIPTextField.getText(), Integer.parseInt(serverPortTextField.getText()));
+                JFrame f = new JFrame();
+                f.setContentPane(panel.panel);
+                f.setResizable(false);
+                resizeFrame(f, 850, 500);
+                f.setVisible(true);
+                f.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+            } catch (Exception ex) {
+                JOptionPane.showConfirmDialog(this,
+                        String.format(Config.translation.errorTextFormat, ex.getStackTrace()[0], ex.getMessage()),
+                        Config.translation.errorTitle, JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
+            }
         }
     };
-    private Box localPlayerNamesBox;
-    
+
     public MenuPanel() {
         super();
         instance = this;
     }
-    
+
     @Nullable
     public static MyPanel getInstance() {
         return instance;
     }
-    
+
     private String @NotNull [] getLocalPlayerNames() {
         Vector<String> rst = new Vector<>();
         localPlayerNames.forEach((box -> {
@@ -88,7 +102,7 @@ public class MenuPanel extends MyPanel {
         }));
         return rst.toArray(new String[]{});
     }
-    
+
     /**
      * 构建组件内容
      */
@@ -106,29 +120,27 @@ public class MenuPanel extends MyPanel {
         wallMapFilesComboBox = new JComboBox<>(WallGroup.scanBinaryBitmapFiles());
         JRadioButton localPlayingRadioButton = new JRadioButton(PlayingMode.LOCAL);
         JPanel onlinePlayingPanel = new JPanel();
-        JTextField serverIPTextField = new JTextField();
-        JTextField serverPortTextField = new JTextField();
+        serverIPTextField = new JTextField();
+        serverPortTextField = new JTextField();
         JRadioButton onlinePlayingRadioButton = new JRadioButton(PlayingMode.ONLINE);
-        JTextField tankNameTextField = new JTextField();
         buttonGroup = new JRadioButtonGroup();
         JButton launchButton = new JButton(Config.translation.launchButtonText);
-        
+
         localPlayingPanel.setBorder(new LineBorder(Config.BORDER_COLOR, 2, true));
         onlinePlayingPanel.setBorder(new LineBorder(Config.BORDER_COLOR, 2, true));
         serverIPTextField.setColumns(10);
         serverPortTextField.setColumns(4);
         localPlayingRadioButton.setSelected(true);
-        tankNameTextField.setColumns(serverIPTextField.getColumns() + serverPortTextField.getColumns());
         buttonGroup.add(localPlayingRadioButton);
         buttonGroup.add(onlinePlayingRadioButton);
         launchButton.addActionListener(launchButtonListener);
-        
+
         add(horizontalBox);
         horizontalBox.add(Box.createVerticalStrut(Config.WINDOW_HEIGHT - 10));
         horizontalBox.add(verticalBox);
-        
+
         verticalBox.add(new JLabel(Config.translation.menuPanelTitle));
-        
+
         verticalBox.add(localPlayingPanel);
         var layout = new BoxLayout(localPlayingPanel, BoxLayout.Y_AXIS);
         localPlayingPanel.setLayout(layout);
@@ -153,7 +165,7 @@ public class MenuPanel extends MyPanel {
                 adjustPlayerTextFieldNumber();
                 label.setFont(Config.TEXT_FONT_FOCUSED);
             }
-            
+
             @Override
             public void focusLost(FocusEvent e) {
                 super.focusLost(e);
@@ -172,8 +184,8 @@ public class MenuPanel extends MyPanel {
         localPlayerNamesBox.add(label);
         // 填充玩家昵称输入框列表
         adjustPlayerTextFieldNumber();
-        
-        
+
+
         verticalBox.add(onlinePlayingPanel);
         onlinePlayingPanel.setLayout(new GridBagLayout());
         GridBagConstraints constraints = new GridBagConstraints();
@@ -188,17 +200,14 @@ public class MenuPanel extends MyPanel {
         onlinePlayingPanel.add(new JLabel(Config.translation.ipAddressSeparator), constraints);
         constraints.gridwidth = REMAINDER;
         onlinePlayingPanel.add(serverPortTextField, constraints);
-        constraints.gridwidth = 1;
         constraints.weightx = 1;
-        onlinePlayingPanel.add(new JLabel(Config.translation.typeNameLabelText), constraints);
         constraints.gridwidth = REMAINDER;
-        onlinePlayingPanel.add(tankNameTextField, constraints);
-        
+
         verticalBox.add(launchButton);
         setSize(Config.WINDOW_WIDTH, Config.WINDOW_HEIGHT);
         attached.set(true);
     }
-    
+
     private void adjustPlayerTextFieldNumber() {
         Integer selectedItem = (Integer) playerNumComboBox.getSelectedItem();
         if (selectedItem == null) {

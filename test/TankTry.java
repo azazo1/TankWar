@@ -140,7 +140,7 @@ public class TankTry {
             g2d.rotate(orientation);
             // 注意负值使图像中点落在初始位置上,使旋转锚点正常
             g.drawImage(rawTankImg, (int) (-tankRect.getWidth() / 2), (int) (-tankRect.getHeight() / 2), (int) tankRect.getWidth(), (int) tankRect.getHeight(), (img, infoflags, x, y, width, height) -> {
-                System.out.println("asd");
+                Tools.logLn("asd");
                 return false;
             });
         }
