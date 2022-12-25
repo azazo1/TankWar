@@ -5,15 +5,14 @@ import com.azazo1.game.session.ServerGameSessionIntro;
 import com.azazo1.game.wall.WallGroup;
 import com.azazo1.online.client.Client;
 import com.azazo1.online.msg.*;
-import com.azazo1.online.server.GameState;
 import com.azazo1.online.server.toclient.ClientHandler;
 import com.azazo1.util.MyURL;
 import com.azazo1.util.Tools;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.*;
 import java.io.IOException;
+import java.text.DateFormat;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.Vector;
@@ -152,67 +151,96 @@ public class OnlineWaitingRoomPanel {
         }) {{
             setRepeats(false);
         }}.start();
-        // 信息收取
-        new Timer(1000, e -> {
-            if (client == null) {
-                return;
-            }
-            MsgBase obj = client.handle(false);
-            if (obj instanceof RegisterMsg.RegisterResponseMsg msg) {
-                Tools.logLn("" + msg.code);
-                switch (msg.code) {
-                    case SUCCEED -> /* 提醒用户*/
-                            JOptionPane.showConfirmDialog(panel, Config.translation.registerSucceeded, Config.translation.succeedTitle, JOptionPane.DEFAULT_OPTION);
-                    case PLAYER_MAXIMUM -> /* 提醒用户更换游戏模式*/
-                            JOptionPane.showConfirmDialog(panel, Config.translation.playerMaximum, Config.translation.errorTitle, JOptionPane.DEFAULT_OPTION);
-                    case NAME_OR_SEQ_OCCUPIED -> /* 提醒用户改名*/
-                            JOptionPane.showConfirmDialog(panel, Config.translation.nameCollision, Config.translation.errorTitle, JOptionPane.DEFAULT_OPTION);
+        // 信息收取, 用Timer会卡顿
+        new Thread(() -> {
+            try {
+                //noinspection LoopConditionNotUpdatedInsideLoop
+                while (client == null) {
+                    Thread.sleep(50);
                 }
-            } else if (obj instanceof FetchGameIntroMsg.FetchGameIntroResponseMsg msg) {
-                // 处理所有玩家信息, 改变墙图设置
-                gameIntro.copyFrom(msg.intro);
-                wallMapSelector.setSelectedItem(gameIntro.getWallMapFile());
-                HashMap<Integer, String> tanks = gameIntro.getTanks();
-                players.clear();
-                tanks.forEach((seq, name) -> {
-                    players.add("%d: %s".formatted(seq, name));
-                });
-                playerList.setListData(players);
-            } else if (obj instanceof QueryClientsMsg.QueryClientsResponseMsg msg) {
-                //  处理所有客户端信息, 注意重点标记显示自身
-                HashMap<Integer, ClientHandler.ClientHandlerInfo> infos = msg.multiInfo;
-                clients.clear();
-                infos.forEach((seq, info) -> {
-                    clients.add("Seq: %d, IP: [%s:%d], Host: %s".formatted(info.seq, info.address, info.port, info.isHost ? "True" : "False"));
-                });
-                ClientHandler.ClientHandlerInfo info = infos.get(client.getSeq());
-                String isPlayer = Config.translation.notDecided;
-                if (info.isPlayer != null) {
-                    isPlayer = info.isPlayer.get() ? Config.translation.playerMode : Config.translation.spectatorMode;
-                }
-                yourProfile.setText(Config.translation.yourProfileFormat.formatted(info.name, info.seq, info.isHost ? "True" : "False", isPlayer));
-                clientList.setListData(clients);
-            } else if (obj instanceof GameStartMsg) {
-                // todo 开始游戏的画面
-            } else if (obj instanceof GameStateMsg) {
-                // todo 显示游戏画面 (在gamepanel 中)
-            } else if (obj instanceof GameOverMsg msg) {
-                // todo 游戏结束 显示结束画面
-                Tools.logLn("Game over.");
-                Tools.logLn("" + msg);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
-        }) {{
-            setRepeats(true);
-        }}.start();
+            while (client.getAlive()) {
+                MsgBase obj = client.handle(false);
+                if (obj == null) {
+                    continue;
+                }
+                String shortClassName = obj.getShortTypeName();
+                Tools.logLn("Got Msg: " + shortClassName + ", created on: " + obj.createdTime + " (" + DateFormat.getInstance().format(obj.createdTime) + ")");
+                if (obj instanceof RegisterMsg.RegisterResponseMsg msg) {
+                    switch (msg.code) {
+                        case SUCCEED -> /* 提醒用户*/
+                                JOptionPane.showConfirmDialog(panel, Config.translation.registerSucceeded, Config.translation.succeedTitle, JOptionPane.DEFAULT_OPTION);
+                        case PLAYER_MAXIMUM -> /* 提醒用户更换游戏模式*/
+                                JOptionPane.showConfirmDialog(panel, Config.translation.playerMaximum, Config.translation.errorTitle, JOptionPane.DEFAULT_OPTION);
+                        case NAME_OR_SEQ_OCCUPIED -> /* 提醒用户改名*/
+                                JOptionPane.showConfirmDialog(panel, Config.translation.nameCollision, Config.translation.errorTitle, JOptionPane.DEFAULT_OPTION);
+                        case HAVING_REGISTERED -> /*提醒用户已经注册了*/
+                                JOptionPane.showConfirmDialog(panel, Config.translation.havingRegistered, Config.translation.errorTitle, JOptionPane.DEFAULT_OPTION);
+                    }
+                } else if (obj instanceof FetchGameIntroMsg.FetchGameIntroResponseMsg msg) {
+                    // 处理所有玩家信息, 改变墙图设置
+                    gameIntro.copyFrom(msg.intro);
+                    wallMapSelector.setSelectedItem(gameIntro.getWallMapFile());
+                    HashMap<Integer, String> tanks = gameIntro.getTanks();
+                    players.clear();
+                    tanks.forEach((seq, name) -> {
+                        players.add("%d: %s".formatted(seq, name));
+                    });
+                    playerList.setListData(players);
+                } else if (obj instanceof QueryClientsMsg.QueryClientsResponseMsg msg) {
+                    //  处理所有客户端信息, 注意重点标记显示自身
+                    HashMap<Integer, ClientHandler.ClientHandlerInfo> infos = msg.multiInfo;
+                    clients.clear();
+                    infos.forEach((seq, info) -> {
+                        clients.add("Seq: %d, IP: [%s:%d], Host: %s".formatted(info.seq, info.address, info.port, info.isHost ? "True" : "False"));
+                    });
+                    ClientHandler.ClientHandlerInfo info = infos.get(client.getSeq());
+                    String isPlayer = Config.translation.notDecided;
+                    if (info.isPlayer != null) {
+                        isPlayer = info.isPlayer.get() ? Config.translation.playerMode : Config.translation.spectatorMode;
+                    }
+                    yourProfile.setText(Config.translation.yourProfileFormat.formatted(info.name, info.seq, info.isHost ? "True" : "False", isPlayer));
+                    clientList.setListData(clients);
+                } else if (obj instanceof GameStartMsg) {
+                    // todo 开始游戏的画面
+                } else if (obj instanceof GameStateMsg) {
+                    // todo 显示游戏画面 (在gamepanel 中)
+                } else if (obj instanceof GameOverMsg msg) {
+                    // todo 游戏结束 显示结束画面
+                    Tools.logLn("Game over.");
+                    Tools.logLn("" + msg);
+                }
+                // 间隔时间稍大，因为防止改变房主对墙图的选择
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }).start();
         // 定期请求个人信息\客户端信息\玩家信息\墙图信息
-        new Timer(3000, e -> {
-            if (client != null) {
-                client.fetchGameIntro();
-                client.queryClients();
+        new Thread(() -> {
+            try {
+                //noinspection LoopConditionNotUpdatedInsideLoop
+                while (client == null) {
+                    Thread.sleep(50);
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
-
-        }) {{
-            setRepeats(true);
-        }}.start();
+            while (client.getAlive()) {
+                if (client != null) {
+                    client.fetchGameIntro();
+                    client.queryClients();
+                }
+                try {
+                    Thread.sleep(3000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }).start();
     }
 }

@@ -72,6 +72,13 @@ public class MenuPanel extends MyPanel {
                 resizeFrame(f, 850, 500);
                 f.setVisible(true);
                 f.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+                // 关闭窗口后客户端关闭
+                f.addWindowListener(new WindowAdapter() {
+                    @Override
+                    public void windowClosed(WindowEvent e) {
+                        panel.client.close();
+                    }
+                });
             } catch (Exception ex) {
                 JOptionPane.showConfirmDialog(this,
                         String.format(Config.translation.errorTextFormat, ex.getStackTrace()[0], ex.getMessage()),

@@ -54,7 +54,6 @@ public class Client implements Closeable {
         if (obj instanceof FetchSeqMsg.FetchSeqResponseMsg msg) {
             seq.set(msg.seq);
         } else if (obj instanceof RegisterMsg.RegisterResponseMsg msg) {
-            Tools.logLn("" + msg.code);
             switch (msg.code) {
                 case SUCCEED -> {/* 提醒用户*/}
                 case PLAYER_MAXIMUM -> {/* 提醒用户更换游戏模式*/}
@@ -66,14 +65,11 @@ public class Client implements Closeable {
             //  处理所有客户端信息, 注意重点标记显示自身
             ClientHandler.ClientHandlerInfo thisInfo = msg.multiInfo.get(seq.get());
             _isHost.set(thisInfo.isHost);
-            Tools.logLn("" + msg.multiInfo);
         } else if (obj instanceof GameStartMsg) {
             //  开始游戏的画面
         } else if (obj instanceof GameStateMsg) {
             // 显示游戏画面
         } else if (obj instanceof GameOverMsg msg) {
-            Tools.logLn("Game over.");
-            Tools.logLn("" + msg);
         } else { // 此处表示 obj 为 null 或不是可被客户端处理的 Msg
             return null;
         }

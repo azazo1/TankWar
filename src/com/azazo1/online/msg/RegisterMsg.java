@@ -32,7 +32,7 @@ public final class RegisterMsg extends MsgBase {
          */
         public final @NotNull RegisterMsg origin;
 
-        public RegisterResponseMsg(@MagicConstant(intValues = {PLAYER_MAXIMUM, NAME_OR_SEQ_OCCUPIED, SUCCEED})
+        public RegisterResponseMsg(@MagicConstant(intValues = {PLAYER_MAXIMUM, NAME_OR_SEQ_OCCUPIED, SUCCEED, HAVING_REGISTERED})
                                    int code, @NotNull RegisterMsg origin) {
             super(code);
             this.origin = origin;

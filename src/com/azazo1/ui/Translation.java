@@ -62,6 +62,8 @@ public class Translation {
     public String playerMaximum = "Maximum number of players, please switch to spectator mode";
     public String nameCollision = "Your nickname is the same as the other one, please change";
     public String notDecided = "Not Decided Yet";
+    public String havingRegistered = "You have been registered";
+    public String quitRoomButtonText = "Quit Room";
 
     public Translation() {
     }
@@ -127,6 +129,8 @@ public class Translation {
             playerMaximum = "游戏玩家数量达到最大值, 请切换到旁观者模式";
             nameCollision = "你的昵称和他人重名了, 请更改";
             notDecided = "仍未决定";
+            havingRegistered = "你已经注册过了";
+            quitRoomButtonText = "退出房间";
         }
     }
 }
