@@ -14,13 +14,13 @@ public class ServerTankGroup extends TankGroup {
         }
         for (TankBase tank : tanks.values()) {
             if (tank.getEnduranceManager().isDead()) {
+                if (livingTanks.contains(tank.getSeq())) {
+                    tankDeathSequence.add(tank.getSeq());
+                    livingTanks.remove(tank.getSeq());
+                }
                 continue;
             }
             tank.update(null); // 更新坦克, 传入一个副本
-            if (tank.getEnduranceManager().isDead()) {
-                tankDeathSequence.add(tank.getSeq());
-                livingTanks.remove(tank.getSeq());
-            }
         }
     }
 }

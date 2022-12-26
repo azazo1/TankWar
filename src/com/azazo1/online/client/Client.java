@@ -70,6 +70,9 @@ public class Client implements Closeable {
         } else if (obj instanceof GameStateMsg) {
             // 显示游戏画面
         } else if (obj instanceof GameOverMsg msg) {
+            // 显示游戏结束画面
+        } else if (obj instanceof QueryGameResultMsg.QueryGameResultResponseMsg) {
+            // 显示游戏结局
         } else { // 此处表示 obj 为 null 或不是可被客户端处理的 Msg
             return null;
         }
@@ -135,6 +138,14 @@ public class Client implements Closeable {
     }
 
     /**
+     * 向服务器查询服务器连接下所有客户端信息
+     */
+    public void queryGameResult() {
+        QueryGameResultMsg msg = new QueryGameResultMsg();
+        dataTransfer.sendObject(msg);
+    }
+
+    /**
      * 向服务器提交选择墙图的请求(仅房主可完成)
      * 服务器只会读取intro内的部分内容,不会更改游戏玩家列表
      */
@@ -144,16 +155,16 @@ public class Client implements Closeable {
         dataTransfer.sendObject(new PostGameIntroMsg(intro));
     }
 
-    /**
-     * 向服务器请求修改本局游戏配置 ({@link Server#WAITING} 时, 仅房主可用)
-     */
-    public void postGameIntro() {
-        if (_isHost.get()) {
-            PostGameIntroMsg msg = new PostGameIntroMsg(intro);
-        } else {
-            // todo 提示用户
-        }
-    }
+//    /** （已经被 selectWallMap代替）
+//     * 向服务器请求修改本局游戏配置 ({@link Server#WAITING} 时, 仅房主可用)
+//     */
+//    public void postGameIntro() {
+//        if (_isHost.get()) {
+//            PostGameIntroMsg msg = new PostGameIntroMsg(intro);
+//        } else {
+//            // 提示用户
+//        }
+//    }
 
     /**
      * {@inheritDoc}
@@ -178,5 +189,4 @@ public class Client implements Closeable {
     public int getSeq() {
         return seq.get();
     }
-// todo 接收游戏信息 (Tank/Bullet/Msg) 方法
 }

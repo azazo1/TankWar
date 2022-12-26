@@ -56,7 +56,7 @@ public class ClientHandler implements Closeable {
 
     @Override
     public void close() {
-        if (isPlayer() != null && isPlayer().get()) { // 客户端断开连接时，坦克自动死亡
+        if (isPlayer() != null && isPlayer().get() && this.alive.get()) { // 客户端断开连接时，坦克自动死亡，只会在第一次调用时将坦克消灭
             server.letMeHandle(() -> {
                 if (server.currentState.equals(GAMING))
                     server.getGameMap().getTankGroup().getTank(seq).enduranceModule.makeDie();

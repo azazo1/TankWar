@@ -200,7 +200,15 @@ public class MenuPanel extends MyPanel {
         onlinePlayingPanel.add(onlinePlayingRadioButton, constraints);
         constraints.gridwidth = 1;
         constraints.weightx = 1;
-        onlinePlayingPanel.add(new JLabel(Config.translation.typeIPAddressLabelText), constraints);
+        onlinePlayingPanel.add(new JLabel(Config.translation.typeIPAddressLabelText) {{
+            addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    serverIPTextField.setText("127.0.0.1");
+                    serverPortTextField.setText("60000");
+                }
+            });
+        }}, constraints);
         constraints.weightx = 4;
         onlinePlayingPanel.add(serverIPTextField, constraints);
         constraints.weightx = 1;

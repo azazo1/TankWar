@@ -111,14 +111,14 @@ public class Server implements Closeable, SingleInstance {
     }
 
     public static void main(String[] args) throws IOException {
-        Server server = new Server(60000);
-        server.changeToWaitingState();
-        Scanner scanner = new Scanner(System.in);
-        while (scanner.hasNextLine()) {
-            String get = scanner.nextLine();
-            if (get.equalsIgnoreCase("q") || get.equals("quit")) {
-                server.close();
-                break;
+        try (Server server = new Server(60000)) {
+            server.changeToWaitingState();
+            try {
+                while (server.alive.get()) {
+                    Thread.sleep(1000);
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
         }
     }

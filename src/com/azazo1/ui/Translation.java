@@ -64,6 +64,7 @@ public class Translation {
     public String notDecided = "Not Decided Yet";
     public String havingRegistered = "You have been registered";
     public String quitRoomButtonText = "Quit Room";
+    public String queryResultButtonText = "Query Game Result";
 
     public Translation() {
     }
@@ -131,6 +132,7 @@ public class Translation {
             notDecided = "仍未决定";
             havingRegistered = "你已经注册过了";
             quitRoomButtonText = "退出房间";
+            queryResultButtonText = "查询游戏结果";
         }
     }
 }

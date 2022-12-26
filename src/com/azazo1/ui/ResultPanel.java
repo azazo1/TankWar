@@ -8,18 +8,24 @@ import javax.swing.*;
 
 public class ResultPanel extends MyPanel {
     protected final GameMap.GameInfo info;
-    
+    protected final boolean doShowReturnButton;
+
     public ResultPanel(GameMap.GameInfo gameInfo) {
-        info = gameInfo;
+        this(gameInfo, true);
     }
-    
+
+    public ResultPanel(GameMap.GameInfo gameInfo, boolean doShowReturnButton) {
+        info = gameInfo;
+        this.doShowReturnButton = doShowReturnButton;
+    }
+
     @Override
     public void setupUI() {
         Box hBox = Box.createHorizontalBox();
         Box vBox = Box.createVerticalBox();
         hBox.add(Box.createVerticalStrut(Config.WINDOW_HEIGHT));
         hBox.add(vBox);
-        
+
         vBox.add(Box.createHorizontalStrut(Config.WINDOW_WIDTH));
         Box listVBox = Box.createVerticalBox();
         JPanel listPanel = new JPanel();
@@ -33,10 +39,12 @@ public class ResultPanel extends MyPanel {
         vBox.add(new JLabel(Config.translation.resultTitle));
         listPanel.add(listVBox);
         vBox.add(listPanel);
-        vBox.add(new JButton(Config.translation.backToMenuButtonText) {{
-            ResultPanel.this.setVisible(false);
-            addActionListener((e) -> MyFrame.getInstance().setContentPane(MenuPanel.getInstance()));
-        }});
+        if (doShowReturnButton) {
+            vBox.add(new JButton(Config.translation.backToMenuButtonText) {{
+                ResultPanel.this.setVisible(false);
+                addActionListener((e) -> MyFrame.getInstance().setContentPane(MenuPanel.getInstance()));
+            }});
+        }
         setVisible(true);
         add(hBox);
     }

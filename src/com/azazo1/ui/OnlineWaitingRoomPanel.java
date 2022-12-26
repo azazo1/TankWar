@@ -10,7 +10,8 @@ import com.azazo1.util.MyURL;
 import com.azazo1.util.Tools;
 
 import javax.swing.*;
-import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.util.HashMap;
@@ -18,7 +19,9 @@ import java.util.Objects;
 import java.util.Vector;
 
 import static com.azazo1.online.msg.RegisterMsg.RegisterResponseMsg.*;
+import static com.azazo1.online.server.toclient.Server.GAMING;
 import static com.azazo1.online.server.toclient.Server.WAITING;
+import static com.azazo1.util.Tools.resizeFrame;
 
 /**
  * 用户选择了服务器地址和端口但仍未开始连接, 本Panel实现连接服务器, 等待大厅（玩家详情）, 房主选择墙图, 房主开始游戏的功能
@@ -44,6 +47,7 @@ public class OnlineWaitingRoomPanel {
     private JTextField nicknameInput;
     private JButton registerButton;
     private JLabel inputNameTitle;
+    private JButton resultButton;
 
     /**
      * 用于储存查询到的intro信息
@@ -132,6 +136,11 @@ public class OnlineWaitingRoomPanel {
                 client.register(mode_, name.strip());
             });
         }};
+        resultButton = new JButton() {{
+            addActionListener(e -> {
+                client.queryGameResult();
+            });
+        }};
 
         nicknameInput = new JTextField();
         inputNameTitle = new JLabel(Config.translation.nicknameInputTitle);
@@ -148,6 +157,7 @@ public class OnlineWaitingRoomPanel {
             wallMapSelectButton.setText(Config.translation.wallMapSelectButtonText);
             startGameButton.setText(Config.translation.startGameButtonText);
             connectionInfo.setText(Config.translation.connectionInfoFormat.formatted(addr, port));
+            resultButton.setText(Config.translation.queryResultButtonText);
         }) {{
             setRepeats(false);
         }}.start();
@@ -203,18 +213,31 @@ public class OnlineWaitingRoomPanel {
                     }
                     yourProfile.setText(Config.translation.yourProfileFormat.formatted(info.name, info.seq, info.isHost ? "True" : "False", isPlayer));
                     clientList.setListData(clients);
-                } else if (obj instanceof GameStartMsg) {
-                    // todo 开始游戏的画面
                 } else if (obj instanceof GameStateMsg) {
                     // todo 显示游戏画面 (在gamepanel 中)
+                    currentState = GAMING;
                 } else if (obj instanceof GameOverMsg msg) {
                     // todo 游戏结束 显示结束画面
                     Tools.logLn("Game over.");
                     Tools.logLn("" + msg);
+                } else if (obj instanceof QueryGameResultMsg.QueryGameResultResponseMsg msg) {
+                    // 显示游戏结果
+                    ResultPanel resultPanel = new ResultPanel(msg.info, false);
+                    JFrame f = new JFrame();
+                    f.setContentPane(resultPanel);
+                    resultPanel.setupUI();
+                    f.setResizable(false);
+                    resizeFrame(f, Config.WINDOW_WIDTH, Config.WINDOW_HEIGHT);
+                    f.setVisible(true);
+                    f.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
                 }
                 // 间隔时间稍大，因为防止改变房主对墙图的选择
                 try {
-                    Thread.sleep(1000);
+                    if (Objects.equals(currentState, GAMING)) {
+                        Thread.sleep((int) (1000.0 / Config.FPS));
+                    } else {
+                        Thread.sleep(1000);
+                    }
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
@@ -230,11 +253,9 @@ public class OnlineWaitingRoomPanel {
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-            while (client.getAlive()) {
-                if (client != null) {
-                    client.fetchGameIntro();
-                    client.queryClients();
-                }
+            while (client.getAlive() && Objects.equals(currentState, WAITING)) {
+                client.fetchGameIntro();
+                client.queryClients();
                 try {
                     Thread.sleep(3000);
                 } catch (InterruptedException e) {
