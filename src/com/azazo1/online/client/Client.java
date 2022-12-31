@@ -9,15 +9,11 @@ import com.azazo1.online.server.toclient.Server;
 import com.azazo1.util.Tools;
 import org.jetbrains.annotations.Nullable;
 
-import javax.security.auth.callback.Callback;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static com.azazo1.online.msg.RegisterMsg.RegisterResponseMsg.*;
 
 
 public class Client implements Closeable {
@@ -53,29 +49,16 @@ public class Client implements Closeable {
         Object obj = dataTransfer.readObject(wait);
         if (obj instanceof FetchSeqMsg.FetchSeqResponseMsg msg) {
             seq.set(msg.seq);
-        } else if (obj instanceof RegisterMsg.RegisterResponseMsg msg) {
-            switch (msg.code) {
-                case SUCCEED -> {/* 提醒用户*/}
-                case PLAYER_MAXIMUM -> {/* 提醒用户更换游戏模式*/}
-                case NAME_OR_SEQ_OCCUPIED -> {/* 提醒用户改名*/}
-            }
         } else if (obj instanceof FetchGameIntroMsg.FetchGameIntroResponseMsg msg) {
             intro.copyFrom(msg.intro);
         } else if (obj instanceof QueryClientsMsg.QueryClientsResponseMsg msg) {
             //  处理所有客户端信息, 注意重点标记显示自身
             ClientHandler.ClientHandlerInfo thisInfo = msg.multiInfo.get(seq.get());
             _isHost.set(thisInfo.isHost);
-        } else if (obj instanceof GameStartMsg) {
-            //  开始游戏的画面
-        } else if (obj instanceof GameStateMsg) {
-            // 显示游戏画面
-        } else if (obj instanceof GameOverMsg msg) {
-            // 显示游戏结束画面
-        } else if (obj instanceof QueryGameResultMsg.QueryGameResultResponseMsg) {
-            // 显示游戏结局
-        } else { // 此处表示 obj 为 null 或不是可被客户端处理的 Msg
-            return null;
+        } else if (!(obj instanceof MsgBase)) {
+            return null;// 此处表示 obj 为 null 或不是 MsgBase
         }
+        // 其他情况, 若此句放在 else if 中则会被抢夺而被忽视
         return (MsgBase) obj;
     }
 

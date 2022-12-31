@@ -2,6 +2,7 @@ package com.azazo1.online.client;
 
 import com.azazo1.Config;
 import com.azazo1.online.Communicator;
+import com.azazo1.online.msg.MsgBase;
 import com.azazo1.util.Tools;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -10,6 +11,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.SocketTimeoutException;
+import java.text.DateFormat;
 import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -50,6 +52,9 @@ public class DataTransfer implements Closeable {
             throw new IllegalStateException("DataTransfer has closed.");
         }
         toBeSent.add(obj);
+        if (obj instanceof MsgBase msg) {
+            Tools.logLn("Sent Msg: " + msg.getShortTypeName() + ", created on: " + msg.createdTime + " (" + DateFormat.getInstance().format(msg.createdTime) + ")");
+        }
     }
 
     /**
@@ -72,10 +77,20 @@ public class DataTransfer implements Closeable {
                     throw new RuntimeException(e);
                 }
             }
-            return received.poll(); // 不会再空了
+            Serializable poll = received.poll();
+            if (poll instanceof MsgBase msg) {
+                String shortClassName = msg.getShortTypeName();
+                Tools.logLn("Got Msg: " + shortClassName + ", created on: " + msg.createdTime + " (" + DateFormat.getInstance().format(msg.createdTime) + ")");
+            }
+            return poll; // 不会再空了
         } else {
             try {
-                return received.poll(Config.CLIENT_SOCKET_TIMEOUT, TimeUnit.MILLISECONDS);
+                Serializable poll = received.poll(Config.CLIENT_SOCKET_TIMEOUT, TimeUnit.MILLISECONDS);
+                if (poll instanceof MsgBase msg) {
+                    String shortClassName = msg.getShortTypeName();
+                    Tools.logLn("Got Msg: " + shortClassName + ", created on: " + msg.createdTime + " (" + DateFormat.getInstance().format(msg.createdTime) + ")");
+                }
+                return poll;
             } catch (InterruptedException e) {
                 return null;
             }

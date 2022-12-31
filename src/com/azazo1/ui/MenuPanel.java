@@ -80,6 +80,7 @@ public class MenuPanel extends MyPanel {
                     }
                 });
             } catch (Exception ex) {
+                ex.printStackTrace();
                 JOptionPane.showConfirmDialog(this,
                         String.format(Config.translation.errorTextFormat, ex.getStackTrace()[0], ex.getMessage()),
                         Config.translation.errorTitle, JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);

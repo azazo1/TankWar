@@ -65,6 +65,16 @@ public class Translation {
     public String havingRegistered = "You have been registered";
     public String quitRoomButtonText = "Quit Room";
     public String queryResultButtonText = "Query Game Result";
+    public String emptyResult = "Null";
+    public String startGameFailed = "Failed to start game";
+    public String startGameSucceeded = "Succeeded to start game";
+    public String notEnoughPlayer = "Not enough players";
+    public String clientInfoFormat = "Seq: %d, IP: [%s:%d], Host: %s";
+    public String serverHasNoWallMapFile = "Server has no such wall map file";
+    public String serverNotInWaitingState = "Server is not in waiting state";
+    public String notHost = "You are not host";
+    public String postGameIntroSucceeded = "Succeeded to edit the game configuration";
+    public String confirmButtonText = "Confirm";
 
     public Translation() {
     }
@@ -133,6 +143,16 @@ public class Translation {
             havingRegistered = "你已经注册过了";
             quitRoomButtonText = "退出房间";
             queryResultButtonText = "查询游戏结果";
+            emptyResult = "无结果";
+            startGameFailed = "开始游戏失败";
+            startGameSucceeded = "开启游戏成功";
+            notEnoughPlayer = "玩家数量不足";
+            clientInfoFormat = "序号: %d, IP: [%s:%d], 房主: %s";
+            serverHasNoWallMapFile = "服务器没有对应的墙图文件";
+            serverNotInWaitingState = "服务器不处在 等待 阶段";
+            notHost = "您不是房主";
+            postGameIntroSucceeded = "成功修改游戏配置";
+            confirmButtonText = "确认";
         }
     }
 }

@@ -26,7 +26,10 @@ import java.net.SocketTimeoutException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.azazo1.online.msg.PostGameIntroMsg.POST_GAME_INTRO_INCORRECT_STATE;
+import static com.azazo1.online.msg.PostGameIntroMsg.POST_GAME_INTRO_SUCCESSFULLY;
 import static com.azazo1.online.msg.RegisterMsg.RegisterResponseMsg.*;
+import static com.azazo1.online.msg.ReqGameStartMsg.*;
 
 /**
  * 服务器对象的所有操作都在子线程异步进行
@@ -321,9 +324,13 @@ public class Server implements Closeable, SingleInstance {
     /**
      * 房主设置单局游戏配置, (tanks 无法更改)
      */
-    public void modifyGameSessionIntro(@NotNull ServerGameSessionIntro intro) {
+    public int modifyGameSessionIntro(@NotNull ServerGameSessionIntro intro) {
+        if (!currentState.equals(WAITING)) {
+            return POST_GAME_INTRO_INCORRECT_STATE;
+        }
         this.intro.setWallMapFile(intro.getWallMapFile());
         // 以后可能还有其他配置
+        return POST_GAME_INTRO_SUCCESSFULLY;
     }
 
     /**
@@ -383,16 +390,24 @@ public class Server implements Closeable, SingleInstance {
     }
 
     /**
-     * 开始游戏
+     * 开始游戏，广播操作将在稍后才执行
      */
-    public boolean startGame() {
+    @MagicConstant(intValues = {START_GAME_NOT_ENOUGH_PLAYER, START_GAME_SUCCESSFULLY, START_GAME_NO_WALL_MAP_FILE, START_GAME_INCORRECT_STATE})
+    public int startGame() {
         try {
+            if (!currentState.equals(WAITING)) {
+                return START_GAME_INCORRECT_STATE;
+            }
+            if (intro.getTanks().size() <= 1) {
+                return START_GAME_NOT_ENOUGH_PLAYER;
+            }
             changeToGamingState();
-            broadcast(new GameStartMsg(), false);
+            // 稍后广播，避免该方法返回值在广播之后才返回
+            letMeHandle(() -> broadcast(new GameStartMsg(), false));
             Tools.logLn("Game Start.");
-            return true;
+            return START_GAME_SUCCESSFULLY;
         } catch (IOException e) {
-            return false;
+            return START_GAME_NO_WALL_MAP_FILE;
         }
     }
 

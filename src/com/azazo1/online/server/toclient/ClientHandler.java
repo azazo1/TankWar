@@ -17,8 +17,10 @@ import java.net.SocketException;
 import java.text.DateFormat;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.azazo1.online.msg.PostGameIntroMsg.POST_GAME_INTRO_NOT_HOST;
 import static com.azazo1.online.msg.RegisterMsg.RegisterResponseMsg.HAVING_REGISTERED;
 import static com.azazo1.online.msg.RegisterMsg.RegisterResponseMsg.SUCCEED;
+import static com.azazo1.online.msg.ReqGameStartMsg.START_GAME_NOT_HOST;
 import static com.azazo1.online.server.toclient.Server.GAMING;
 
 public class ClientHandler implements Closeable {
@@ -171,15 +173,19 @@ public class ClientHandler implements Closeable {
                 toBeSent = new QueryClientsMsg.QueryClientsResponseMsg(server.getClientsInfo());
             } else if (obj instanceof PostGameIntroMsg msg) {
                 if (isHost()) {
-                    server.modifyGameSessionIntro(msg.intro);
+                    toBeSent = new PostGameIntroMsg.PostGameIntroResponseMsg(server.modifyGameSessionIntro(msg.intro));
+                } else {
+                    toBeSent = new PostGameIntroMsg.PostGameIntroResponseMsg(POST_GAME_INTRO_NOT_HOST);
                 }
             } else if (obj instanceof ReqGameStartMsg) {
                 if (isHost()) {
-                    server.letMeHandle(server::startGame);
-                    toBeSent = new ReqGameStartMsg.ReqGameStartMsgResponseMsg(true);
+                    int rst = server.startGame();
+                    toBeSent = new ReqGameStartMsg.ReqGameStartMsgResponseMsg(rst);
                 } else {
-                    toBeSent = new ReqGameStartMsg.ReqGameStartMsgResponseMsg(false);
+                    toBeSent = new ReqGameStartMsg.ReqGameStartMsgResponseMsg(START_GAME_NOT_HOST);
                 }
+            } else if (obj instanceof QueryGameResultMsg) {
+                toBeSent = new QueryGameResultMsg.QueryGameResultResponseMsg(null);
             }
             // todo 提供 WallMap 选择接口 (仅房主)
             // todo 给 Server 提供向客户端 (玩家/旁观者) 发送游戏信息 (Tank/Bullet/Msg) 方法

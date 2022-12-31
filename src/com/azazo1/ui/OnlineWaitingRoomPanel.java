@@ -10,15 +10,15 @@ import com.azazo1.util.MyURL;
 import com.azazo1.util.Tools;
 
 import javax.swing.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.*;
 import java.io.IOException;
-import java.text.DateFormat;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.Vector;
 
+import static com.azazo1.online.msg.PostGameIntroMsg.*;
 import static com.azazo1.online.msg.RegisterMsg.RegisterResponseMsg.*;
+import static com.azazo1.online.msg.ReqGameStartMsg.*;
 import static com.azazo1.online.server.toclient.Server.GAMING;
 import static com.azazo1.online.server.toclient.Server.WAITING;
 import static com.azazo1.util.Tools.resizeFrame;
@@ -102,10 +102,24 @@ public class OnlineWaitingRoomPanel {
             maps.add(url.toString());
         }
         wallMapSelector = new JComboBox<>(maps);
-
         wallMapSelectButton = new JButton() {{
             addActionListener(e -> {
-                client.selectWallMap((String) wallMapSelector.getSelectedItem());
+                // 打开选择墙图的窗口
+                JDialog selectDialog = new JDialog();
+                selectDialog.setModal(true);
+                selectDialog.setLayout(new FlowLayout());
+                JComboBox<String> selector = new JComboBox<>(maps);
+                selectDialog.setTitle(Config.translation.wallMapSelectorTitle);
+                selectDialog.add(selector);
+                selectDialog.add(new JButton(Config.translation.confirmButtonText) {{
+                    addActionListener(e1 -> {
+                        selectDialog.dispose();
+                        client.selectWallMap((String) selector.getSelectedItem());
+                    });
+                }});
+                selectDialog.setResizable(false);
+                selectDialog.setSize(325, 100);
+                selectDialog.setVisible(true);
             });
         }};
 
@@ -176,8 +190,6 @@ public class OnlineWaitingRoomPanel {
                 if (obj == null) {
                     continue;
                 }
-                String shortClassName = obj.getShortTypeName();
-                Tools.logLn("Got Msg: " + shortClassName + ", created on: " + obj.createdTime + " (" + DateFormat.getInstance().format(obj.createdTime) + ")");
                 if (obj instanceof RegisterMsg.RegisterResponseMsg msg) {
                     switch (msg.code) {
                         case SUCCEED -> /* 提醒用户*/
@@ -188,6 +200,15 @@ public class OnlineWaitingRoomPanel {
                                 JOptionPane.showConfirmDialog(panel, Config.translation.nameCollision, Config.translation.errorTitle, JOptionPane.DEFAULT_OPTION);
                         case HAVING_REGISTERED -> /*提醒用户已经注册了*/
                                 JOptionPane.showConfirmDialog(panel, Config.translation.havingRegistered, Config.translation.errorTitle, JOptionPane.DEFAULT_OPTION);
+                    }
+                } else if (obj instanceof PostGameIntroMsg.PostGameIntroResponseMsg msg) {
+                    switch (msg.rst) {
+                        case POST_GAME_INTRO_NOT_HOST ->
+                                JOptionPane.showMessageDialog(panel, Config.translation.notHost);
+                        case POST_GAME_INTRO_INCORRECT_STATE ->
+                                JOptionPane.showMessageDialog(panel, Config.translation.serverNotInWaitingState);
+                        case POST_GAME_INTRO_SUCCESSFULLY ->
+                                JOptionPane.showMessageDialog(panel, Config.translation.postGameIntroSucceeded);
                     }
                 } else if (obj instanceof FetchGameIntroMsg.FetchGameIntroResponseMsg msg) {
                     // 处理所有玩家信息, 改变墙图设置
@@ -204,7 +225,7 @@ public class OnlineWaitingRoomPanel {
                     HashMap<Integer, ClientHandler.ClientHandlerInfo> infos = msg.multiInfo;
                     clients.clear();
                     infos.forEach((seq, info) -> {
-                        clients.add("Seq: %d, IP: [%s:%d], Host: %s".formatted(info.seq, info.address, info.port, info.isHost ? "True" : "False"));
+                        clients.add(Config.translation.clientInfoFormat.formatted(info.seq, info.address, info.port, info.isHost ? "True" : "False"));
                     });
                     ClientHandler.ClientHandlerInfo info = infos.get(client.getSeq());
                     String isPlayer = Config.translation.notDecided;
@@ -230,14 +251,21 @@ public class OnlineWaitingRoomPanel {
                     resizeFrame(f, Config.WINDOW_WIDTH, Config.WINDOW_HEIGHT);
                     f.setVisible(true);
                     f.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-                }
-                // 间隔时间稍大，因为防止改变房主对墙图的选择
-                try {
-                    if (Objects.equals(currentState, GAMING)) {
-                        Thread.sleep((int) (1000.0 / Config.FPS));
-                    } else {
-                        Thread.sleep(1000);
+                } else if (obj instanceof ReqGameStartMsg.ReqGameStartMsgResponseMsg msg) {
+                    switch (msg.rst) {
+                        case START_GAME_SUCCESSFULLY ->
+                                JOptionPane.showMessageDialog(panel, Config.translation.startGameSucceeded);
+                        case START_GAME_NOT_ENOUGH_PLAYER ->
+                                JOptionPane.showMessageDialog(panel, Config.translation.notEnoughPlayer);
+                        case START_GAME_NO_WALL_MAP_FILE ->
+                                JOptionPane.showMessageDialog(panel, Config.translation.serverHasNoWallMapFile);
+                        case START_GAME_INCORRECT_STATE ->
+                                JOptionPane.showMessageDialog(panel, Config.translation.serverNotInWaitingState);
+                        case START_GAME_NOT_HOST -> JOptionPane.showMessageDialog(panel, Config.translation.notHost);
                     }
+                }
+                try {
+                    Thread.sleep((int) (1000.0 / Config.FPS));
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }

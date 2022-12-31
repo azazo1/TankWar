@@ -3,18 +3,19 @@ package com.azazo1.ui;
 import com.azazo1.Config;
 import com.azazo1.game.GameMap;
 import com.azazo1.game.tank.TankBase;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 
 public class ResultPanel extends MyPanel {
-    protected final GameMap.GameInfo info;
+    protected final @Nullable GameMap.GameInfo info;
     protected final boolean doShowReturnButton;
 
     public ResultPanel(GameMap.GameInfo gameInfo) {
         this(gameInfo, true);
     }
 
-    public ResultPanel(GameMap.GameInfo gameInfo, boolean doShowReturnButton) {
+    public ResultPanel(@Nullable GameMap.GameInfo gameInfo, boolean doShowReturnButton) {
         info = gameInfo;
         this.doShowReturnButton = doShowReturnButton;
     }
@@ -29,12 +30,18 @@ public class ResultPanel extends MyPanel {
         vBox.add(Box.createHorizontalStrut(Config.WINDOW_WIDTH));
         Box listVBox = Box.createVerticalBox();
         JPanel listPanel = new JPanel();
-        for (TankBase.TankInfo info1 : info.getTanksInfo()) {
-            listVBox.add(new MyLabel() {
-                {
-                    setText(info1);
-                }
-            });
+        if (info == null || info.getTanksInfo().isEmpty()) {
+            listVBox.add(new MyLabel() {{
+                setText(Config.translation.emptyResult);
+            }});
+        } else {
+            for (TankBase.TankInfo info1 : info.getTanksInfo()) {
+                listVBox.add(new MyLabel() {
+                    {
+                        setText(info1);
+                    }
+                });
+            }
         }
         vBox.add(new JLabel(Config.translation.resultTitle));
         listPanel.add(listVBox);
