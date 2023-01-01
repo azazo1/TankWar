@@ -94,7 +94,7 @@ public class Server implements Closeable, SingleInstance {
     /**
      * 降低 {@link GameStateMsg} 发送频率
      */
-    protected final IntervalTicker intervalTicker = new IntervalTicker(50);
+    protected final IntervalTicker intervalTicker = new IntervalTicker(Config.SERVER_GAME_STATE_SENDING_INTERVAL_TIME_MS);
     /**
      * 客户端信息处理器, 用于和客户端进行交互
      */

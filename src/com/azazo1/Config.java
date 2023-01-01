@@ -83,6 +83,10 @@ public final class Config {
      * 服务端最大允许注册玩家数量
      */
     public static final int MAX_SERVER_SESSION_PLAYER_NUM = 5;
+    /**
+     * 服务器广播游戏同步信息的时间间隔 (与游戏进程的处理速度无关)
+     */
+    public static final long SERVER_GAME_STATE_SENDING_INTERVAL_TIME_MS = 100;
 
     private Config() {
     }
