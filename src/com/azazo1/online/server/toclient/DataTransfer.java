@@ -1,7 +1,9 @@
 package com.azazo1.online.server.toclient;
 
-import com.azazo1.Config;
 import com.azazo1.online.Communicator;
+import com.azazo1.online.msg.GameStateMsg;
+import com.azazo1.online.msg.MsgBase;
+import com.azazo1.util.Tools;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -9,6 +11,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.SocketTimeoutException;
+import java.text.DateFormat;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.concurrent.LinkedTransferQueue;
@@ -28,12 +31,12 @@ public class DataTransfer implements Closeable {
      */
     protected final HashMap<ClientHandler, LinkedTransferQueue<Serializable>> toBeSent = new HashMap<>();
     private final AtomicBoolean alive = new AtomicBoolean(true);
-    
+
     public DataTransfer() {
         readingThread.start();
         sendingThread.start();
     }
-    
+
     /**
      * 将可序列化对象添加到待发送列表
      *
@@ -45,8 +48,15 @@ public class DataTransfer implements Closeable {
             throw new IllegalStateException("DataTransfer has closed.");
         }
         toBeSent.get(client).add(obj);
+        if (obj instanceof MsgBase msg) {
+            if (obj instanceof GameStateMsg) { // 该消息压缩显示
+                Tools.log("Sent Msg(To " + client.getSeq() + "): " + msg.getShortTypeName() + ", created on: " + msg.createdTime + " (" + DateFormat.getInstance().format(msg.createdTime) + ")\r");
+            } else {
+                Tools.logLn("Sent Msg(To " + client.getSeq() + "): " + msg.getShortTypeName() + ", created on: " + msg.createdTime + " (" + DateFormat.getInstance().format(msg.createdTime) + ")");
+            }
+        }
     }
-    
+
     /**
      * 提取待提取列表中的已读信息
      *
@@ -58,9 +68,13 @@ public class DataTransfer implements Closeable {
         } else if (!client.getAlive()) {
             throw new IllegalArgumentException("Closed clientHandler");
         }
-        return received.get(client).poll();
+        Serializable poll = received.get(client).poll();
+        if (poll instanceof MsgBase obj) {
+            Tools.logLn("Got Msg(From " + client.getSeq() + "): " + obj.getShortTypeName() + ", created on: " + obj.createdTime + " (" + DateFormat.getInstance().format(obj.createdTime) + ")");
+        }
+        return poll;
     }
-    
+
     /**
      * 添加客户端
      *
@@ -82,9 +96,9 @@ public class DataTransfer implements Closeable {
         received.put(client, new LinkedTransferQueue<>());
         toBeSent.put(client, new LinkedTransferQueue<>());
         return true;
-        
+
     }
-    
+
     /**
      * 结束使用
      */
@@ -100,11 +114,11 @@ public class DataTransfer implements Closeable {
         sendingThread.interrupt();
         alive.set(false);
     }
-    
+
     public boolean getAlive() {
         return alive.get();
     }
-    
+
     /**
      * 持续接收对象
      */
@@ -113,7 +127,7 @@ public class DataTransfer implements Closeable {
             setDaemon(true);
             setName("reading");
         }
-        
+
         @Override
         public void run() {
             while (!this.isInterrupted()) {
@@ -131,11 +145,11 @@ public class DataTransfer implements Closeable {
                         } catch (IOException e) {
                             client.close();
                         }
-                        
+
                     }
                     try {
                         //noinspection BusyWait
-                        Thread.sleep((long) (550.0 / Config.FPS)); // 要以略快于游戏事件循环的速度进行
+                        Thread.sleep(1); // 要以极快的速度进行
                     } catch (InterruptedException e) {
                         close();
                         break;
@@ -145,8 +159,8 @@ public class DataTransfer implements Closeable {
             }
         }
     };
-    
-    
+
+
     /**
      * 持续发送对象
      *
@@ -157,7 +171,7 @@ public class DataTransfer implements Closeable {
             setDaemon(true);
             setName("sending");
         }
-        
+
         @Override
         public void run() {
             while (!this.isInterrupted()) {
@@ -173,13 +187,14 @@ public class DataTransfer implements Closeable {
                             } catch (SocketTimeoutException e) {
                                 targets.add(obj);
                             } catch (IOException e) {
-                                client.close();
+                                e.printStackTrace();
+                                client.close(); // 这里常因为 NonSerializableException 而莫名奇妙使得客户端连接关闭
                             }
                         }
                     }
                     try {
                         //noinspection BusyWait
-                        Thread.sleep((long) (550.0 / Config.FPS)); // 要以略快于游戏事件循环的速度进行
+                        Thread.sleep(1); // 要以极快的速度进行
                     } catch (InterruptedException e) {
                         close();
                         break;

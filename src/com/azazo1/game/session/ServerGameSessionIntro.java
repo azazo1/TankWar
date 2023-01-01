@@ -5,6 +5,7 @@ import com.azazo1.online.server.toclient.Server;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.awt.*;
 import java.io.Serializable;
 import java.util.HashMap;
 
@@ -12,6 +13,10 @@ import java.util.HashMap;
  * 服务端一局游戏的配置, 由 {@link Server} 管理
  */
 public class ServerGameSessionIntro implements Serializable {
+    /**
+     * 游戏画布尺寸 (只会用到宽和高)
+     */
+    private final Rectangle mapSize = new Rectangle(0, 0, Config.MAP_WIDTH, Config.MAP_HEIGHT);
     /**
      * 坦克的:
      * seq -> name
@@ -21,7 +26,7 @@ public class ServerGameSessionIntro implements Serializable {
      * 墙图文件
      */
     private volatile String wallMapFile;
-    
+
     /**
      * 拷贝 {@link ServerGameSessionIntro}, 若参数为 null 则与默认初始化无异
      */
@@ -30,32 +35,47 @@ public class ServerGameSessionIntro implements Serializable {
             copyFrom(intro);
         }
     }
-    
+
     public ServerGameSessionIntro() {
         this(null);
     }
-    
+
     public void copyFrom(@NotNull ServerGameSessionIntro intro) {
         tanks.clear();
         tanks.putAll(intro.getTanks());
         wallMapFile = intro.getWallMapFile();
+        setMapSize(intro.mapSize);
     }
-    
+
+    public void setMapSize(int width, int height) {
+        mapSize.setSize(width, height);
+    }
+
+    public void setMapSize(@NotNull Rectangle size) {
+        setMapSize(size.width, size.height);
+    }
+
+    public Rectangle getMapSize() {
+        return mapSize;
+    }
+
     public HashMap<Integer, String> getTanks() {
         return tanks;
     }
-    
+
     public String getWallMapFile() {
         return wallMapFile;
     }
-    
+
+
     /**
      * 墙图文件在 Jar 内的路径
+     * e.g. "wallmap/WallMap.mwal"
      */
     public void setWallMapFile(String filePath) {
         wallMapFile = filePath;
     }
-    
+
     /**
      * 添加坦克(玩家)
      *
@@ -70,11 +90,20 @@ public class ServerGameSessionIntro implements Serializable {
         }
         tanks.put(seq, name);
     }
-    
+
     /**
      * 移除坦克(玩家)
      */
     public void removeTank(int seq) {
         tanks.remove(seq);
+    }
+
+    @Override
+    public String toString() {
+        return "ServerGameSessionIntro{" +
+                "mapSize=(" + mapSize.width + ", " + mapSize.height + ")" +
+                ", tanks=" + tanks +
+                ", wallMapFile='" + wallMapFile + '\'' +
+                '}';
     }
 }

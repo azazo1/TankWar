@@ -20,23 +20,25 @@ public class GamePanel extends MyPanel {
     protected Box verticalBox;
     protected final GameSession session;
     protected final AtomicBoolean attached = new AtomicBoolean(false);
+    protected MyFrame frame;
     protected MyLabel FPSLabel;
     protected MyLabel mapSizeLabel;
     protected MyLabel tankNumLabel;
     protected MyLabel bulletNumLabel;
     protected Box sideBar; // 侧边栏
-    protected final Vector<MyLabel> tankLabelList = new Vector<>(); // 顺序: 排名 由高到低
-    
+    protected final Vector<MyLabel> tankLabelList = new Vector<>(); // 在侧边栏显示坦克详细信息
+
     public GamePanel(GameSession.LocalSession session) {
         mode = PlayingMode.LOCAL;
         this.session = session;
     }
-    
+
     @Override
-    public void setupUI() {
+    public void setupUI(MyFrame frame) {
         if (attached.get()) {
             throw new IllegalStateException("GamePanel cannot be attached twice.");
         }
+        this.frame = frame;
         // 设定退出键
         KeyboardFocusManager manager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
         manager.addKeyEventDispatcher(new KeyEventDispatcher() {
@@ -52,7 +54,7 @@ public class GamePanel extends MyPanel {
                 return false;
             }
         });
-        
+
         horizontalBox = Box.createHorizontalBox();
         verticalBox = Box.createVerticalBox();
         sideBar = Box.createVerticalBox();
@@ -64,8 +66,8 @@ public class GamePanel extends MyPanel {
         qTreeDepthLabel.setText(session.getGameMap().getWallGroup().getQTreeDepth());
         GameMap map = session.getGameMap();
         mapSizeLabel.setText(map.getWidth(), map.getHeight());
-        
-        
+
+
         session.setFrameListener((tanks, bulletNum) -> {
             tankNumLabel.setText(
                     session.getGameMap().getTankGroup().getLivingTankNum(),
@@ -78,7 +80,7 @@ public class GamePanel extends MyPanel {
             if (session.isOver()) {
                 stop();
             }
-            // 输出所有坦克基本信息
+            // 输出所有坦克基本信息 顺序: 排名 由高到低
             for (int i = 0, tanksSize = tanks.size(); i < tanksSize; i++) {
                 TankBase.TankInfo info = tanks.get(i);
                 MyLabel label = tankLabelList.get(i);
@@ -88,11 +90,11 @@ public class GamePanel extends MyPanel {
         horizontalBox.add(Box.createVerticalStrut(Config.MAP_HEIGHT));
         horizontalBox.add(verticalBox);
         verticalBox.add(Box.createHorizontalStrut(Config.MAP_WIDTH));
-        
+
         add(horizontalBox);
-        
+
         verticalBox.add(session.getGameMap());
-        
+
         // 侧边栏
         horizontalBox.add(Box.createHorizontalStrut(5));
         horizontalBox.add(sideBar);
@@ -106,10 +108,10 @@ public class GamePanel extends MyPanel {
             sideBar.add(tankLabel);
             tankLabelList.add(tankLabel);
         }
-        
+
         attached.set(true);
     }
-    
+
     /**
      * 启动 Session
      *
@@ -119,12 +121,12 @@ public class GamePanel extends MyPanel {
         setVisible(true);
         EventQueue.invokeLater(session::start);
     }
-    
+
     /**
      * 关闭 Session, 并显示游戏结局 {@link ResultPanel}
      */
     public void stop() {
         setVisible(false);
-        MyFrame.getInstance().setContentPane(new ResultPanel(session.stop()));
+        new ResultPanel(frame, session.stop(), true, true);
     }
 }

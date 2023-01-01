@@ -11,8 +11,7 @@ import static com.azazo1.util.Tools.resizeFrame;
 public class Main {
     public static void main(String[] args) throws IOException {
         MyFrame f = new MyFrame();
-        MenuPanel m = new MenuPanel();
-        f.setContentPane(m);
+        MenuPanel m = new MenuPanel(f);
         f.setResizable(false);
         resizeFrame(f, Config.WINDOW_WIDTH, Config.WINDOW_HEIGHT);
         f.setVisible(true);

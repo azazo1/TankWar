@@ -7,6 +7,7 @@ import com.azazo1.game.GameMap;
 import com.azazo1.game.bullet.BulletBase;
 import com.azazo1.game.wall.Wall;
 import com.azazo1.game.wall.WallGroup;
+import com.azazo1.online.client.tank.ClientTank;
 import com.azazo1.util.AtomicDouble;
 import com.azazo1.util.SeqModule;
 import com.azazo1.util.Tools;
@@ -55,9 +56,9 @@ public class TankBase implements CharWithRectangle {
     protected final AtomicBoolean doPaint = new AtomicBoolean(true); // 是否显示, 服务端子类设为 false
     protected final CollisionAndMotionModule collisionAndMotionModule = new CollisionAndMotionModule();
     private final int seq;
-    protected TankGroup tankGroup; // 用于统一处理数据和显示
-    protected String name; // 坦克昵称, 可能为 null
-    private HashMap<Integer, TankAction> actionKeyMap; // 默认按键映射
+    protected volatile TankGroup tankGroup; // 用于统一处理数据和显示
+    protected volatile String name; // 坦克昵称, 可能为 null
+    private volatile HashMap<Integer, TankAction> actionKeyMap; // 默认按键映射
 
     /**
      * @implNote 当为 Online 模式时, 客户端子类无参构造函数要禁用, 因为 seq 由服务端控制
@@ -210,12 +211,12 @@ public class TankBase implements CharWithRectangle {
         // 更新弹夹状态
         fireModule.updateFireState();
         // 更新生命状态
-        enduranceModule.updateEndurance();
+        enduranceModule.updateLivingTime();
 
         paint(g);
     }
 
-    protected void paint(@NotNull Graphics g) {
+    protected void paint(Graphics g) {
         if (doPaint.get()) {
             Graphics2D g2d = (Graphics2D) g;
             double dx = rect.getCenterX();
@@ -275,9 +276,11 @@ public class TankBase implements CharWithRectangle {
         protected final int seq;
         protected final String nickname; // 坦克昵称
         protected final long livingTime;
+        protected final int spareBulletNum; // 弹夹中还有的子弹数量
         protected int rank = -1; // 排名(由死亡顺序计算) (产生后由 TankGroup 分配其值)
+        protected final boolean left, right, forward, backward;
 
-        protected TankInfo(TankBase tank) {
+        protected TankInfo(@NotNull TankBase tank) {
             totalEndurance = tank.enduranceModule.maxEndurance;
             nowEndurance = tank.enduranceModule.getEndurance();
             rect = new Rectangle(tank.rect);
@@ -285,6 +288,11 @@ public class TankBase implements CharWithRectangle {
             seq = tank.seq;
             nickname = tank.name;
             livingTime = tank.enduranceModule.getLivingTime();
+            spareBulletNum = tank.fireModule.getSpareBulletNum();
+            left = tank.leftTurningKeyPressed.get();
+            right = tank.rightTurningKeyPressed.get();
+            forward = tank.forwardGoingKeyPressed.get();
+            backward = tank.backwardGoingKeyPressed.get();
         }
 
         @Override
@@ -297,7 +305,12 @@ public class TankBase implements CharWithRectangle {
                     ", seq=" + seq +
                     ", nickname='" + nickname + '\'' +
                     ", livingTime=" + livingTime +
+                    ", spareBulletNum=" + spareBulletNum +
                     ", rank=" + rank +
+                    ", left=" + left +
+                    ", right=" + right +
+                    ", forward=" + forward +
+                    ", backward=" + backward +
                     '}';
         }
 
@@ -321,12 +334,27 @@ public class TankBase implements CharWithRectangle {
             return totalEndurance;
         }
 
+        /**
+         * 获取坦克正在执行的操作
+         *
+         * @return 长度为四, 分别指代: 向左转 向右转 向前走 向后退
+         */
+        public boolean[] getPressedActions() {
+            return new boolean[]{
+                    left, right, forward, backward
+            };
+        }
+
         public int getSeq() {
             return seq;
         }
 
         public int getRank() {
             return rank;
+        }
+
+        public int getSpareBulletNum() {
+            return spareBulletNum;
         }
 
         public String getNickname() {
@@ -346,7 +374,24 @@ public class TankBase implements CharWithRectangle {
         public EnduranceModule() {
         }
 
-        public void updateEndurance() {
+        /**
+         * 设置坦克血量, 不会改变坦克最大血量
+         */
+        public void setEndurance(int nowEndurance) {
+            if (!(TankBase.this instanceof ClientTank)) {
+                throw new IllegalCallerException("Only ClientTank can set the endurance.");
+            }
+            this.endurance.set(nowEndurance);
+        }
+
+        public void setLivingTime(long timeInMillis) {
+            if (!(TankBase.this instanceof ClientTank)) {
+                throw new IllegalCallerException("Only ClientTank can set the living time.");
+            }
+            livingTime.set(timeInMillis);
+        }
+
+        public void updateLivingTime() {
             livingTime.set(Tools.getFrameTimeInMillis());
         }
 
@@ -500,6 +545,13 @@ public class TankBase implements CharWithRectangle {
 
         public int getUsedBulletNum() {
             return Config.TANK_MAX_FIRE_CAPACITY - spareBulletNum.get();
+        }
+
+        public void setSpareBulletNum(int spareBulletNum) {
+            if (!(TankBase.this instanceof ClientTank)) {
+                throw new IllegalCallerException("Only ClientTank can set spare bullet num.");
+            }
+            this.spareBulletNum.set(spareBulletNum);
         }
     }
 

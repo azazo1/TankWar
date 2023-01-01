@@ -13,13 +13,13 @@ import java.util.Base64;
 public class Communicator implements Closeable {
     private final BufferedReader in;
     private final PrintWriter out;
-    
+
     public Communicator(@NotNull Socket soc) throws IOException {
         super();
         out = new PrintWriter(soc.getOutputStream());
         in = new BufferedReader(new InputStreamReader(soc.getInputStream()));
     }
-    
+
     /**
      * 发送可序列化对象, 可以是字符串
      *
@@ -33,7 +33,7 @@ public class Communicator implements Closeable {
         out.println(Base64.getEncoder().encodeToString(bytes.toByteArray()));
         out.flush();
     }
-    
+
     /**
      * 读取一个对象
      *
@@ -48,9 +48,11 @@ public class Communicator implements Closeable {
             }
         } catch (ClassNotFoundException e) {
             return null; // 一般不会到这
+        } catch (NullPointerException e) {
+            throw new NullPointerException("Connection Closed. " + e.getMessage());
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */

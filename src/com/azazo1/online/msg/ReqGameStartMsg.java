@@ -32,11 +32,11 @@ public class ReqGameStartMsg extends MsgBase {
         super();
     }
 
-    public static final class ReqGameStartMsgResponseMsg extends MsgBase {
+    public static final class ReqGameStartResponseMsg extends MsgBase {
         @MagicConstant(intValues = {START_GAME_NOT_HOST, START_GAME_NOT_ENOUGH_PLAYER, START_GAME_SUCCESSFULLY, START_GAME_NO_WALL_MAP_FILE, START_GAME_INCORRECT_STATE})
         public final int rst;
 
-        public ReqGameStartMsgResponseMsg(int rst) {
+        public ReqGameStartResponseMsg(int rst) {
             super();
             this.rst = rst;
         }

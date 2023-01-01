@@ -15,11 +15,9 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.IOException;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.azazo1.util.Tools.resizeFrame;
 import static java.awt.GridBagConstraints.REMAINDER;
 
 /**
@@ -28,6 +26,10 @@ import static java.awt.GridBagConstraints.REMAINDER;
 public class MenuPanel extends MyPanel {
     private static MyPanel instance;
     private final AtomicBoolean attached = new AtomicBoolean(false); // 是否曾被设置为 MyFrame 的 contentPanel
+    /**
+     * 绑定到的 {@link MyFrame}
+     */
+    private MyFrame frame;
     private final Vector<Box> localPlayerNames = new Vector<>();
     /**
      * 显示各个墙图文件路径
@@ -65,20 +67,7 @@ public class MenuPanel extends MyPanel {
         } else if (buttonGroup.getSelectedActionCommand().equals(PlayingMode.ONLINE)) {
             // 启动在线游戏
             try {
-                OnlineWaitingRoomPanel panel = new OnlineWaitingRoomPanel(serverIPTextField.getText(), Integer.parseInt(serverPortTextField.getText()));
-                JFrame f = new JFrame();
-                f.setContentPane(panel.panel);
-                f.setResizable(false);
-                resizeFrame(f, 850, 500);
-                f.setVisible(true);
-                f.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-                // 关闭窗口后客户端关闭
-                f.addWindowListener(new WindowAdapter() {
-                    @Override
-                    public void windowClosed(WindowEvent e) {
-                        panel.client.close();
-                    }
-                });
+                OnlineWaitingRoomPanel panel = new OnlineWaitingRoomPanel(frame, serverIPTextField.getText(), Integer.parseInt(serverPortTextField.getText()));
             } catch (Exception ex) {
                 ex.printStackTrace();
                 JOptionPane.showConfirmDialog(this,
@@ -88,9 +77,15 @@ public class MenuPanel extends MyPanel {
         }
     };
 
-    public MenuPanel() {
+    /**
+     * 本构造方法会自动调用{@link MyFrame#setContentPane(Container)}
+     * 无需再次调用
+     */
+    public MenuPanel(MyFrame frame) {
         super();
         instance = this;
+        this.frame = frame;
+        this.frame.setContentPane(this);
     }
 
     @Nullable
@@ -115,8 +110,11 @@ public class MenuPanel extends MyPanel {
      * 构建组件内容
      */
     @Override
-    public void setupUI() {
+    public void setupUI(MyFrame frame) {
         setVisible(true);
+        if (!this.frame.equals(frame)) {
+            throw new IllegalArgumentException("This panel can't be attached to a different MyFrame");
+        }
         if (attached.get()) { // 不构建第二次
             return;
         }

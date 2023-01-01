@@ -9,7 +9,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.awt.font.TextLayout;
-import java.io.Serial;
 import java.io.Serializable;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -62,7 +61,6 @@ public class GameMap extends Canvas {
     @Override
     public void paint(Graphics g) {
         boolean doPaint = this.doPaint.get();
-
         if (doPaint) {
             Image buffer = createImage(getWidth(), getHeight()); // 二级缓冲
             Graphics bufferGraphics = buffer.getGraphics();

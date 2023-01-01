@@ -2,6 +2,7 @@ package com.azazo1.online.client;
 
 import com.azazo1.Config;
 import com.azazo1.online.Communicator;
+import com.azazo1.online.msg.GameStateMsg;
 import com.azazo1.online.msg.MsgBase;
 import com.azazo1.util.Tools;
 import org.jetbrains.annotations.NotNull;
@@ -74,21 +75,28 @@ public class DataTransfer implements Closeable {
                     Thread.sleep(2);
                 } catch (InterruptedException e) {
                     close();
+                    client.close();
                     throw new RuntimeException(e);
                 }
             }
             Serializable poll = received.poll();
             if (poll instanceof MsgBase msg) {
-                String shortClassName = msg.getShortTypeName();
-                Tools.logLn("Got Msg: " + shortClassName + ", created on: " + msg.createdTime + " (" + DateFormat.getInstance().format(msg.createdTime) + ")");
+                if (poll instanceof GameStateMsg) { // 该消息压缩显示
+                    Tools.log("Got Msg: " + msg.getShortTypeName() + ", created on: " + msg.createdTime + " (" + DateFormat.getInstance().format(msg.createdTime) + ")\r");
+                } else {
+                    Tools.logLn("Got Msg: " + msg.getShortTypeName() + ", created on: " + msg.createdTime + " (" + DateFormat.getInstance().format(msg.createdTime) + ")");
+                }
             }
             return poll; // 不会再空了
         } else {
             try {
                 Serializable poll = received.poll(Config.CLIENT_SOCKET_TIMEOUT, TimeUnit.MILLISECONDS);
                 if (poll instanceof MsgBase msg) {
-                    String shortClassName = msg.getShortTypeName();
-                    Tools.logLn("Got Msg: " + shortClassName + ", created on: " + msg.createdTime + " (" + DateFormat.getInstance().format(msg.createdTime) + ")");
+                    if (poll instanceof GameStateMsg) { // 该消息压缩显示
+                        Tools.log("Got Msg: " + msg.getShortTypeName() + ", created on: " + msg.createdTime + " (" + DateFormat.getInstance().format(msg.createdTime) + ")\r");
+                    } else {
+                        Tools.logLn("Got Msg: " + msg.getShortTypeName() + ", created on: " + msg.createdTime + " (" + DateFormat.getInstance().format(msg.createdTime) + ")");
+                    }
                 }
                 return poll;
             } catch (InterruptedException e) {
@@ -128,17 +136,24 @@ public class DataTransfer implements Closeable {
                         received.add(get);
                     }
                 } catch (NullPointerException e) {// 连接断开
+                    if (client.getAlive()) {
+                        e.printStackTrace();
+                    }
                     close();
                     client.close();
+                    break;
                 } catch (SocketTimeoutException ignore) {
                 } catch (IOException e) {
+                    if (client.getAlive()) {
+                        e.printStackTrace();
+                    }
                     close();
                     client.close();
                     break;
                 }
                 try {
                     //noinspection BusyWait
-                    Thread.sleep((long) (550.0 / Config.FPS)); // 要以略快于游戏事件循环的速度进行
+                    Thread.sleep(1); // 要以快于游戏事件循环的速度进行
                 } catch (InterruptedException e) {
                     break;
                 }
@@ -160,19 +175,23 @@ public class DataTransfer implements Closeable {
         public void run() {
             while (!this.isInterrupted()) {
                 Serializable obj;
-                // 由于异步问题, 新客户端加入时 targets 可能为 null, 但后来就会被赋予相应的值
                 if ((obj = toBeSent.poll()) != null) { // 每个连接每次只发送一个对象
                     try {
                         communicator.sendObject(obj);
                     } catch (SocketTimeoutException e) {
                         toBeSent.add(obj);
                     } catch (IOException e) {
+                        if (client.getAlive()) {
+                            e.printStackTrace();
+                        }
                         client.close();
+                        close();
+                        break;
                     }
                 }
                 try {
                     //noinspection BusyWait
-                    Thread.sleep((long) (550.0 / Config.FPS)); // 要以略快于游戏事件循环的速度进行
+                    Thread.sleep(1); // 要以快于游戏事件循环的速度进行
                 } catch (InterruptedException e) {
                     break;
                 }

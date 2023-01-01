@@ -13,7 +13,7 @@ import static com.azazo1.util.Tools.resizeFrame;
 
 public class MyFrame extends JFrame implements SingleInstance {
     protected static MyFrame instance;
-    
+
     public MyFrame() throws IOException { // 这个构造函数只会被调用一次
         super();
         checkInstance();
@@ -22,7 +22,7 @@ public class MyFrame extends JFrame implements SingleInstance {
         setIconImage(ImageIO.read(Tools.getFileURL("img/FrameIcon.png").url()));
         setContentPane(new MyPanel() { // 显示加载中画面
             @Override
-            public void setupUI() {
+            public void setupUI(MyFrame frame) {
                 setLayout(new BorderLayout());
                 add(new JLabel(Config.translation.loading, SwingConstants.CENTER), BorderLayout.CENTER);
             }
@@ -30,23 +30,23 @@ public class MyFrame extends JFrame implements SingleInstance {
         resizeFrame(this, Config.WINDOW_WIDTH, Config.WINDOW_HEIGHT);
         consumeFontLoadingTime();
     }
-    
+
     public static MyFrame getInstance() {
         return instance;
     }
-    
+
     @Override
     public void checkInstance() {
         if (hasInstance()) {
             throw new IllegalStateException("MyFrame can be created only once.");
         }
     }
-    
+
     @Override
     public boolean hasInstance() {
         return instance != null;
     }
-    
+
     /**
      * 先尝试加载字体, 防止游戏启动时卡顿
      */
@@ -65,19 +65,22 @@ public class MyFrame extends JFrame implements SingleInstance {
         });
         timer.start();
     }
-    
+
     @Override
     public Component add(Component comp) {
         throw new IllegalCallerException("This frame supports content panel only.");
     }
-    
+
     @Override
     public void setContentPane(Container contentPane) {
-        throw new IllegalArgumentException("MyFrame supports MyPanel only");
+        if (!(contentPane instanceof MyPanel)) {
+            throw new IllegalArgumentException("MyFrame supports MyPanel only");
+        }
+        setContentPane((MyPanel) contentPane);
     }
-    
+
     public void setContentPane(MyPanel panel) {
         super.setContentPane(panel);
-        panel.setupUI();
+        panel.setupUI(this);
     }
 }

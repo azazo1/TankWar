@@ -17,15 +17,15 @@ public abstract class MsgBase implements Serializable {
      * 此消息代码, 用于子类判断消息详情, 需注意 -1 表示无效代码, 但不代表无效消息
      */
     public final int code;
-    
+
     public MsgBase() {
         this(-1);
     }
-    
+
     public MsgBase(int code) {
         this.code = code;
     }
-    
+
     /**
      * 获取本消息的类型名 如: {@link FetchGameIntroMsg} -> "FetchGameIntroMsg"
      */
