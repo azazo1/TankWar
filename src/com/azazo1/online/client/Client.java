@@ -9,6 +9,7 @@ import com.azazo1.online.server.toclient.Server;
 import com.azazo1.util.Tools;
 import org.jetbrains.annotations.Nullable;
 
+import java.awt.*;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.Socket;
@@ -129,25 +130,29 @@ public class Client implements Closeable {
     }
 
     /**
-     * 向服务器提交选择墙图的请求(仅房主可完成)
+     * 向服务器提交编辑本剧游戏配置的请求(仅房主可完成, 仅在{@link Server#WAITING} 时可用)
      * 服务器只会读取intro内的部分内容,不会更改游戏玩家列表
      */
-    public void selectWallMap(String wallMap) {
+    public void editGameIntro(String wallMap, Rectangle mapSize) {
         ServerGameSessionIntro intro = new ServerGameSessionIntro();
         intro.setWallMapFile(wallMap);
+        intro.setMapSize(mapSize);
         dataTransfer.sendObject(new PostGameIntroMsg(intro));
     }
 
-//    /** （已经被 selectWallMap代替）
-//     * 向服务器请求修改本局游戏配置 ({@link Server#WAITING} 时, 仅房主可用)
-//     */
-//    public void postGameIntro() {
-//        if (_isHost.get()) {
-//            PostGameIntroMsg msg = new PostGameIntroMsg(intro);
-//        } else {
-//            // 提示用户
-//        }
-//    }
+    /**
+     * 向服务端请求更改坦克动作状态
+     */
+    public void changePressedKey(boolean left, boolean right, boolean forward, boolean backward) {
+        dataTransfer.sendObject(new KeyPressChangeMsg(left, right, forward, backward));
+    }
+
+    /**
+     * 向服务器请求开火
+     */
+    public void fire() {
+        dataTransfer.sendObject(new TankFireActionMsg());
+    }
 
     /**
      * {@inheritDoc}

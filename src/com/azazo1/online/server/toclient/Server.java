@@ -5,6 +5,7 @@ import com.azazo1.Config;
 import com.azazo1.base.SingleInstance;
 import com.azazo1.game.GameMap;
 import com.azazo1.game.session.ServerGameSessionIntro;
+import com.azazo1.game.tank.TankBase;
 import com.azazo1.online.msg.*;
 import com.azazo1.online.server.GameState;
 import com.azazo1.online.server.ServerGameMap;
@@ -12,18 +13,23 @@ import com.azazo1.online.server.bullet.ServerBulletGroup;
 import com.azazo1.online.server.tank.ServerTank;
 import com.azazo1.online.server.tank.ServerTankGroup;
 import com.azazo1.online.server.wall.ServerWallGroup;
+import com.azazo1.util.IntervalTicker;
 import com.azazo1.util.Tools;
 import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.azazo1.online.msg.PostGameIntroMsg.POST_GAME_INTRO_INCORRECT_STATE;
@@ -82,9 +88,17 @@ public class Server implements Closeable, SingleInstance {
      */
     protected Timer acceptor;
     /**
+     * 服务端信息处理器, 用于控制游戏进程
+     */
+    protected Timer serverHandler;
+    /**
+     * 降低 {@link GameStateMsg} 发送频率
+     */
+    protected final IntervalTicker intervalTicker = new IntervalTicker(50);
+    /**
      * 客户端信息处理器, 用于和客户端进行交互
      */
-    protected Timer handler;
+    protected Timer clientHandler;
     /**
      * 待执行，在 handler 循环中被执行
      */
@@ -109,19 +123,25 @@ public class Server implements Closeable, SingleInstance {
         socket = new ServerSocket(port) {{
             setSoTimeout(Config.SERVER_SOCKET_TIMEOUT);
         }};
-        initHandler();
+        initServerHandlerLoop();
+        initClientHandlerLoop();
+        ClientHandler.initSeqModule(); // 初始化 ClientHandler seq 模组
+        TankBase.getSeqModule().init(); // 初始化坦克 seq 模组
+        Tools.clearFrameData(); // 清空帧数信息
         Tools.logLn("Server Opened at Port: " + socket.getLocalPort());
     }
 
     public static void main(String[] args) throws IOException {
-        try (Server server = new Server(60000)) {
-            server.changeToWaitingState();
-            try {
-                while (server.alive.get()) {
-                    Thread.sleep(1000);
+        while (true) {
+            try (Server server = new Server(60000)) {
+                server.changeToWaitingState();
+                try {
+                    while (server.alive.get()) {
+                        Thread.sleep(1000);
+                    }
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
             }
         }
     }
@@ -143,17 +163,54 @@ public class Server implements Closeable, SingleInstance {
     }
 
     /**
-     * 初始化客户端信息处理器, 处理周期要略短于游戏事件周期
+     * 初始化服务端游戏进程处理器循环
      *
-     * @apiNote 此方法只能调用一次
+     * @apiNote 此方法最好只调用一次
      */
-    protected void initHandler() {
-        if (handler != null) {
-            handler.cancel();
+    public void initServerHandlerLoop() {
+        if (serverHandler != null) {
+            serverHandler.cancel();
         }
-        handler = new Timer("handler", true);
+        serverHandler = new Timer("serverHandler", true);
         // 不用 schedule, 防止处理过慢
-        handler.scheduleAtFixedRate(new TimerTask() {
+        serverHandler.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                if (alive.get()) {
+                    if (currentState.equals(GAMING)) {
+                        gameMap.update(null);
+                        Tools.tickFrame();
+                        if (intervalTicker.judgeCanExecute()) {
+                            broadcast(new GameStateMsg(new GameState(
+                                    Tools.getFrameTimeInMillis(),
+                                    gameMap.getTankGroup().getTanksInfo(),
+                                    gameMap.getBulletGroup().getBulletInfo()
+                            )), false);
+                        }
+                        if (gameMap.getTankGroup().getLivingTankNum() <= 1) { // 游戏结束
+                            Tools.logLn("Game Over.");
+                            gameResult = gameMap.getInfo();
+                            broadcast(new GameOverMsg(gameResult), false);
+                            changeToOverState();
+                        }
+                    }
+                }
+            }
+        }, 0, (long) (1000.0 / Config.FPS));
+    }
+
+    /**
+     * 初始化客户端信息处理器循环
+     *
+     * @apiNote 此方法最好只调用一次
+     */
+    public void initClientHandlerLoop() {
+        if (clientHandler != null) {
+            clientHandler.cancel();
+        }
+        clientHandler = new Timer("clientHandler", true);
+        // 不用 schedule, 防止处理过慢
+        clientHandler.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 if (alive.get()) {
@@ -172,31 +229,32 @@ public class Server implements Closeable, SingleInstance {
                             }
                         }
                     }
-                    if (currentState.equals(GAMING)) {
-                        gameMap.update(null);
-                        Tools.tickFrame();
-                        broadcast(new GameStateMsg(new GameState(
-                                Tools.getFrameTimeInMillis(),
-                                gameMap.getTankGroup().getTanksInfo(),
-                                gameMap.getBulletGroup().getBulletInfo()
-                        )), false);
-                        if (gameMap.getTankGroup().getLivingTankNum() <= 1) { // 游戏结束
-                            Tools.logLn("Game Over.");
-                            gameResult = gameMap.getInfo();
-                            broadcast(new GameOverMsg(gameResult), false);
-                            changeToOverState();
-                        }
-                    }
                 }
             }
-        }, 0, (long) (650.0 / Config.FPS)); // 要以略快于游戏事件循环的速度进行
+        }, 0, 1); // 要以超快的速度处理
     }
 
+    /**
+     * 表明要踢出客户端, 但是暂时不移除(连接仍保持一段时间)
+     */
+    public void kick(@NotNull ClientHandler client) {
+        dataTransfer.sendObject(client, new KickMsg());
+        EventQueue.invokeLater(() -> {
+            try {
+                Thread.sleep(10000);
+                removeClient(client);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
 
-    private void removeClient(int i) {
-        ClientHandler client = clients.get(i);
+    /**
+     * @param client 要移除的客户端
+     */
+    private void removeClient(@NotNull final ClientHandler client) {
         client.close();
-        clients.remove(i); // todo 检查移除是否对游戏产生影响
+        clients.remove(client); // todo 检查移除是否对游戏产生影响
         Tools.logLn("Client: \"" + client.getSeq() + "\" was removed.");
         if (client.isHost()) { // 重新设置房主, 如果 clients 为空, 则变为 null, 会在新客户端加入时重新设置
             if (clients.isEmpty()) {
@@ -208,6 +266,14 @@ public class Server implements Closeable, SingleInstance {
         if (client.isPlayer() != null && client.isPlayer().get()) {
             unregisterPlayer(client.getSeq());
         }
+    }
+
+    /**
+     * @param index 要移除的客户端在 clients 里的索引
+     */
+    private void removeClient(int index) {
+        ClientHandler client = clients.get(index);
+        removeClient(client);
     }
 
     protected void changeToOverState() {
@@ -329,6 +395,7 @@ public class Server implements Closeable, SingleInstance {
             return POST_GAME_INTRO_INCORRECT_STATE;
         }
         this.intro.setWallMapFile(intro.getWallMapFile());
+        this.intro.setMapSize(intro.getMapSize());
         // 以后可能还有其他配置
         return POST_GAME_INTRO_SUCCESSFULLY;
     }
@@ -339,13 +406,14 @@ public class Server implements Closeable, SingleInstance {
      */
     @Override
     public void close() {
-        handler.cancel();
+        serverHandler.cancel();
         acceptor.cancel();
         dataTransfer.close();
         try {
             socket.close();
         } catch (IOException ignore) {
         }
+        instance = null;
         alive.set(false);
     }
 
@@ -401,14 +469,28 @@ public class Server implements Closeable, SingleInstance {
             if (intro.getTanks().size() <= 1) {
                 return START_GAME_NOT_ENOUGH_PLAYER;
             }
+            removeUnregisteredClient();
             changeToGamingState();
             // 稍后广播，避免该方法返回值在广播之后才返回
-            letMeHandle(() -> broadcast(new GameStartMsg(), false));
+            letMeHandle(() -> broadcast(new GameStartMsg(intro), false));
             Tools.logLn("Game Start.");
             return START_GAME_SUCCESSFULLY;
         } catch (IOException e) {
             return START_GAME_NO_WALL_MAP_FILE;
         }
+    }
+
+    /**
+     * 移除没有注册的客户端
+     */
+    private void removeUnregisteredClient() {
+        Vector<ClientHandler> unregisteredClients = new Vector<>();
+        for (ClientHandler client : clients) {
+            if (client.isPlayer() == null) {
+                unregisteredClients.add(client);
+            }
+        }
+        unregisteredClients.forEach(this::kick);
     }
 
     /**

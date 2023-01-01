@@ -1,6 +1,5 @@
 package com.azazo1.online.server.tank;
 
-import com.azazo1.Config;
 import com.azazo1.game.tank.TankBase;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,7 +21,7 @@ public class ServerTank extends TankBase {
         // 更新弹夹状态
         fireModule.updateFireState();
         // 更新生命状态
-        enduranceModule.updateEndurance();
+        enduranceModule.updateLivingTime();
     }
 
     /**
@@ -37,6 +36,7 @@ public class ServerTank extends TankBase {
 
     public ServerTank(int seq) {
         super(seq);
+        setActionKeyMap(null);
     }
 
     public void adaptFromInfo(@NotNull TankInfo info) {

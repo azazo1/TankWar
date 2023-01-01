@@ -42,8 +42,14 @@ public class Translation {
     public String onlinePlayerListTitle = "Players";
     public String gameModeSelectorTitle = "Select Game Mode";
     public String registerButtonText = "Register";
-    public String wallMapSelectorTitle = "Select Wall Map";
-    public String wallMapSelectButtonText = "Select (only Host)";
+    public String gameIntroEditTitleFormat = """
+            <html>
+            Edit Game Config:<br>
+            &emsp;&emsp;GameMap Size (%dx%d)
+            </html>
+            """;
+    public String gameIntroEditTitle = "Edit Game Config";
+    public String gameIntroEditButtonText = "Edit (only Host)";
     public String startGameButtonText = "Start Game (only Host)";
     public String nicknameInputTitle = "Input Nickname:";
     public String yourProfileFormat = """
@@ -75,6 +81,12 @@ public class Translation {
     public String notHost = "You are not host";
     public String postGameIntroSucceeded = "Succeeded to edit the game configuration";
     public String confirmButtonText = "Confirm";
+    public String invalidMapSizeInput = "Invalid map size";
+    public String mapSizeEditTitle = "Map Size \"[width] x [height]\":";
+    public String registeredFrameTitleFormat = "Hi, %s";
+    public String connectedFrameTitle = "Please register, or you will be kicked out when the game starts";
+    public String kicked = "You are kicked";
+    public String msgSyncRate = "Msg sync rate (Hz):";
 
     public Translation() {
     }
@@ -120,8 +132,14 @@ public class Translation {
             onlinePlayerListTitle = "玩家";
             gameModeSelectorTitle = "选择游戏模式";
             registerButtonText = "注册";
-            wallMapSelectorTitle = "选择墙图";
-            wallMapSelectButtonText = "选择 (仅许房主)";
+            gameIntroEditTitleFormat = """
+                    <html>
+                    编辑本局游戏配置:<br>
+                    &emsp;&emsp;游戏画布大小 (%dx%d)
+                    </html>
+                    """;
+            gameIntroEditTitle = "编辑本局游戏配置";
+            gameIntroEditButtonText = "编辑 (仅许房主)";
             startGameButtonText = "启动游戏 (仅许房主)";
             nicknameInputTitle = "输入昵称:";
             yourProfileFormat = """
@@ -153,6 +171,12 @@ public class Translation {
             notHost = "您不是房主";
             postGameIntroSucceeded = "成功修改游戏配置";
             confirmButtonText = "确认";
+            invalidMapSizeInput = "无效的地图尺寸";
+            mapSizeEditTitle = "地图尺寸 \"[宽] x [高]\":";
+            connectedFrameTitle = "请注册以进行游戏, 否则当游戏开始时你会被踢出房间";
+            registeredFrameTitleFormat = "你好, %s";
+            kicked = "你被踢出了";
+            msgSyncRate = "消息同步速率 (Hz):";
         }
     }
 }

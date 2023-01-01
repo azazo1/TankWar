@@ -26,7 +26,7 @@ public final class Tools {
     private static final Vector<Long> lastTickTimes = new Vector<>(10); // 最后10次 tickFrame 时间戳, 真实时间
     private static final AtomicLong firstTickTime = new AtomicLong(-1); // 真实时间
     private static final AtomicLong bias = new AtomicLong();
-    
+
     /**
      * 当以 Jar 包形式运行时, 读取 Jar 包内的文件 URL, 当直接运行时直接获取文件 URL<br>
      * 不用加 "res/"<br>
@@ -37,7 +37,7 @@ public final class Tools {
         URL url = cl.getResource(filePath);
         return new MyURL(Objects.requireNonNull(url));
     }
-    
+
     /**
      * 获取 dirPath 文件夹下所有文件 URL<br>
      * <p>
@@ -53,7 +53,7 @@ public final class Tools {
         ClassLoader classLoader = Tools.class.getClassLoader();
         URL url = Objects.requireNonNullElse(classLoader.getResource(dirPath), new URL("file:" + new File(dirPath).getAbsolutePath()));
         String urlStr = url.getProtocol() + ":" + url.getPath();
-        
+
         Vector<MyURL> rst = new Vector<>();
         if (url.getProtocol().equals("jar")) { // jar 内
             String jarPath = urlStr.substring(0, urlStr.indexOf("!/") + 2); // 用于创建文件 URL
@@ -81,21 +81,21 @@ public final class Tools {
         }
         return rst;
     }
-    
+
     /**
      * 记录日志, 换行
      */
     public static void logLn(String msg) {
         System.out.println(msg);
     }
-    
+
     /**
      * 记录日志, 不换行
      */
     public static void log(String msg) {
         System.out.print(msg);
     }
-    
+
     /**
      * 清除所有帧数信息, 便于重开游戏
      */
@@ -104,7 +104,7 @@ public final class Tools {
         lastTickTimes.clear();
         firstTickTime.set(-1);
     }
-    
+
     /**
      * 获得当前帧率<br>
      * 通过 10 除以 倒数10帧的时间 来计算
@@ -115,21 +115,30 @@ public final class Tools {
         }
         return (int) (1000.0 * 10 / (lastTickTimes.get(9) - lastTickTimes.get(0)));
     }
-    
+
     /**
      * 获得平均帧率
      */
     public static int getAverageFPS() {
         return (int) (getFrameCounts() * 1000.0 / (getRealTimeInMillis() - firstTickTime.get()));
     }
-    
+
     /**
      * 累计帧数, 控制帧率
      */
     public static void tickFrame() {
+        tickFrame(true);
+    }
+
+    /**
+     * 累计帧数, 控制帧率
+     *
+     * @param controlFrameRate 是否调用{@link Thread#sleep(long)} 以控制帧率
+     */
+    public static void tickFrame(boolean controlFrameRate) {
         long nowTime = getRealTimeInMillis();
         // 控制帧率
-        if (!lastTickTimes.isEmpty()) {
+        if (controlFrameRate && !lastTickTimes.isEmpty()) {
             long lastTime = lastTickTimes.get(lastTickTimes.size() - 1);
             double sleepTime = (1000.0 / Config.FPS);
             while (nowTime - lastTime < sleepTime) { // 循环等待
@@ -140,6 +149,7 @@ public final class Tools {
                     throw new RuntimeException(e);
                 }
             }
+
         }
         framesCounter.incrementAndGet();
         if (firstTickTime.get() < 0) {
@@ -149,30 +159,29 @@ public final class Tools {
         while (lastTickTimes.size() > 10) {
             lastTickTimes.remove(0);
         }
-        
     }
-    
+
     /**
      * 获得累积的总帧数
      */
     public static int getFrameCounts() {
         return framesCounter.get();
     }
-    
+
     /**
      * 获得真实的时间
      */
     public static long getRealTimeInMillis() {
         return getRealTimeInMillis(bias.get());
     }
-    
+
     /**
      * 获得真实时间, 可设置时间偏差
      */
     public static long getRealTimeInMillis(long bias) {
         return System.currentTimeMillis() + bias;
     }
-    
+
     /**
      * 获得游戏经过累计帧数计算出的经过时间
      * 相比于 {@link #getRealTimeInMillis()} 更推荐这个
@@ -180,7 +189,7 @@ public final class Tools {
     public static long getFrameTimeInMillis() {
         return (long) (framesCounter.get() * (1000.0 / Config.FPS));
     }
-    
+
     /**
      * 复制 BufferedImage
      */
@@ -190,9 +199,9 @@ public final class Tools {
         boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
         return new BufferedImage(cm, src.copyData(null), isAlphaPremultiplied, null);
     }
-    
+
     /**
-     * 尝试重置 {@link JFrame} 大小使内容得到全部显示
+     * 尝试重置 {@link JFrame} 大小使内容得到全部显示, 不断尝试直到成功一次
      */
     public static void resizeFrame(JFrame frame, int width, int height) {
         Timer timer = new Timer((int) (1000.0 / Config.FPS), null);
@@ -210,7 +219,7 @@ public final class Tools {
         timer.setRepeats(true);
         timer.start();
     }
-    
+
     /**
      * 调整时间偏差, 用于同步客户端和服务端的时间
      */

@@ -18,6 +18,9 @@ public final class Config {
     public static final Color TEXT_COLOR = new Color(0x100E0E);
     public static final Color BORDER_COLOR = new Color(0x9F9F9F);
     public static final Color TANK_SEQ_COLOR = new Color(0xFF0000); // 坦克上的序号字色
+    public static final Color TANK_NAME_YOU_COLOR = new Color(0x00FF00); // Client: 坦克 "你" 的名称颜色
+    public static final Color TANK_NAME_COLOR = new Color(0xFF0000); // Client: 坦克的名称颜色
+    public static final Color TANK_CLIP_YOU_COLOR = new Color(0x00FF00); // Client: 坦克 "你" 的弹夹颜色
     public static final Color TANK_CLIP_COLOR = TANK_SEQ_COLOR; // 坦克弹夹颜色
     public static final int QUADTREE_DEPTH = 2; // 默认四叉树深度
     public static final int MAP_WIDTH = 500; // 游戏画布尺寸 pixels
@@ -78,7 +81,7 @@ public final class Config {
      * 服务端最大允许注册玩家数量
      */
     public static final int MAX_SERVER_SESSION_PLAYER_NUM = 5;
-    
+
     private Config() {
     }
 }

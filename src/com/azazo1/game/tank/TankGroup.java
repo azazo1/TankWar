@@ -93,6 +93,13 @@ public class TankGroup {
     }
 
     /**
+     * 获得所有的坦克数量
+     */
+    public int getTankNum() {
+        return tanks.size();
+    }
+
+    /**
      * 获得所有坦克信息<br>
      * 同时将排名分配到每个 {@link TankBase.TankInfo} 上
      *
@@ -121,6 +128,9 @@ public class TankGroup {
         return _livingTanks;
     }
 
+    /**
+     * 查找坦克, 若无匹配则返回 null
+     */
     public TankBase getTank(int seq) {
         return tanks.get(seq);
     }

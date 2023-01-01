@@ -12,6 +12,7 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -143,17 +144,17 @@ public class BulletBase {
     /**
      * 储存子弹信息，用于序列化子弹
      */
-    public class BulletInfo {
+    public static class BulletInfo implements Serializable {
         protected final int seq;
         protected final double orientation;
         protected final Rectangle rect;
         protected final long createdTime;
 
-        protected BulletInfo(BulletBase bullet) {
+        protected BulletInfo(@NotNull BulletBase bullet) {
             seq = bullet.seq;
             orientation = bullet.orientation.get();
             rect = new Rectangle(bullet.rect);
-            createdTime = lifeModule.createdTime;
+            createdTime = bullet.lifeModule.createdTime;
         }
 
         public double getOrientation() {

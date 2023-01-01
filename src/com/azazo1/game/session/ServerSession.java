@@ -15,8 +15,9 @@ import java.io.IOException;
 import java.util.HashMap;
 
 /**
- * 写着写着被我忘记了，其功能直接被我在 {@link Server#initHandler()} 中实现了
+ * 写着写着被我忘记了，其功能直接被我在 {@link Server#initServerHandlerLoop()} 中实现了
  */
+@Deprecated
 public class ServerSession extends GameSession {
     protected ServerSession() {
         super();

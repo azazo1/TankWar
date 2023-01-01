@@ -1,7 +1,6 @@
 package com.azazo1.online.client;
 
 import com.azazo1.online.msg.*;
-import com.azazo1.online.server.GameState;
 import com.azazo1.util.Tools;
 import org.junit.jupiter.api.Test;
 
@@ -41,12 +40,15 @@ class ClientTest {
     }
 
     @Test
-    void register() throws IOException, InterruptedException {
+    void registerAndWait() throws IOException, InterruptedException {
         try (Client c = new Client("localhost", 60000)) {
             c.register(true, "hello");
             c.queryClients();
             while (!(c.handle() instanceof QueryClientsMsg.QueryClientsResponseMsg)) {
-                Thread.sleep(1);
+                Thread.sleep(10);
+            }
+            while (c.getAlive()) {
+                Thread.sleep(100);
             }
         }
     }
@@ -116,7 +118,7 @@ class ClientTest {
     }
 
     @Test
-    void recvGameOver() throws IOException, InterruptedException  {
+    void recvGameOver() throws IOException, InterruptedException {
         try (Client c = new Client("localhost", 60000)) {
             c.register(true, "hello");
             c.reqStartGame();

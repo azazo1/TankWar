@@ -52,6 +52,10 @@ public class ClientHandler implements Closeable {
         seqModule.use(seq = seqModule.next()); // 先赋值后标记使用
     }
 
+    public static void initSeqModule() {
+        seqModule.init();
+    }
+
     public void setIsHost(boolean host) {
         _isHost.set(host);
     }
@@ -86,7 +90,7 @@ public class ClientHandler implements Closeable {
         if (obj instanceof MsgBase msg) { // 同时检查了 !=null
             switch (server.getState()) {
                 case Server.WAITING -> handleOnWaiting(dt, msg);
-                case GAMING -> handleOnGaming(dt, msg);
+                case Server.GAMING -> handleOnGaming(dt, msg);
                 case Server.OVER -> handleOnOver(dt, msg);
             }
         }
@@ -107,7 +111,6 @@ public class ClientHandler implements Closeable {
         }
         if (toBeSent != null) {
             dt.sendObject(this, toBeSent);
-            Tools.logLn("Sent Msg(To " + seq + "): " + toBeSent.getShortTypeName() + ", created on: " + toBeSent.createdTime + " (" + DateFormat.getInstance().format(toBeSent.createdTime) + ")");
         }
     }
 
@@ -115,13 +118,13 @@ public class ClientHandler implements Closeable {
      * 在游戏进行时的处理方法
      */
     protected void handleOnGaming(@NotNull DataTransfer dt, @NotNull MsgBase obj) {
-        String shortClassName = obj.getShortTypeName();
         MsgBase toBeSent = null;
         if (Tools.getRealTimeInMillis() - obj.createdTime <= Config.MSG_OUTDATED_TIME) { // 在有效期内
-            Tools.logLn("Got Msg(From " + seq + "): " + shortClassName + ", created on: " + obj.createdTime + " (" + DateFormat.getInstance().format(obj.createdTime) + ")");
             if (obj instanceof TankFireActionMsg) {
                 if (isPlayer().get()) {
-                    server.letMeHandle(() -> server.getGameMap().getTankGroup().getTank(seq).fireModule.fire(ServerBullet.class));
+                    server.letMeHandle(() -> {
+                        server.getGameMap().getTankGroup().getTank(seq).fireModule.fire(ServerBullet.class);
+                    });
                 }
             } else if (obj instanceof KeyPressChangeMsg msg) {
                 if (isPlayer().get()) {
@@ -134,7 +137,6 @@ public class ClientHandler implements Closeable {
         }
         if (toBeSent != null) {
             dt.sendObject(this, toBeSent);
-            Tools.logLn("Sent Msg(To " + seq + "): " + toBeSent.getShortTypeName() + ", created on: " + toBeSent.createdTime + " (" + DateFormat.getInstance().format(toBeSent.createdTime) + ")");
         }
     }
 
@@ -180,15 +182,13 @@ public class ClientHandler implements Closeable {
             } else if (obj instanceof ReqGameStartMsg) {
                 if (isHost()) {
                     int rst = server.startGame();
-                    toBeSent = new ReqGameStartMsg.ReqGameStartMsgResponseMsg(rst);
+                    toBeSent = new ReqGameStartMsg.ReqGameStartResponseMsg(rst);
                 } else {
-                    toBeSent = new ReqGameStartMsg.ReqGameStartMsgResponseMsg(START_GAME_NOT_HOST);
+                    toBeSent = new ReqGameStartMsg.ReqGameStartResponseMsg(START_GAME_NOT_HOST);
                 }
             } else if (obj instanceof QueryGameResultMsg) {
                 toBeSent = new QueryGameResultMsg.QueryGameResultResponseMsg(null);
             }
-            // todo 提供 WallMap 选择接口 (仅房主)
-            // todo 给 Server 提供向客户端 (玩家/旁观者) 发送游戏信息 (Tank/Bullet/Msg) 方法
         }
         if (toBeSent != null) {
             dt.sendObject(this, toBeSent);
