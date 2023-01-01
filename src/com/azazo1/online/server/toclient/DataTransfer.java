@@ -146,6 +146,7 @@ public class DataTransfer implements Closeable {
                             client.close();
                         }
                     }
+
                     try {
                         //noinspection BusyWait
                         Thread.sleep(1); // 要以极快的速度进行

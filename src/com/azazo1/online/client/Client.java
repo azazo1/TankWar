@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Client implements Closeable {
     protected final Socket socket;
-    protected final DataTransfer dataTransfer;
+    public final DataTransfer dataTransfer;
     protected final ServerGameSessionIntro intro = new ServerGameSessionIntro();
     private final AtomicBoolean alive = new AtomicBoolean(true);
     private final AtomicInteger seq = new AtomicInteger(-1);

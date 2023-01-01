@@ -3,7 +3,6 @@ package com.azazo1.ui;
 import com.azazo1.Config;
 import com.azazo1.base.TankAction;
 import com.azazo1.game.session.ServerGameSessionIntro;
-import com.azazo1.game.tank.TankBase;
 import com.azazo1.game.wall.WallGroup;
 import com.azazo1.online.client.Client;
 import com.azazo1.online.client.ClientGameMap;
@@ -471,7 +470,6 @@ public class OnlineWaitingRoomPanel {
 
     public void startGamePanel() {
         // 创建 ClientGameMap
-        TankBase.getSeqModule().init();
         gameMap = new ClientGameMap();
         gameMap.setSize(gameIntro.getMapSize().width, gameIntro.getMapSize().height);
         gameMap.setBulletGroup(new ClientBulletGroup());

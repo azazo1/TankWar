@@ -15,6 +15,8 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.Timer;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -65,6 +67,14 @@ public class ClientGamePanel {
         }
         frame.setContentPane(this.panel);
         frame.setSize(850, 600);
+        frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                dispose();
+                frame.removeWindowListener(this);
+            }
+        });
         // Tank 的 seq 管理模组在 Client 模式被禁用
         Tools.clearFrameData(); // 清空帧数信息
     }

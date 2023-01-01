@@ -1,6 +1,7 @@
 package com.azazo1;
 
 import com.azazo1.base.TankAction;
+import com.azazo1.online.server.toclient.Server;
 import com.azazo1.ui.Translation;
 
 import java.awt.*;
@@ -64,9 +65,10 @@ public final class Config {
      * 客户端处理器对应套接字超时时间 ms<br>
      * 客户端较多, 超时设置短些
      *
-     * @apiNote 在服务端使用
+     * @apiNote 在服务端使用, 不知道为什么当服务端进入 {@link Server#GAMING} 状态时,
+     * 此设置会极大阻碍服务端消息读取速度, 因此将其设置为 1
      */
-    public static final int CLIENT_HANDLER_SOCKET_TIMEOUT = 500;
+    public static final int CLIENT_HANDLER_SOCKET_TIMEOUT = 1;
     /**
      * 客户端套接字超时时间 ms
      *
