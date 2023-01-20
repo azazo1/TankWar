@@ -69,8 +69,8 @@ public class GameMap extends Canvas {
             bufferGraphics.setColor(Config.BACKGROUND_COLOR);
             bufferGraphics.fillRect(0, 0, getWidth(), getHeight());
             // 更新游戏信息, 服务端不会取消此过程
-            getTankGroup().update(bufferGraphics.create()); // 传入副本
             getWallGroup().update(bufferGraphics.create()); // 传入副本
+            getTankGroup().update(bufferGraphics.create()); // 传入副本
             getBulletGroup().update(bufferGraphics.create()); // 传入副本
             if (!hasFocus()) {
                 bufferGraphics.setColor(Config.TEXT_COLOR);
