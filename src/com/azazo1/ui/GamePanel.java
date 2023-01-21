@@ -6,16 +6,21 @@ import com.azazo1.game.GameMap;
 import com.azazo1.game.session.GameSession;
 import com.azazo1.game.tank.TankBase;
 import com.azazo1.game.tank.TankGroup;
+import com.azazo1.util.MyFrameSetting;
 import com.azazo1.util.Tools;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class GamePanel extends MyPanel {
     protected final String mode; // 游戏模式 @see PlayingMode
+    private final MyFrameSetting originalFrameSetting;
+    public KeyEventDispatcher quitKeyDispatcher;
     protected Box horizontalBox;
     protected Box verticalBox;
     protected final GameSession session;
@@ -31,20 +36,35 @@ public class GamePanel extends MyPanel {
     public GamePanel(GameSession.LocalSession session) {
         mode = PlayingMode.LOCAL;
         this.session = session;
+        frame = MyFrame.getInstance();
+        originalFrameSetting = new MyFrameSetting(frame);
+        frame.setContentPane(this);
+        frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                dispose();
+                frame.removeWindowListener(this);
+            }
+        });
+    }
+
+    public void dispose() {
+        originalFrameSetting.restore();
+        quitKeyDispatcher.dispatchKeyEvent(null); // 结束游戏
     }
 
     @Override
-    public void setupUI(MyFrame frame) {
+    public void setupUI() {
         if (attached.get()) {
             throw new IllegalStateException("GamePanel cannot be attached twice.");
         }
-        this.frame = frame;
         // 设定退出键
         KeyboardFocusManager manager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
-        manager.addKeyEventDispatcher(new KeyEventDispatcher() {
+        quitKeyDispatcher = new KeyEventDispatcher() {
             @Override
             public boolean dispatchKeyEvent(KeyEvent e) {
-                if (e.getKeyCode() == Config.QUIT_GAME_KEY) {
+                if (e == null/*在dispose方法中调用,用来结束游戏*/ || e.getKeyCode() == Config.QUIT_GAME_KEY) {
                     EventQueue.invokeLater(() -> {
                         stop();
                         manager.removeKeyEventDispatcher(this);
@@ -53,7 +73,8 @@ public class GamePanel extends MyPanel {
                 }
                 return false;
             }
-        });
+        };
+        manager.addKeyEventDispatcher(quitKeyDispatcher);
 
         horizontalBox = Box.createHorizontalBox();
         verticalBox = Box.createVerticalBox();

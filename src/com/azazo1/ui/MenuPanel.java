@@ -55,7 +55,6 @@ public class MenuPanel extends MyPanel {
                         ((MyURL) wallMapFilesComboBox.getSelectedItem()).url().openStream());
                 // 切换到GamePanel
                 GamePanel gamePanel = new GamePanel(session);
-                MyFrame.getInstance().setContentPane(gamePanel);
                 gamePanel.start();
                 MenuPanel.this.setVisible(false);
             } catch (Exception ex) {
@@ -110,11 +109,8 @@ public class MenuPanel extends MyPanel {
      * 构建组件内容
      */
     @Override
-    public void setupUI(MyFrame frame) {
+    public void setupUI() {
         setVisible(true);
-        if (!this.frame.equals(frame)) {
-            throw new IllegalArgumentException("This panel can't be attached to a different MyFrame");
-        }
         if (attached.get()) { // 不构建第二次
             return;
         }
@@ -122,7 +118,7 @@ public class MenuPanel extends MyPanel {
         Box verticalBox = Box.createVerticalBox();
         JPanel localPlayingPanel = new JPanel();
         localPlayerNamesBox = Box.createVerticalBox();
-        playerNumComboBox = new JComboBox<>(new Integer[]{2, 3});
+        playerNumComboBox = new JComboBox<>(new Integer[]{2, 3, 4});
         wallMapFilesComboBox = new JComboBox<>(WallGroup.scanBinaryBitmapFiles());
         JRadioButton localPlayingRadioButton = new JRadioButton(PlayingMode.LOCAL);
         JPanel onlinePlayingPanel = new JPanel();

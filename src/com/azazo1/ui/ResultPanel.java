@@ -52,7 +52,7 @@ public class ResultPanel extends MyPanel {
     }
 
     @Override
-    public void setupUI(MyFrame frame) {
+    public void setupUI() {
         setVisible(true);
         Box hBox = Box.createHorizontalBox();
         Box vBox = Box.createVerticalBox();

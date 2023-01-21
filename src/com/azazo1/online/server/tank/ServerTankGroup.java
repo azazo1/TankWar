@@ -8,7 +8,6 @@ import java.awt.*;
 public class ServerTankGroup extends TankGroup {
     @Override
     public void update(Graphics g) {
-        // todo 发送坦克信息
         if (tanks.isEmpty()) {
             return;
         }

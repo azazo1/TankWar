@@ -63,7 +63,12 @@ public class GameMap extends Canvas {
         boolean doPaint = this.doPaint.get();
         if (doPaint) {
             Image buffer = createImage(getWidth(), getHeight()); // 二级缓冲
-            Graphics bufferGraphics = buffer.getGraphics();
+            Graphics bufferGraphics;
+            try {
+                bufferGraphics = buffer.getGraphics();
+            } catch (NullPointerException e) {
+                return;
+            }
             Graphics2D g2d = null;
             g2d = (Graphics2D) bufferGraphics;
             bufferGraphics.setColor(Config.BACKGROUND_COLOR);

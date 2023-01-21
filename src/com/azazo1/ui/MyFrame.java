@@ -22,7 +22,7 @@ public class MyFrame extends JFrame implements SingleInstance {
         setIconImage(ImageIO.read(Tools.getFileURL("img/FrameIcon.png").url()));
         setContentPane(new MyPanel() { // 显示加载中画面
             @Override
-            public void setupUI(MyFrame frame) {
+            public void setupUI() {
                 setLayout(new BorderLayout());
                 add(new JLabel(Config.translation.loading, SwingConstants.CENTER), BorderLayout.CENTER);
             }
@@ -81,6 +81,6 @@ public class MyFrame extends JFrame implements SingleInstance {
 
     public void setContentPane(MyPanel panel) {
         super.setContentPane(panel);
-        panel.setupUI(this);
+        panel.setupUI();
     }
 }

@@ -32,7 +32,7 @@ public class BulletBase {
         }
     }
 
-    protected final AtomicInteger speed = new AtomicInteger(10);
+    protected final AtomicInteger speed = new AtomicInteger(3);
     protected final AtomicBoolean finished = new AtomicBoolean(false); // 子弹是否已经击中目标或到达飞行时间上限
     protected final AtomicDouble orientation = new AtomicDouble(0); // 0 向右,顺时针为正向
     protected final Rectangle rect = new Rectangle(rawImg.getWidth(), rawImg.getHeight());

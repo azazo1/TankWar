@@ -35,18 +35,36 @@ public final class Config {
                 put(KeyEvent.VK_D, TankAction.RIGHT_TURNING);
                 put(KeyEvent.VK_S, TankAction.BACKWARD_GOING);
                 put(KeyEvent.VK_W, TankAction.FORWARD_GOING);
-                put(KeyEvent.VK_SPACE, TankAction.FIRE);
+                put(KeyEvent.VK_SHIFT, TankAction.FIRE); // 横排数字 1
             }
         }); // 一号坦克按键映射
+        add(new HashMap<>() {
+            {
+                put(KeyEvent.VK_G, TankAction.LEFT_TURNING);
+                put(KeyEvent.VK_J, TankAction.RIGHT_TURNING);
+                put(KeyEvent.VK_H, TankAction.BACKWARD_GOING);
+                put(KeyEvent.VK_Y, TankAction.FORWARD_GOING);
+                put(KeyEvent.VK_SPACE, TankAction.FIRE);
+            }
+        });// 二号坦克按键映射
         add(new HashMap<>() {
             {
                 put(KeyEvent.VK_LEFT, TankAction.LEFT_TURNING);
                 put(KeyEvent.VK_RIGHT, TankAction.RIGHT_TURNING);
                 put(KeyEvent.VK_DOWN, TankAction.BACKWARD_GOING);
                 put(KeyEvent.VK_UP, TankAction.FORWARD_GOING);
+                put(KeyEvent.VK_PERIOD, TankAction.FIRE); // 句号
+            }
+        });// 三号坦克按键映射
+        add(new HashMap<>() {
+            {
+                put(KeyEvent.VK_NUMPAD4, TankAction.LEFT_TURNING);
+                put(KeyEvent.VK_NUMPAD6, TankAction.RIGHT_TURNING);
+                put(KeyEvent.VK_NUMPAD5, TankAction.BACKWARD_GOING);
+                put(KeyEvent.VK_NUMPAD8, TankAction.FORWARD_GOING);
                 put(KeyEvent.VK_NUMPAD0, TankAction.FIRE);
             }
-        });// 二号坦克按键映射
+        });// 四号坦克按键映射
     }};
     public static final int TANK_MAX_FIRE_CAPACITY = 5; // 坦克弹夹容量
     public static final int TANK_BULLET_INCREMENT_INTERVAL_MILLIS = 1000; // 坦克弹夹子弹数增加间隔

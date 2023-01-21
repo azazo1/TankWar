@@ -82,8 +82,7 @@ public class ClientGamePanel {
     private void createUIComponents() {
         panel = new MyPanel() {
             @Override
-            public void setupUI(MyFrame frame) {
-
+            public void setupUI() {
             }
         };
         gameMapContainer = new JPanel();

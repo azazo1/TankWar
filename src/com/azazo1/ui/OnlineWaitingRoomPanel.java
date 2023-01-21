@@ -135,7 +135,7 @@ public class OnlineWaitingRoomPanel {
     private void createUIComponents() {
         panel = new MyPanel() {
             @Override
-            public void setupUI(MyFrame frame) {
+            public void setupUI() {
             }
         };
 
@@ -401,7 +401,7 @@ public class OnlineWaitingRoomPanel {
     }
 
     private void handleQueryClientsResponseMsg(QueryClientsMsg.@NotNull QueryClientsResponseMsg msg) {
-        //  处理所有客户端信息, todo 注意重点标记显示自身
+        //  处理所有客户端信息, 重点标记显示自身
         HashMap<Integer, ClientHandler.ClientHandlerInfo> infos = msg.multiInfo;
         clients.clear();
         infos.forEach((seq, info) -> {

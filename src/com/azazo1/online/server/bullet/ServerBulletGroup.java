@@ -21,6 +21,5 @@ public class ServerBulletGroup extends BulletGroup {
         for (BulletBase bullet : bullets) {
             bullet.update(null);
         }
-        // todo 发送子弹位置信息
     }
 }
