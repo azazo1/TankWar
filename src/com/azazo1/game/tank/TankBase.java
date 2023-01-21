@@ -293,6 +293,7 @@ public class TankBase implements CharWithRectangle {
         protected final String nickname; // 坦克昵称
         protected final long livingTime;
         protected final int spareBulletNum; // 弹夹中还有的子弹数量
+        protected final Class<? extends BulletBase> nextBullet;
         protected int rank = -1; // 排名(由死亡顺序计算) (产生后由 TankGroup 分配其值)
         protected final boolean left, right, forward, backward;
 
@@ -309,6 +310,7 @@ public class TankBase implements CharWithRectangle {
             right = tank.rightTurningKeyPressed.get();
             forward = tank.forwardGoingKeyPressed.get();
             backward = tank.backwardGoingKeyPressed.get();
+            nextBullet = tank.fireModule.nextBullet;
         }
 
         @Override
@@ -322,12 +324,17 @@ public class TankBase implements CharWithRectangle {
                     ", nickname='" + nickname + '\'' +
                     ", livingTime=" + livingTime +
                     ", spareBulletNum=" + spareBulletNum +
+                    ", nextBullet=" + nextBullet +
                     ", rank=" + rank +
                     ", left=" + left +
                     ", right=" + right +
                     ", forward=" + forward +
                     ", backward=" + backward +
                     '}';
+        }
+
+        public Class<? extends BulletBase> getNextBullet() {
+            return nextBullet;
         }
 
         public long getLivingTime() {
@@ -420,7 +427,7 @@ public class TankBase implements CharWithRectangle {
          *
          * @return 是否造成了伤害
          */
-        public boolean makeAttack(int damage) {
+        public boolean makeAttack(int damage) { // 修改时注意修改子代
             if (damage <= 0 // 恢复效果则不被忽略
                     || Tools.getFrameTimeInMillis() > Config.TANK_INJURED_INTERVAL_MILLIS + lastInjuredTime.get()) { // 过了受伤间隔
                 endurance.getAndAdd(-damage);

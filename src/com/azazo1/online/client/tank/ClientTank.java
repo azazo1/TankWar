@@ -1,6 +1,7 @@
 package com.azazo1.online.client.tank;
 
 import com.azazo1.Config;
+import com.azazo1.game.bullet.BulletBase;
 import com.azazo1.game.tank.TankBase;
 import com.azazo1.util.Tools;
 import org.jetbrains.annotations.NotNull;
@@ -101,5 +102,9 @@ public class ClientTank extends TankBase {
         rightTurningKeyPressed.set(pressedActions[1]);
         forwardGoingKeyPressed.set(pressedActions[2]);
         backwardGoingKeyPressed.set(pressedActions[3]);
+    }
+
+    public void setNextBullet(Class<? extends BulletBase> nextBullet) {
+        fireModule.setNextBullet(nextBullet);
     }
 }

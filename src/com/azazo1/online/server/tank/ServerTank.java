@@ -67,8 +67,10 @@ public class ServerTank extends TankBase {
         enduranceModule = new EnduranceModule() {
             @Override
             public boolean makeAttack(int damage) {
-                if (Tools.getFrameTimeInMillis() > Config.TANK_INJURED_INTERVAL_MILLIS + lastInjuredTime.get()) { // 过了受伤间隔
+                if (damage <= 0 // 恢复效果则不被忽略
+                        || Tools.getFrameTimeInMillis() > Config.TANK_INJURED_INTERVAL_MILLIS + lastInjuredTime.get()) { // 过了受伤间隔
                     endurance.getAndAdd(-damage);
+                    endurance.set(Math.min(maxEndurance, endurance.get())); // 防止超出最大生命值
                     lastInjuredTime.set(Tools.getFrameTimeInMillis());
                     if (damage > 0) {
                         // 广播坦克受伤事件

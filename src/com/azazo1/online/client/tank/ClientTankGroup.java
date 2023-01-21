@@ -29,6 +29,7 @@ public class ClientTankGroup extends TankGroup {
             get.setRank(info.getRank());
             get.setSpareBullet(info.getSpareBulletNum());
             get.setActions(info.getPressedActions());
+            get.setNextBullet(info.getNextBullet());
         }
     }
 
