@@ -2,6 +2,7 @@ package com.azazo1.game;
 
 import com.azazo1.Config;
 import com.azazo1.game.bullet.BulletGroup;
+import com.azazo1.game.item.ItemGroup;
 import com.azazo1.game.tank.TankBase;
 import com.azazo1.game.tank.TankGroup;
 import com.azazo1.game.wall.WallGroup;
@@ -20,6 +21,7 @@ public class GameMap extends Canvas {
     protected final AtomicBoolean doPaint = new AtomicBoolean(true); // 是否显示, 服务端子类设为 false
     protected TankGroup tankGroup;
     protected WallGroup wallGroup;
+    protected ItemGroup itemGroup;
     protected BulletGroup bulletGroup;
 
     public GameMap() {
@@ -41,6 +43,10 @@ public class GameMap extends Canvas {
         if (bulletGroup != null) {
             bulletGroup.clearGameMap();
             bulletGroup = null;
+        }
+        if (itemGroup != null) {
+            itemGroup.clearGameMap();
+            itemGroup = null;
         }
     }
 
@@ -76,6 +82,7 @@ public class GameMap extends Canvas {
             // 更新游戏信息, 服务端不会取消此过程
             getWallGroup().update(bufferGraphics.create()); // 传入副本
             getTankGroup().update(bufferGraphics.create()); // 传入副本
+            getItemGroup().update(bufferGraphics.create()); // 传入副本
             getBulletGroup().update(bufferGraphics.create()); // 传入副本
             if (!hasFocus()) {
                 bufferGraphics.setColor(Config.TEXT_COLOR);
@@ -89,6 +96,7 @@ public class GameMap extends Canvas {
             getTankGroup().update(null);
             getWallGroup().update(null);
             getBulletGroup().update(null);
+            getItemGroup().update(null);
         }
     }
 
@@ -103,7 +111,16 @@ public class GameMap extends Canvas {
         this.tankGroup = tankGroup;
         tankGroup.setGameMap(this);
     }
-
+    public void setItemGroup(@NotNull ItemGroup itemGroup){
+        if (this.itemGroup != null && itemGroup != this.itemGroup) {
+            this.itemGroup.clearGameMap();
+        }
+        this.itemGroup = itemGroup;
+        itemGroup.setGameMap(this);
+    }
+    public ItemGroup getItemGroup() {
+        return itemGroup;
+    }
     public WallGroup getWallGroup() {
         return wallGroup;
     }

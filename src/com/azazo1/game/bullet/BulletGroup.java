@@ -23,18 +23,20 @@ public class BulletGroup {
     }
 
     public void update(Graphics graphics) {
-        for (int i = 0; i < bullets.size(); i++) {
-            BulletBase bullet = bullets.get(i);
-            if (bullet.isFinished()) {
-                removeBullet(bullet);
-                i--;
+        synchronized (bullets) {
+            for (int i = 0; i < bullets.size(); i++) {
+                BulletBase bullet = bullets.get(i);
+                if (bullet.isFinished()) {
+                    removeBullet(bullet);
+                    i--;
+                }
             }
-        }
-        if (bullets.isEmpty()) {
-            return;
-        }
-        for (BulletBase bullet : bullets) {
-            bullet.update(graphics.create());
+            if (bullets.isEmpty()) {
+                return;
+            }
+            for (BulletBase bullet : bullets) {
+                bullet.update(graphics.create());
+            }
         }
     }
 

@@ -1,13 +1,13 @@
 package com.azazo1.util;
 
 import com.azazo1.Config;
-import com.azazo1.game.bullet.BulletBase;
 import com.azazo1.game.tank.TankBase;
 import jmp123.PlayBack;
 import jmp123.output.Audio;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -31,6 +32,7 @@ public final class Tools {
     private static final Vector<Long> lastTickTimes = new Vector<>(10); // 最后10次 tickFrame 时间戳, 真实时间
     private static final AtomicLong firstTickTime = new AtomicLong(-1); // 真实时间
     private static final AtomicLong bias = new AtomicLong();
+    private static final HashMap<String, BufferedImage> loadedImg = new HashMap<>();
 
     /**
      * 当以 Jar 包形式运行时, 读取 Jar 包内的文件 URL, 当直接运行时直接获取文件 URL<br>
@@ -256,8 +258,8 @@ public final class Tools {
      */
     public static void init() throws IOException {
         TankBase.getSeqModule().init();
-        BulletBase.getSeqModule().init();
         Tools.clearFrameData();
+        loadedImg.clear();
         // 初始化(清空) temp 目录
         File tempDir = new File(Config.TEMP_DIR);
         if (!tempDir.exists()) {
@@ -286,5 +288,24 @@ public final class Tools {
             deleteFileAndDir(f);
         }
         target.delete();
+    }
+
+    /**
+     * 加载图片, 若对应图片已被加载过则直接从内存中获取
+     *
+     * @param imgFile 图片路径
+     */
+    public static BufferedImage loadImg(String imgFile) {
+        try {
+            return loadedImg.getOrDefault(imgFile, ImageIO.read(Tools.getFileURL(imgFile).url()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    /**
+     * 清除已加载图片, 释放内存
+     * */
+    public static void clearLoadedImg() {
+        loadedImg.clear();
     }
 }

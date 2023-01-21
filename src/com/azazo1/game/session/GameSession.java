@@ -4,6 +4,7 @@ import com.azazo1.Config;
 import com.azazo1.base.SingleInstance;
 import com.azazo1.game.GameMap;
 import com.azazo1.game.bullet.BulletGroup;
+import com.azazo1.game.item.ItemGroup;
 import com.azazo1.game.tank.TankBase;
 import com.azazo1.game.tank.TankGroup;
 import com.azazo1.game.wall.WallGroup;
@@ -125,6 +126,9 @@ public abstract class GameSession implements SingleInstance {
             session.gameMap.setWallGroup(wallG);
 
             session.gameMap.setBulletGroup(new BulletGroup());
+
+            ItemGroup itemGroup = new ItemGroup();
+            session.gameMap.setItemGroup(itemGroup);
 
             TankGroup tankG = new TankGroup();
             session.gameMap.setTankGroup(tankG);

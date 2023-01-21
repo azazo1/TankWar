@@ -9,7 +9,7 @@ import java.io.IOException;
 import static com.azazo1.util.Tools.init;
 import static com.azazo1.util.Tools.resizeFrame;
 
-public class Main {
+public class Main {// todo 设置界面
     public static void main(String[] args) throws IOException {
         init();
         MyFrame f = new MyFrame();

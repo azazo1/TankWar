@@ -34,7 +34,7 @@ class BulletTest {
         }
         BulletGroup bulletG = new BulletGroup();
 
-        bulletG.addBullet(new BulletBase(50, 50, Math.toRadians(45), 2)); // test Bullet
+        bulletG.addBullet(new BulletBase(50, 50, Math.toRadians(45))); // test Bullet
         tankG.addTank(tank);
         tankG.addTank(tank2);
         map.setTankGroup(tankG);

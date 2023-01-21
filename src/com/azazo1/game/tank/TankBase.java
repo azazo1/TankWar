@@ -5,6 +5,7 @@ import com.azazo1.base.CharWithRectangle;
 import com.azazo1.base.TankAction;
 import com.azazo1.game.GameMap;
 import com.azazo1.game.bullet.BulletBase;
+import com.azazo1.game.item.ItemBase;
 import com.azazo1.game.wall.Wall;
 import com.azazo1.game.wall.WallGroup;
 import com.azazo1.online.client.tank.ClientTank;
@@ -239,6 +240,17 @@ public class TankBase implements CharWithRectangle {
             g2dBak.setColor(Config.TANK_CLIP_COLOR);
             g2dBak.setFont(Config.TANK_CLIP_FONT); // 降低字体大小
             g2dBak.drawString(Config.translation.hasBulletChar.repeat(fireModule.getSpareBulletNum()) + Config.translation.emptyBulletChar.repeat(fireModule.getUsedBulletNum()), -rect.width / 4, -rect.height / 4);
+            // 当有下一发特殊子弹时, 在中心位置显示下一发子弹(记得修改子代)
+            if (fireModule.nextBullet != null) {
+                try {
+                    String filename = (String) fireModule.nextBullet.getDeclaredField("imgFile").get(fireModule.nextBullet);
+                    BufferedImage img = Tools.loadImg(filename);
+                    int width = img.getWidth(), height = img.getHeight();
+                    g2d.drawImage(img, -width / 2, -height / 2, width, height, null);
+                } catch (NoSuchFieldException | IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+            }
         }
     }
 
@@ -408,10 +420,12 @@ public class TankBase implements CharWithRectangle {
          * @return 是否造成了伤害
          */
         public boolean makeAttack(int damage) {
-            if (Tools.getFrameTimeInMillis() > Config.TANK_INJURED_INTERVAL_MILLIS + lastInjuredTime.get()) { // 过了受伤间隔
+            if (damage <= 0 // 恢复效果则不被忽略
+                    || Tools.getFrameTimeInMillis() > Config.TANK_INJURED_INTERVAL_MILLIS + lastInjuredTime.get()) { // 过了受伤间隔
                 endurance.getAndAdd(-damage);
+                endurance.set(Math.min(maxEndurance, endurance.get())); // 防止超出最大生命值
                 lastInjuredTime.set(Tools.getFrameTimeInMillis());
-                if (damage > 0) {
+                if (damage > 0 && !(TankBase.this instanceof ClientTank)) {
                     // 播放受伤音效
                     Tools.playSound(Tools.getFileURL(Config.ATTACKED_SOUND).url());
                 }
@@ -500,6 +514,7 @@ public class TankBase implements CharWithRectangle {
     public class FireModule {
         protected final AtomicLong lastIncrementTime = new AtomicLong(0); // 上次弹夹数量增加时间戳 (FrameTime)
         protected final AtomicInteger spareBulletNum = new AtomicInteger(0); // 弹夹内子弹数量, 有最大值, 见 Config
+        protected volatile Class<? extends BulletBase> nextBullet = null; // 下一发子弹
 
         public FireModule() {
         }
@@ -523,8 +538,10 @@ public class TankBase implements CharWithRectangle {
 
                 spareBulletNum.getAndDecrement();
                 tankGroup.getGameMap().getBulletGroup().addBullet(bullet);
-                // 播放音效
-                Tools.playSound(Tools.getFileURL(Config.FIRE_SOUND).url());
+                if (!(TankBase.this instanceof ClientTank)) {
+                    // 播放音效
+                    Tools.playSound(Tools.getFileURL(Config.FIRE_SOUND).url());
+                }
                 return true;
             } catch (NoSuchMethodException | InvocationTargetException | InstantiationException |
                      IllegalAccessException e) {
@@ -551,6 +568,11 @@ public class TankBase implements CharWithRectangle {
          * 子代可以继承来修改子弹的类型
          */
         public boolean fire() {
+            if (nextBullet != null) {
+                boolean fired = fire(nextBullet);
+                nextBullet = null;
+                return fired;
+            }
             return fire(BulletBase.class);
         }
 
@@ -567,6 +589,13 @@ public class TankBase implements CharWithRectangle {
                 throw new IllegalCallerException("Only ClientTank can set spare bullet num.");
             }
             this.spareBulletNum.set(spareBulletNum);
+        }
+
+        /**
+         * 设置坦克的下一发子弹类型, 该子弹也会消耗弹药数量
+         */
+        public void setNextBullet(Class<? extends BulletBase> bullet) {
+            nextBullet = bullet;
         }
     }
 
@@ -734,6 +763,15 @@ public class TankBase implements CharWithRectangle {
                     if (enduranceModule.makeAttack(b.getDamage())) {
                         b.finish(TankBase.this);
                     }
+                }
+            }
+
+            // 与物品进行碰撞检测
+            for (ItemBase i : tankGroup.getGameMap().getItemGroup().getItems()) {
+                Point center = detectCollision(i.getRect());
+                if (center != null) {
+                    // 碰撞到了, 使受到伤害
+                    i.finishAndEffect(TankBase.this);
                 }
             }
         }

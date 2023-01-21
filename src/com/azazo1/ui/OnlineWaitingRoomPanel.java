@@ -3,10 +3,12 @@ package com.azazo1.ui;
 import com.azazo1.Config;
 import com.azazo1.base.TankAction;
 import com.azazo1.game.session.ServerGameSessionIntro;
+import com.azazo1.game.tank.TankBase;
 import com.azazo1.game.wall.WallGroup;
 import com.azazo1.online.client.Client;
 import com.azazo1.online.client.ClientGameMap;
 import com.azazo1.online.client.bullet.ClientBulletGroup;
+import com.azazo1.online.client.item.ClientItemGroup;
 import com.azazo1.online.client.tank.ClientTank;
 import com.azazo1.online.client.tank.ClientTankGroup;
 import com.azazo1.online.client.wall.ClientWallGroup;
@@ -478,8 +480,10 @@ public class OnlineWaitingRoomPanel {
         Tools.tickFrame(false);
         ClientTankGroup tankGroup = (ClientTankGroup) gameMap.getTankGroup();
         ClientBulletGroup bulletGroup = (ClientBulletGroup) gameMap.getBulletGroup();
+        ClientItemGroup itemGroup = (ClientItemGroup) gameMap.getItemGroup();
         tankGroup.syncTanks(msg.state.tankInfos(), client);
         bulletGroup.syncBullets(msg.state.bulletInfos());
+        itemGroup.syncItems(msg.state.itemInfos());
         gamePanel.updateLabels();
     }
 
@@ -514,7 +518,9 @@ public class OnlineWaitingRoomPanel {
         gameMap.setBulletGroup(new ClientBulletGroup());
         ClientTankGroup tankGroup = new ClientTankGroup();
         gameMap.setTankGroup(tankGroup);
+        gameMap.setItemGroup(new ClientItemGroup());
         gameIntro.getTanks().forEach((seq, name) -> {
+            TankBase.getSeqModule().init();
             ClientTank tank = new ClientTank(seq, seq == client.getSeq());
             tank.setName(name);
             tankGroup.addTank(tank);

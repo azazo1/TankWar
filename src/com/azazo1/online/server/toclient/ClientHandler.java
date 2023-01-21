@@ -2,7 +2,6 @@ package com.azazo1.online.server.toclient;
 
 import com.azazo1.Config;
 import com.azazo1.online.msg.*;
-import com.azazo1.online.server.bullet.ServerBullet;
 import com.azazo1.online.server.tank.ServerTank;
 import com.azazo1.util.SeqModule;
 import com.azazo1.util.Tools;
@@ -125,7 +124,7 @@ public class ClientHandler implements Closeable {
             if (obj instanceof TankFireActionMsg) {
                 if (isPlayer().get()) {
                     server.letMeHandle(() -> {
-                        server.getGameMap().getTankGroup().getTank(seq).fireModule.fire(ServerBullet.class);
+                        server.getGameMap().getTankGroup().getTank(seq).fireModule.fire();
                     });
                 }
             } else if (obj instanceof KeyPressChangeMsg msg) {

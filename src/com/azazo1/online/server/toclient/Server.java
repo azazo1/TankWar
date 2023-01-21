@@ -4,6 +4,7 @@ package com.azazo1.online.server.toclient;
 import com.azazo1.Config;
 import com.azazo1.base.SingleInstance;
 import com.azazo1.game.GameMap;
+import com.azazo1.game.item.ItemGroup;
 import com.azazo1.game.session.ServerGameSessionIntro;
 import com.azazo1.online.msg.*;
 import com.azazo1.online.server.GameState;
@@ -187,7 +188,8 @@ public class Server implements Closeable, SingleInstance {
                             broadcast(new GameStateMsg(new GameState(
                                     Tools.getFrameTimeInMillis(),
                                     gameMap.getTankGroup().getTanksInfo(),
-                                    gameMap.getBulletGroup().getBulletInfo()
+                                    gameMap.getBulletGroup().getBulletInfo(),
+                                    gameMap.getItemGroup().getItemInfos()
                             )), false);
                         }
                         if (gameMap.getTankGroup().getLivingTankNum() <= 1) { // 游戏结束
@@ -302,6 +304,7 @@ public class Server implements Closeable, SingleInstance {
         ServerTankGroup serverTankGroup = new ServerTankGroup();
         gameMap.setTankGroup(serverTankGroup);
         gameMap.setBulletGroup(new ServerBulletGroup());
+        gameMap.setItemGroup(new ItemGroup()); // ItemGroup 在服务端不需要特别设置
         gameMap.setWallGroup(ServerWallGroup.parseFromBitmap(ImageIO.read(Tools.getFileURL(intro.getWallMapFile()).url())));
         HashMap<Integer, String> tanks = intro.getTanks();
         tanks.forEach((seq, name) -> {

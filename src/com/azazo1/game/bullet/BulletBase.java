@@ -1,81 +1,54 @@
 package com.azazo1.game.bullet;
 
+import com.azazo1.base.CharWithRectangle;
 import com.azazo1.game.tank.TankBase;
 import com.azazo1.game.wall.Wall;
 import com.azazo1.game.wall.WallGroup;
 import com.azazo1.util.AtomicDouble;
-import com.azazo1.util.SeqModule;
 import com.azazo1.util.Tools;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
-public class BulletBase {
-    protected final static int EXISTING_DURATION_IN_MILLIS = 5000; // 子弹飞行时长
+public class BulletBase implements CharWithRectangle {
+    protected final static AtomicInteger existingTime = new AtomicInteger(5000); // 子弹飞行时长
     protected final static int MAX_REFLECTION_TIMES = 10; // 子弹最大反弹次数
-    protected static final String imgFileName = "img/Bullet.png";
-    protected static final BufferedImage rawImg;
-    private static final SeqModule seqModule = new SeqModule();
+    public static final String imgFile = "img/Bullet.png";
+    protected volatile BufferedImage rawImg = Tools.loadImg(imgFile);
 
-    static {
-        try {
-            rawImg = ImageIO.read(Tools.getFileURL(imgFileName).url()); // 为了保证子弹反射正常进行, 建议子弹图像为方形
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     protected final AtomicInteger speed = new AtomicInteger(3);
     protected final AtomicBoolean finished = new AtomicBoolean(false); // 子弹是否已经击中目标或到达飞行时间上限
     protected final AtomicDouble orientation = new AtomicDouble(0); // 0 向右,顺时针为正向
     protected final Rectangle rect = new Rectangle(rawImg.getWidth(), rawImg.getHeight());
-    protected final LifeModule lifeModule = new LifeModule();
-    protected final ReflectionModule reflectionModule = new ReflectionModule();
+    protected volatile LifeModule lifeModule = new LifeModule();
+    protected volatile ReflectionModule reflectionModule = new ReflectionModule();
     protected final AtomicInteger damage = new AtomicInteger(1); // 对坦克造成的伤害
-    protected final AtomicBoolean doPaint = new AtomicBoolean(true); // 是否显示, 服务端子类设为 false
-    private final int seq;
-    protected BulletGroup bulletGroup;
+    protected volatile BulletGroup bulletGroup;
 
     /**
      * 子代都应继承这个构造函数
      */
-    public BulletBase(int seq, int centerX, int centerY, double orientation) {
+    public BulletBase(int centerX, int centerY, double orientation) {
         rect.translate(centerX, centerY);
         rect.translate(-rect.width / 2, -rect.height / 2);
         this.orientation.set(orientation % (Math.PI * 2));
-        seqModule.use(seq);
-        this.seq = seq;
     }
 
     /**
      * @implNote 当为 Online 模式时, 客户端子类无 seq 参构造函数要禁用, 因为 seq 由服务端控制
+     * @deprecated 速度不作为初始化参数
      */
     public BulletBase(int centerX, int centerY, double orientation, int speed) {
-        this(seqModule.next(), centerX, centerY, orientation);
+        this(centerX, centerY, orientation);
         setSpeed(speed);
-    }
-
-    /**
-     * @implNote 当为 Online 模式时, 客户端子类无 seq 参构造函数要禁用, 因为 seq 由服务端控制
-     */
-    public BulletBase(int centerX, int centerY, double orientation) {
-        this(seqModule.next(), centerX, centerY, orientation);
-    }
-
-    public static SeqModule getSeqModule() {
-        return seqModule;
-    }
-
-    public int getSeq() {
-        return seq;
     }
 
     public Rectangle getRect() {
@@ -112,8 +85,8 @@ public class BulletBase {
         }
     }
 
-    protected void paint(@NotNull Graphics graphics) {
-        if (doPaint.get()) {
+    protected void paint(Graphics graphics) {
+        if (graphics != null) {
             graphics.translate(rect.x, rect.y);
             ((Graphics2D) graphics).rotate(orientation.get());
             graphics.drawImage(rawImg, -rect.width / 2, -rect.height / 2, rect.width, rect.height, null);
@@ -153,16 +126,16 @@ public class BulletBase {
      * 储存子弹信息，用于序列化子弹
      */
     public static class BulletInfo implements Serializable {
-        protected final int seq;
+        protected final Class<? extends BulletBase> bulletType;
         protected final double orientation;
         protected final Rectangle rect;
         protected final long createdTime;
 
         protected BulletInfo(@NotNull BulletBase bullet) {
-            seq = bullet.seq;
             orientation = bullet.orientation.get();
             rect = new Rectangle(bullet.rect);
-            createdTime = bullet.lifeModule.createdTime;
+            createdTime = bullet.lifeModule.createdTime.get();
+            bulletType = bullet.getClass();
         }
 
         public double getOrientation() {
@@ -177,8 +150,8 @@ public class BulletBase {
             return createdTime;
         }
 
-        public int getSeq() {
-            return seq;
+        public Class<? extends BulletBase> getBulletType() {
+            return bulletType;
         }
     }
 
@@ -186,7 +159,7 @@ public class BulletBase {
      * 子弹生命模块
      */
     protected class LifeModule {
-        protected final long createdTime = Tools.getFrameTimeInMillis();
+        protected final AtomicLong createdTime = new AtomicLong(Tools.getFrameTimeInMillis()); // 便于 BunshinBullet 继承修改
 
         public void updateLife() {
             int width = bulletGroup.getGameMap().getWidth();
@@ -194,7 +167,7 @@ public class BulletBase {
             double cx = rect.getCenterX();
             double cy = rect.getCenterY();
             if (reflectionModule.getReflectionTimes() > MAX_REFLECTION_TIMES // 反射过多
-                    || Tools.getFrameTimeInMillis() > EXISTING_DURATION_IN_MILLIS + createdTime // 存在过久
+                    || Tools.getFrameTimeInMillis() > existingTime.get() + createdTime.get() // 存在过久
                     || cx > width || cx < 0 || cy > height || cy < 0) { // 超出边界
                 finish();
             }

@@ -1,14 +1,10 @@
 package com.azazo1.online.client.tank;
 
 import com.azazo1.Config;
-import com.azazo1.game.bullet.BulletBase;
 import com.azazo1.game.tank.TankBase;
-import com.azazo1.util.Tools;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -29,45 +25,6 @@ public class ClientTank extends TankBase {
         getSeqModule().init(); // 禁用 seq 管理模块
         setActionKeyMap(null);
         this.you = you;
-        enduranceModule = new EnduranceModule() {
-            @Override
-            public boolean makeAttack(int damage) {
-                if (Tools.getFrameTimeInMillis() > Config.TANK_INJURED_INTERVAL_MILLIS + lastInjuredTime.get()) { // 过了受伤间隔
-                    endurance.getAndAdd(-damage);
-                    lastInjuredTime.set(Tools.getFrameTimeInMillis());
-                    // 此处不发声
-                    return true;
-                }
-                if (endurance.get() <= 0) {
-                    makeDie();
-                }
-                return false;
-            }
-        };
-        fireModule = new FireModule() {
-            @Override
-            public boolean fire(@NotNull Class<? extends BulletBase> T) {
-                if (spareBulletNum.get() <= 0) {
-                    return false;
-                }
-                try {
-                    Constructor<? extends BulletBase> constructor = T.getConstructor(int.class, int.class, double.class);
-                    double orientation = orientationModule.getOrientation();
-                    // rect.width 是坦克炮筒所在边
-                    int cx = (int) (rect.getCenterX() + Math.cos(orientation) * rect.width);
-                    int cy = (int) (rect.getCenterY() + Math.sin(orientation) * rect.width);
-                    BulletBase bullet = constructor.newInstance(cx, cy, orientation);
-
-                    spareBulletNum.getAndDecrement();
-                    tankGroup.getGameMap().getBulletGroup().addBullet(bullet);
-                    // 此处不发声
-                    return true;
-                } catch (NoSuchMethodException | InvocationTargetException | InstantiationException |
-                         IllegalAccessException e) {
-                    throw new RuntimeException(e); // 一般不会到达此处
-                }
-            }
-        };
     }
 
     public void turnTo(double orientation) {
