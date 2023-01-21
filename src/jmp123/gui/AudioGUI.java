@@ -20,27 +20,20 @@
 */
 package jmp123.gui;
 
-import java.awt.Color;
-import java.awt.GradientPaint;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-
-import javax.swing.ImageIcon;
-import javax.swing.JComponent;
-
 import jmp123.decoder.Header;
 import jmp123.decoder.IAudio;
 import jmp123.gui.album.AlbumFrame;
-//import jmp123.gui.album.AlbumImpl;
 import jmp123.gui.album.AlbumReceiver;
 import jmp123.gui.album.AlbumThread;
 import jmp123.output.Audio;
 import jmp123.output.FFT;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 
 /**
  * 音频输出（播放），频谱显示，唱片集显示。

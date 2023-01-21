@@ -20,18 +20,13 @@
  */
 package jmp123;
 
-import java.io.IOException;
-import jmp123.decoder.Header;
-import jmp123.decoder.IAudio;
-import jmp123.decoder.ID3Tag;
-import jmp123.decoder.Layer123;
-import jmp123.decoder.Layer1;
-import jmp123.decoder.Layer2;
-import jmp123.decoder.Layer3;
+import jmp123.decoder.*;
 import jmp123.instream.BuffRandReadFile;
 import jmp123.instream.BuffRandReadURL;
-import jmp123.instream.RandomRead;
 import jmp123.instream.MultiplexAudio;
+import jmp123.instream.RandomRead;
+
+import java.io.IOException;
 
 /**
  * 播放一个文件及播放时暂停等控制。用PlayBack播放一个文件的步骤为：

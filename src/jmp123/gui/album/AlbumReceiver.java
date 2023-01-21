@@ -1,6 +1,6 @@
 package jmp123.gui.album;
 
-import javax.swing.ImageIcon;
+import javax.swing.*;
 
 /**
  * 接收唱片集搜索结果。该该接口的方法由接收者实现，被搜索者调用。

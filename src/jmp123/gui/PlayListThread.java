@@ -1,8 +1,9 @@
 package jmp123.gui;
 
-import java.io.IOException;
 import jmp123.PlayBack;
 import jmp123.decoder.IAudio;
+
+import java.io.IOException;
 
 public class PlayListThread extends Thread {
 	private volatile boolean interrupted;

@@ -1,14 +1,9 @@
 package jmp123.gui.album;
 
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Image;
+import javax.swing.*;
+import java.awt.*;
 import java.net.MalformedURLException;
 import java.net.URL;
-
-import javax.swing.ImageIcon;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
 
 @SuppressWarnings("serial")
 public class AlbumFrame extends JFrame{

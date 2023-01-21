@@ -1,9 +1,9 @@
 package jmp123.test;
 
-import java.io.IOException;
-
 import jmp123.PlayBack;
 import jmp123.decoder.Header;
+
+import java.io.IOException;
 
 /**
  * 测试解码速度，也是解码器调用的一个示例。

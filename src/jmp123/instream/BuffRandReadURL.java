@@ -22,13 +22,13 @@
 */
 package jmp123.instream;
 
+import jmp123.decoder.IAudio;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLDecoder;
-
-import jmp123.decoder.IAudio;
 
 /**
  * 读取网络文件，带缓冲区。

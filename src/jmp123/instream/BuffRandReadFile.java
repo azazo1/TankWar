@@ -20,8 +20,8 @@
 */
 package jmp123.instream;
 
-import java.io.RandomAccessFile;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 
 public final class BuffRandReadFile extends RandomRead {
 	private RandomAccessFile rafIn;

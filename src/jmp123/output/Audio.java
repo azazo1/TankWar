@@ -20,13 +20,13 @@
  */
 package jmp123.output;
 
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.SourceDataLine;
-import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioSystem;
-
 import jmp123.decoder.Header;
 import jmp123.decoder.IAudio;
+
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.SourceDataLine;
 
 /**
  * 将解码得到的PCM数据写入音频设备（播放）。
