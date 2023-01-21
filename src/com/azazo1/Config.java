@@ -8,6 +8,7 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.util.HashMap;
 import java.util.Vector;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class Config {
     public static final int FPS = 60;
@@ -105,6 +106,27 @@ public final class Config {
      * 服务器广播游戏同步信息的时间间隔 (与游戏进程的处理速度无关)
      */
     public static final long SERVER_GAME_STATE_SENDING_INTERVAL_TIME_MS = 100;
+
+    /**
+     * 是否播放音效
+     */
+    public static final AtomicBoolean doPlaySound = new AtomicBoolean(true);
+    /**
+     * 保存墙图像素图片的文件的文件后缀
+     */
+    public static final String WALL_MAP_FILE_SUFFIX = ".mwal";
+    /**
+     * 受伤音效
+     */
+    public static final String ATTACKED_SOUND = "sound/attacked.mp3";
+    /**
+     * 开火音效
+     */
+    public static final String FIRE_SOUND = "sound/fire.mp3";
+    /**
+     * 随机传送音效
+     */
+    public static final String RANDOM_TELEPORT_SOUND = "sound/teleport.mp3";
 
     private Config() {
     }

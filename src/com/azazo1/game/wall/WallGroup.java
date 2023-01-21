@@ -1,7 +1,6 @@
 package com.azazo1.game.wall;
 
 import com.azazo1.Config;
-import com.azazo1.base.ConstantVal;
 import com.azazo1.game.GameMap;
 import com.azazo1.util.MyURL;
 import com.azazo1.util.Tools;
@@ -15,7 +14,6 @@ import java.awt.image.Raster;
 import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -142,7 +140,7 @@ public class WallGroup {
      */
     public static @Nullable Vector<MyURL> scanBinaryBitmapFiles(String scanPath) {
         try {
-            return Tools.getFileURLs(scanPath, (dir, name) -> name.endsWith(ConstantVal.WALL_MAP_FILE_SUFFIX));
+            return Tools.getFileURLs(scanPath, (dir, name) -> name.endsWith(Config.WALL_MAP_FILE_SUFFIX));
         } catch (IOException e) {
             return null;
         }

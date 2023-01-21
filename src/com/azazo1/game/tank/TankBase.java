@@ -189,6 +189,9 @@ public class TankBase implements CharWithRectangle {
             rect.setRect(rectBak);
             orientationModule.setOrientation(orientationBak);
             randomlyTeleport(); // 重试直到没有发生碰撞
+        } else {
+            // 成功传送时播放音效
+            Tools.playSound(Tools.getFileURL(Config.RANDOM_TELEPORT_SOUND).url());
         }
     }
 
@@ -408,6 +411,8 @@ public class TankBase implements CharWithRectangle {
             if (Tools.getFrameTimeInMillis() > Config.TANK_INJURED_INTERVAL_MILLIS + lastInjuredTime.get()) { // 过了受伤间隔
                 endurance.getAndAdd(-damage);
                 lastInjuredTime.set(Tools.getFrameTimeInMillis());
+                // 播放受伤音效
+                Tools.playSound(Tools.getFileURL(Config.ATTACKED_SOUND).url());
                 return true;
             }
             if (endurance.get() <= 0) {
@@ -511,6 +516,8 @@ public class TankBase implements CharWithRectangle {
 
                 spareBulletNum.getAndDecrement();
                 tankGroup.getGameMap().getBulletGroup().addBullet(bullet);
+                // 播放音效
+                Tools.playSound(Tools.getFileURL(Config.FIRE_SOUND).url());
             } catch (NoSuchMethodException | InvocationTargetException | InstantiationException |
                      IllegalAccessException e) {
                 throw new RuntimeException(e); // 一般不会到达此处
@@ -717,7 +724,7 @@ public class TankBase implements CharWithRectangle {
                 if (center != null) {
                     // 碰撞到了, 使受到伤害
                     if (enduranceModule.makeAttack(b.getDamage())) {
-                        b.finish();
+                        b.finish(TankBase.this);
                     }
                 }
             }

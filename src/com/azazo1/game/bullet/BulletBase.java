@@ -1,5 +1,6 @@
 package com.azazo1.game.bullet;
 
+import com.azazo1.game.tank.TankBase;
 import com.azazo1.game.wall.Wall;
 import com.azazo1.game.wall.WallGroup;
 import com.azazo1.util.AtomicDouble;
@@ -86,6 +87,13 @@ public class BulletBase {
      */
     public void finish() {
         finished.set(true);
+    }
+
+    /**
+     * @param tank 击中的坦克，可覆盖此方法以实现特殊子弹效果
+     */
+    public void finish(TankBase tank) {
+        finish();
     }
 
     public void setSpeed(int speed) {

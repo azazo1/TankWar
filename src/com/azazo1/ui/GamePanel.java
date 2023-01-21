@@ -32,6 +32,13 @@ public class GamePanel extends MyPanel {
     protected MyLabel bulletNumLabel;
     protected Box sideBar; // 侧边栏
     protected final Vector<MyLabel> tankLabelList = new Vector<>(); // 在侧边栏显示坦克详细信息
+    protected final WindowAdapter doOnCloseWindow = new WindowAdapter() {
+        @Override
+        public void windowClosed(WindowEvent e) {
+            stop();
+        }
+    };
+    ;
 
     public GamePanel(GameSession.LocalSession session) {
         mode = PlayingMode.LOCAL;
@@ -40,18 +47,16 @@ public class GamePanel extends MyPanel {
         originalFrameSetting = new MyFrameSetting(frame);
         frame.setContentPane(this);
         frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        frame.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosed(WindowEvent e) {
-                dispose();
-                frame.removeWindowListener(this);
-            }
-        });
+        frame.addWindowListener(doOnCloseWindow);
     }
 
-    public void dispose() {
+    /**
+     * 结束游戏时, 由 {@link GamePanel#stop()} 调用, 请勿直接调用
+     */
+    protected void dispose() {
+        setVisible(false);
+        frame.removeWindowListener(doOnCloseWindow);
         originalFrameSetting.restore();
-        quitKeyDispatcher.dispatchKeyEvent(null); // 结束游戏
     }
 
     @Override
@@ -62,13 +67,18 @@ public class GamePanel extends MyPanel {
         // 设定退出键
         KeyboardFocusManager manager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
         quitKeyDispatcher = new KeyEventDispatcher() {
+            final AtomicBoolean invoked = new AtomicBoolean(false); // dispatchKeyEvent 是否被调用过(调用过则说明游戏结束)
+
             @Override
             public boolean dispatchKeyEvent(KeyEvent e) {
-                if (e == null/*在dispose方法中调用,用来结束游戏*/ || e.getKeyCode() == Config.QUIT_GAME_KEY) {
+                if (e.getKeyCode() == Config.QUIT_GAME_KEY) {
                     EventQueue.invokeLater(() -> {
-                        stop();
-                        manager.removeKeyEventDispatcher(this);
+                        if (!invoked.get()) {
+                            stop();
+                            invoked.set(true);
+                        }
                     });
+                    manager.removeKeyEventDispatcher(this);
                     return true;
                 }
                 return false;
@@ -147,7 +157,7 @@ public class GamePanel extends MyPanel {
      * 关闭 Session, 并显示游戏结局 {@link ResultPanel}
      */
     public void stop() {
-        setVisible(false);
+        dispose();
         new ResultPanel(frame, session.stop(), true, true);
     }
 }

@@ -1,6 +1,8 @@
 package com.azazo1.util;
 
 import com.azazo1.Config;
+import jmp123.PlayBack;
+import jmp123.output.Audio;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -225,5 +227,22 @@ public final class Tools {
      */
     public static void setTimeBias(long bias) {
         Tools.bias.set(bias);
+    }
+
+    /**
+     * 播放音效
+     */
+    public static void playSound(@NotNull URL path) {
+        if (Config.doPlaySound.get()) {
+            new Thread(() -> {
+                try {
+                    PlayBack playBack = new PlayBack(new Audio());
+                    playBack.open(path.getPath(), null);
+                    playBack.start(false);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }).start();
+        }
     }
 }
