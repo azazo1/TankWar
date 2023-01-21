@@ -95,6 +95,11 @@ public class BuffRandReadURL extends RandomRead {
 		return true;
 	}
 
+	@Override
+	public boolean open(URL file, String title) throws IOException {
+		throw new IllegalAccessError("TankWar needless to use this.");
+	}
+
 	private boolean  printErrMsg(String msg) {
 		System.out.println();
 		connection.printResponse();

@@ -20,13 +20,16 @@
  */
 package jmp123;
 
+import com.azazo1.util.Tools;
 import jmp123.decoder.*;
 import jmp123.instream.BuffRandReadFile;
 import jmp123.instream.BuffRandReadURL;
 import jmp123.instream.MultiplexAudio;
 import jmp123.instream.RandomRead;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.net.URL;
 
 /**
  * 播放一个文件及播放时暂停等控制。用PlayBack播放一个文件的步骤为：
@@ -44,7 +47,7 @@ import java.io.IOException;
  * </ul>
  * <li>播放完一个文件，调用PlayBack对象的 {@link #close()} 作必要的清理。</li>
  * </ol>
- * 
+ *
  */
 public class PlayBack {
 	private byte[] buf;
@@ -58,7 +61,7 @@ public class PlayBack {
 
 	/**
 	 * 用指定的音频输出对象构造一个PlayBack对象。
-	 * 
+	 *
 	 * @param audio
 	 *            指定的音频输出 {@link jmp123.decoder.IAudio} 对象。若指定为 <b>null</b> 则只解码不播放输出。
 	 * @see jmp123.output.Audio
@@ -117,7 +120,7 @@ public class PlayBack {
 
 	/**
 	 * 打开文件并解析文件信息。
-	 * 
+	 *
 	 * @param name
 	 *            文件路径。
 	 * @param title
@@ -125,12 +128,12 @@ public class PlayBack {
 	 * @return 打开失败返回 <b>false</b>；否则返回 <b>true</b> 。
 	 * @throws IOException 发生I/O错误。
 	 */
-	public boolean open(String name, String title) throws IOException {
+	public boolean open(@NotNull URL file, String title) throws IOException {
 		maxOff = off = 0;
 		paused = eof = false;
 
 		boolean id3v1 = false;
-		String str = name.toLowerCase();
+		String str = file.getPath().toLowerCase();
 		if (str.startsWith("http://") && str.endsWith(".mp3")) {
 			instream = new BuffRandReadURL(audio);
 		} else if (str.endsWith(".mp3")) {
@@ -143,7 +146,7 @@ public class PlayBack {
 			return false;
 		}
 
-		if (instream.open(name, title) == false)
+		if (!instream.open(file, title))
 			return false;
 
 		int tagSize = parseTag(id3v1);
@@ -176,12 +179,14 @@ public class PlayBack {
 		}
 
 		// 成功解析帧头后初始化音频输出
-		if (audio != null && audio.open(header, id3tag.getArtist()) == false)
+		if (audio != null && !audio.open(header, id3tag.getArtist()))
 			return false;
 
 		return true;
 	}
-
+	public boolean open(@NotNull String file, String title) throws IOException {
+		return open(Tools.getFileURL(file).url(), title);
+	}
 	private int parseTag(boolean id3v1) throws IOException {
 		int tagSize = 0;
 
@@ -226,7 +231,7 @@ public class PlayBack {
 
 	/**
 	 * 获取帧头信息。
-	 * 
+	 *
 	 * @return 取帧 {@link jmp123.decoder.Header} 对象。
 	 * @see jmp123.decoder.Header
 	 */
@@ -236,7 +241,7 @@ public class PlayBack {
 
 	/**
 	 * 获取文件的标签信息。
-	 * 
+	 *
 	 * @return 文件的标签信息 {@link jmp123.decoder.ID3Tag} 对象。
 	 * @see jmp123.decoder.ID3Tag
 	 */
@@ -246,7 +251,7 @@ public class PlayBack {
 
 	/**
 	 * 解码已打开的文件。
-	 * 
+	 *
 	 * @param verbose
 	 *            指定为 <b>true</b> 在控制台打印播放进度条。
 	 * @return 成功播放指定的文件返回true，否则返回false。

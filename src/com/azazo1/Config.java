@@ -127,6 +127,10 @@ public final class Config {
      * 随机传送音效
      */
     public static final String RANDOM_TELEPORT_SOUND = "sound/teleport.mp3";
+    /**
+     * 临时文件夹, 应用运行时会放一些临时文件, 每次启动应用都会被清空
+     */
+    public static final String TEMP_DIR = "temp";
 
     private Config() {
     }

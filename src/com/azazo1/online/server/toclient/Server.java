@@ -5,7 +5,6 @@ import com.azazo1.Config;
 import com.azazo1.base.SingleInstance;
 import com.azazo1.game.GameMap;
 import com.azazo1.game.session.ServerGameSessionIntro;
-import com.azazo1.game.tank.TankBase;
 import com.azazo1.online.msg.*;
 import com.azazo1.online.server.GameState;
 import com.azazo1.online.server.ServerGameMap;
@@ -126,8 +125,7 @@ public class Server implements Closeable, SingleInstance {
         initServerHandlerLoop();
         initClientHandlerLoop();
         ClientHandler.initSeqModule(); // 初始化 ClientHandler seq 模组
-        TankBase.getSeqModule().init(); // 初始化坦克 seq 模组
-        Tools.clearFrameData(); // 清空帧数信息
+        Tools.init();
         Tools.logLn("Server Opened at Port: " + socket.getLocalPort());
     }
 

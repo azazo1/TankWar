@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -52,5 +53,19 @@ class ToolsTest {
             Tools.playSound(Tools.getFileURL("sound/fire.mp3").url());
             Thread.sleep(50);
         }
+    }
+
+    @Test
+    void delete() { // 只能在调试模式下运行否则会被乱删
+        File target = new File("D:/Temp/新建文件夹/新建文件夹");
+        if (target.isDirectory()) {
+            Tools.deleteFileAndDir(target);
+            if (target.exists()) {
+                fail();
+            }
+        } else {
+            fail();
+        }
+
     }
 }

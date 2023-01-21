@@ -1,6 +1,7 @@
 package jmp123.instream;
 
 import java.io.IOException;
+import java.net.URL;
 
 /**
  * 随机访问文件的读取。
@@ -41,6 +42,7 @@ public abstract class RandomRead {
 	 *             发生I/O错误。
 	 */
 	public abstract boolean open(String name, String title) throws IOException;
+	public abstract boolean open(URL file, String title) throws IOException;
 
 	/**
 	 * 关闭此输入流并释放与该流关联的所有系统资源。

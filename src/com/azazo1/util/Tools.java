@@ -1,6 +1,8 @@
 package com.azazo1.util;
 
 import com.azazo1.Config;
+import com.azazo1.game.bullet.BulletBase;
+import com.azazo1.game.tank.TankBase;
 import jmp123.PlayBack;
 import jmp123.output.Audio;
 import org.jetbrains.annotations.NotNull;
@@ -11,6 +13,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.JarURLConnection;
@@ -237,12 +240,49 @@ public final class Tools {
             new Thread(() -> {
                 try {
                     PlayBack playBack = new PlayBack(new Audio());
-                    playBack.open(path.getPath(), null);
+                    playBack.open(path, null);
                     playBack.start(false);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             }).start();
         }
+    }
+
+    /**
+     * 初始化, 放在 main 前部即可
+     */
+    public static void init() throws IOException {
+        TankBase.getSeqModule().init();
+        BulletBase.getSeqModule().init();
+        Tools.clearFrameData();
+        // 初始化(清空) temp 目录
+        File tempDir = new File(Config.TEMP_DIR);
+        if (!tempDir.exists()) {
+            boolean rst = tempDir.mkdirs();
+        } else if (tempDir.isDirectory()) {
+            deleteFileAndDir(tempDir);
+            boolean rst = tempDir.mkdirs();
+        } else {
+            throw new FileNotFoundException("temp dir is not a DIR.");
+        }
+    }
+
+    /**
+     * 清空该目录下的所有内容, 并删除该目录; 或删除该文件
+     */
+    public static void deleteFileAndDir(@NotNull File target) {
+        if (target.isFile()) {
+            boolean rst = target.delete();
+            return;
+        }
+        File[] files = target.listFiles();
+        if (files == null) {
+            throw new RuntimeException("wrong in listing files");
+        }
+        for (File f : files) {
+            deleteFileAndDir(f);
+        }
+        target.delete();
     }
 }

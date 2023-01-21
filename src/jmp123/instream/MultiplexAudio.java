@@ -22,6 +22,7 @@ package jmp123.instream;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.net.URL;
 
 /**
  * 从MPEG-1和MPEG-2文件读取音频流。仅支持以下的多路复用格式：
@@ -51,6 +52,11 @@ public class MultiplexAudio extends RandomRead {
 			return false;
 
 		return true;
+	}
+
+	@Override
+	public boolean open(URL file, String title) throws IOException {
+		throw new IllegalAccessError("TankWar needless to use this.");
 	}
 
 	private boolean needBytes(int n) throws IOException {
