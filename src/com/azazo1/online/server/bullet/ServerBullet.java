@@ -1,6 +1,9 @@
 package com.azazo1.online.server.bullet;
 
 import com.azazo1.game.bullet.BulletBase;
+import com.azazo1.online.msg.MsgBase;
+import com.azazo1.online.server.toclient.ClientHandler;
+import com.azazo1.online.server.toclient.DataTransfer;
 
 import java.awt.*;
 
@@ -8,7 +11,9 @@ public class ServerBullet extends BulletBase {
     {
         doPaint.set(false);
     }
-
+    /**
+     * 本构造方法由反射调用 {@link ClientHandler#handleOnGaming(DataTransfer, MsgBase)}
+     * */
     public ServerBullet(int centerX, int centerY, double orientation) {
         super(centerX, centerY, orientation);
     }

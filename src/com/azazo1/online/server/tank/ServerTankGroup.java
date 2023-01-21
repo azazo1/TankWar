@@ -19,7 +19,7 @@ public class ServerTankGroup extends TankGroup {
                 }
                 continue;
             }
-            tank.update(null); // 更新坦克, 传入一个副本
+            tank.update(null); // 更新坦克
         }
     }
 }

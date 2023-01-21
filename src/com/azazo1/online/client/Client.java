@@ -56,6 +56,12 @@ public class Client implements Closeable {
             //  处理所有客户端信息, 注意重点标记显示自身
             ClientHandler.ClientHandlerInfo thisInfo = msg.multiInfo.get(seq.get());
             _isHost.set(thisInfo.isHost);
+        } else if (obj instanceof GlobalEventMsg msg) {
+            switch (msg.event) {
+                case TANK_FIRE -> Tools.playSound(Tools.getFileURL(Config.FIRE_SOUND).url());
+                case TANK_ATTACKED -> Tools.playSound(Tools.getFileURL(Config.ATTACKED_SOUND).url());
+                case TANK_RANDOMLY_TELEPORT -> Tools.playSound(Tools.getFileURL(Config.RANDOMLY_TELEPORT_SOUND).url());
+            }
         } else if (!(obj instanceof MsgBase)) {
             return null;// 此处表示 obj 为 null 或不是 MsgBase
         }

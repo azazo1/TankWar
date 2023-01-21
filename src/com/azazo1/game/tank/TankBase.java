@@ -50,11 +50,11 @@ public class TankBase implements CharWithRectangle {
     public final OrientationModule orientationModule = new OrientationModule(); // 用于将方向校准于坐标轴
     protected final AtomicDouble goingSpeed = new AtomicDouble(4); // 行动速度 pixels/帧
     protected final AtomicDouble turningSpeed = new AtomicDouble(Math.toRadians(7)); // 转向速度 rad/帧
-    public final EnduranceModule enduranceModule = new EnduranceModule();
-    public final FireModule fireModule = new FireModule();
+    public volatile EnduranceModule enduranceModule = new EnduranceModule(); // 不final以方便子代继承
+    public volatile FireModule fireModule = new FireModule();
+    protected volatile CollisionAndMotionModule collisionAndMotionModule = new CollisionAndMotionModule();
     protected final Rectangle rect = new Rectangle(0, 0, rawImg.getWidth(), rawImg.getHeight());
     protected final AtomicBoolean doPaint = new AtomicBoolean(true); // 是否显示, 服务端子类设为 false
-    protected final CollisionAndMotionModule collisionAndMotionModule = new CollisionAndMotionModule();
     private final int seq;
     protected volatile TankGroup tankGroup; // 用于统一处理数据和显示
     protected volatile String name; // 坦克昵称, 可能为 null
@@ -191,7 +191,7 @@ public class TankBase implements CharWithRectangle {
             randomlyTeleport(); // 重试直到没有发生碰撞
         } else {
             // 成功传送时播放音效
-            Tools.playSound(Tools.getFileURL(Config.RANDOM_TELEPORT_SOUND).url());
+            Tools.playSound(Tools.getFileURL(Config.RANDOMLY_TELEPORT_SOUND).url());
         }
     }
 
@@ -411,8 +411,10 @@ public class TankBase implements CharWithRectangle {
             if (Tools.getFrameTimeInMillis() > Config.TANK_INJURED_INTERVAL_MILLIS + lastInjuredTime.get()) { // 过了受伤间隔
                 endurance.getAndAdd(-damage);
                 lastInjuredTime.set(Tools.getFrameTimeInMillis());
-                // 播放受伤音效
-                Tools.playSound(Tools.getFileURL(Config.ATTACKED_SOUND).url());
+                if (damage > 0) {
+                    // 播放受伤音效
+                    Tools.playSound(Tools.getFileURL(Config.ATTACKED_SOUND).url());
+                }
                 return true;
             }
             if (endurance.get() <= 0) {
@@ -502,9 +504,14 @@ public class TankBase implements CharWithRectangle {
         public FireModule() {
         }
 
-        public void fire(@NotNull Class<? extends BulletBase> T) {
+        /**
+         * 坦克开火
+         *
+         * @return true:成功发射, false:没弹药了
+         */
+        public boolean fire(@NotNull Class<? extends BulletBase> T) {
             if (spareBulletNum.get() <= 0) {
-                return;
+                return false;
             }
             try {
                 Constructor<? extends BulletBase> constructor = T.getConstructor(int.class, int.class, double.class);
@@ -518,6 +525,7 @@ public class TankBase implements CharWithRectangle {
                 tankGroup.getGameMap().getBulletGroup().addBullet(bullet);
                 // 播放音效
                 Tools.playSound(Tools.getFileURL(Config.FIRE_SOUND).url());
+                return true;
             } catch (NoSuchMethodException | InvocationTargetException | InstantiationException |
                      IllegalAccessException e) {
                 throw new RuntimeException(e); // 一般不会到达此处
@@ -542,8 +550,8 @@ public class TankBase implements CharWithRectangle {
          * 坦克开火
          * 子代可以继承来修改子弹的类型
          */
-        public void fire() {
-            fire(BulletBase.class);
+        public boolean fire() {
+            return fire(BulletBase.class);
         }
 
         public int getSpareBulletNum() {

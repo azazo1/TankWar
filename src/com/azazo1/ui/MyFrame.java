@@ -37,14 +37,9 @@ public class MyFrame extends JFrame implements SingleInstance {
 
     @Override
     public void checkInstance() {
-        if (hasInstance()) {
+        if (instance != null) {
             throw new IllegalStateException("MyFrame can be created only once.");
         }
-    }
-
-    @Override
-    public boolean hasInstance() {
-        return instance != null;
     }
 
     /**

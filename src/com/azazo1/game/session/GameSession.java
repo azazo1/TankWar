@@ -28,7 +28,7 @@ public abstract class GameSession implements SingleInstance {
     protected final AtomicInteger totalTankNum = new AtomicInteger(0); // 总共的坦克数量
     protected Timer timer;
     protected FrameListener listener;
-    
+
     protected GameSession() {
         checkInstance();
         instance = this;
@@ -37,31 +37,26 @@ public abstract class GameSession implements SingleInstance {
         gameMap = new GameMap();
         gameMap.setSize(Config.MAP_WIDTH, Config.MAP_HEIGHT);
     }
-    
+
     public static void clearInstance() {
         instance = null;
     }
-    
+
     @Override
     public void checkInstance() {
-        if (hasInstance()) {
+        if (instance != null) {
             throw new IllegalStateException("GameSession can be created only once.");
         }
     }
-    
-    @Override
-    public boolean hasInstance() {
-        return instance != null;
-    }
-    
+
     public void setFrameListener(FrameListener frameListener) {
         listener = frameListener;
     }
-    
+
     public GameMap getGameMap() {
         return gameMap;
     }
-    
+
     /**
      * 开启游戏事件调度
      */
@@ -75,7 +70,7 @@ public abstract class GameSession implements SingleInstance {
         timer.setRepeats(true);
         timer.start();
     }
-    
+
     /**
      * 停止游戏事件调度, 获得游戏信息
      */
@@ -85,17 +80,17 @@ public abstract class GameSession implements SingleInstance {
         gameMap.dispose();
         return rst;
     }
-    
+
     /**
      * 根据特定条件判断游戏进程是否结束(如:有坦克胜利则则为结束)<br>
      * 一般此方法由 {@link FrameListener} 调用检查游戏进程
      */
     public abstract boolean isOver();
-    
+
     public int getTotalTankNum() {
         return totalTankNum.get();
     }
-    
+
     /**
      * 游戏回调函数
      */
@@ -109,12 +104,12 @@ public abstract class GameSession implements SingleInstance {
          */
         void tick(Vector<TankBase.TankInfo> tanks, int bulletNum);
     }
-    
+
     public static class LocalSession extends GameSession {
         protected LocalSession() {
             super();
         }
-        
+
         /**
          * 创建一局本地游戏会话
          *
@@ -125,12 +120,12 @@ public abstract class GameSession implements SingleInstance {
         public static @NotNull LocalSession createLocalSession(int tankNum, @Nullable String[] tankNames, @NotNull InputStream wallMap) throws IOException {
             GameSession.clearInstance();
             LocalSession session = new LocalSession();
-            
+
             WallGroup wallG = WallGroup.parseFromBitmap(ImageIO.read(wallMap));
             session.gameMap.setWallGroup(wallG);
-            
+
             session.gameMap.setBulletGroup(new BulletGroup());
-            
+
             TankGroup tankG = new TankGroup();
             session.gameMap.setTankGroup(tankG);
             session.totalTankNum.set(tankNum);
@@ -144,7 +139,7 @@ public abstract class GameSession implements SingleInstance {
             }
             return session;
         }
-        
+
         @Override
         public boolean isOver() {
             return gameMap.getTankGroup().getLivingTankNum() <= 1;

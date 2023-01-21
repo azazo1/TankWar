@@ -442,11 +442,6 @@ public class Server implements Closeable, SingleInstance {
         }
     }
 
-    @Override
-    public boolean hasInstance() {
-        return instance != null;
-    }
-
     /**
      * 初始化游戏配置
      */
