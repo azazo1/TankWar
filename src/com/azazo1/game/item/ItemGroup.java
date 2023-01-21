@@ -22,12 +22,13 @@ public class ItemGroup {
         add(RecoverBulletItem.class);
         add(FastBulletItem.class);
         add(BunshinBulletItem.class);
+        add(TeleportBulletItem.class);
     }};
 
     /**
      * 用于随机生成物品
      */
-    protected volatile IntervalTicker ticker = new IntervalTicker(3000);
+    protected volatile IntervalTicker ticker = new IntervalTicker(10000, 20000);
 
     public void addItem(ItemBase itemBase) {
         items.add(itemBase);

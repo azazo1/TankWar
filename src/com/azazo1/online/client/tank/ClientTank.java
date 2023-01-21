@@ -2,9 +2,11 @@ package com.azazo1.online.client.tank;
 
 import com.azazo1.Config;
 import com.azazo1.game.tank.TankBase;
+import com.azazo1.util.Tools;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -66,7 +68,7 @@ public class ClientTank extends TankBase {
                 g2dBak.setColor(Config.TANK_NAME_COLOR);
             }
             g2dBak.setFont(Config.TANK_SEQ_FONT);
-            g2dBak.drawString(name + "", -rect.width / 2, -rect.height / 2);
+            g2dBak.drawString("%s(%d)".formatted(name, getSeq()), -rect.width / 2, -rect.height / 2);
 
             // 显示坦克子弹数, 不显示其他坦克的子弹数量
             if (you) {
@@ -74,7 +76,16 @@ public class ClientTank extends TankBase {
                 g2dBak.setFont(Config.TANK_CLIP_FONT); // 降低字体大小
                 g2dBak.drawString(Config.translation.hasBulletChar.repeat(fireModule.getSpareBulletNum()) + Config.translation.emptyBulletChar.repeat(fireModule.getUsedBulletNum()), -rect.width / 4, -rect.height / 4);
             }
-
+            if (fireModule.getNextBullet() != null) {
+                try {
+                    String filename = (String) fireModule.getNextBullet().getDeclaredField("imgFile").get(fireModule.getNextBullet());
+                    BufferedImage img = Tools.loadImg(filename);
+                    int width = img.getWidth(), height = img.getHeight();
+                    g2d.drawImage(img, -width / 2, -height / 2, width, height, null);
+                } catch (NoSuchFieldException | IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+            }
         }
     }
 

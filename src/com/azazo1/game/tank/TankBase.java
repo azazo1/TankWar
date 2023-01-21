@@ -220,7 +220,7 @@ public class TankBase implements CharWithRectangle {
         paint(g);
     }
 
-    protected void paint(Graphics g) {
+    protected void paint(Graphics g) {// 修改时(记得修改子代)
         if (doPaint.get()) {
             Graphics2D g2d = (Graphics2D) g;
             double dx = rect.getCenterX();
@@ -234,13 +234,14 @@ public class TankBase implements CharWithRectangle {
             // 在坦克身上标注序号
             g2dBak.setColor(Config.TANK_SEQ_COLOR);
             g2dBak.setFont(Config.TANK_SEQ_FONT);
-            g2dBak.drawString(seq + "", -rect.width / 2, -rect.height / 2);
+            g2dBak.drawString("%s(%d)".formatted(name, seq), -rect.width / 2, -rect.height / 2);
+
 
             // 显示坦克子弹数
             g2dBak.setColor(Config.TANK_CLIP_COLOR);
             g2dBak.setFont(Config.TANK_CLIP_FONT); // 降低字体大小
             g2dBak.drawString(Config.translation.hasBulletChar.repeat(fireModule.getSpareBulletNum()) + Config.translation.emptyBulletChar.repeat(fireModule.getUsedBulletNum()), -rect.width / 4, -rect.height / 4);
-            // 当有下一发特殊子弹时, 在中心位置显示下一发子弹(记得修改子代)
+            // 当有下一发特殊子弹时, 在中心位置显示下一发子弹
             if (fireModule.nextBullet != null) {
                 try {
                     String filename = (String) fireModule.nextBullet.getDeclaredField("imgFile").get(fireModule.nextBullet);
@@ -596,6 +597,10 @@ public class TankBase implements CharWithRectangle {
          */
         public void setNextBullet(Class<? extends BulletBase> bullet) {
             nextBullet = bullet;
+        }
+
+        public Class<? extends BulletBase> getNextBullet() {
+            return nextBullet;
         }
     }
 
