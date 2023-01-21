@@ -87,6 +87,11 @@ public class Translation {
     public String connectedFrameTitle = "Please register, or you will be kicked out when the game starts";
     public String kicked = "You are kicked";
     public String msgSyncRate = "Msg sync rate (Hz):";
+    public String failToTalk = "Fail to talk, possible reason: not registered / content is too long / empty content";
+    public String talkingRoomTitle = "TalkingRoom";
+    public String talkButtonText = "Talk";
+    public String talkInputHint = "Talk something";
+    public String talkDialogTitle = "Talk";
 
     public Translation() {
     }
@@ -177,6 +182,11 @@ public class Translation {
             registeredFrameTitleFormat = "你好, %s";
             kicked = "你被踢出了";
             msgSyncRate = "消息同步速率 (Hz):";
+            failToTalk = "无法说话, 可能原因: 没注册/内容太长/内容为空";
+            talkingRoomTitle = "聊天室";
+            talkButtonText = "说话";
+            talkInputHint = "说点什么";
+            talkDialogTitle = "说话";
         }
     }
 }

@@ -9,7 +9,7 @@ import org.intellij.lang.annotations.MagicConstant;
  * <p>此消息只能在 {@link Server#WAITING} 中起作用, 且 {@link #intro} 的 {@link ServerGameSessionIntro} 的 tanks 不会起作用
  * <p>此消息没有返回值, 客户端要通过判断自身是否是房主来知晓是否操作成功, 操作结果可以通过 {@link FetchGameIntroMsg} 查看
  */
-public class PostGameIntroMsg extends MsgBase {
+public final class PostGameIntroMsg extends MsgBase {
     /**
      * 更改游戏配置结果: 成功
      */

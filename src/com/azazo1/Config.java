@@ -81,6 +81,10 @@ public final class Config {
      */
     public static final int SERVER_SOCKET_TIMEOUT = 500;
     /**
+     * 聊天字数限制
+     */
+    public static final int TALKING_WORDS_LIMIT = 50;
+    /**
      * 客户端处理器对应套接字超时时间 ms<br>
      * 客户端较多, 超时设置短些
      *

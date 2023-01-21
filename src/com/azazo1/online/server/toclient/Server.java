@@ -101,7 +101,7 @@ public class Server implements Closeable, SingleInstance {
     /**
      * 待执行，在 handler 循环中被执行
      */
-    protected Vector<Runnable> handleList = new Vector<>();
+    protected final Vector<Runnable> handleList = new Vector<>();
     /**
      * 当前服务器状态
      */
@@ -112,6 +112,11 @@ public class Server implements Closeable, SingleInstance {
      * 游戏结果，在游戏结束前都是null
      */
     protected GameMap.GameInfo gameResult;
+
+    /**
+     * 聊天室
+     */
+    protected final TalkingRoom talkingRoom = new TalkingRoom();
 
     /**
      * @param port 端口号, 为 0 则自动分配
@@ -508,5 +513,9 @@ public class Server implements Closeable, SingleInstance {
      */
     public void letMeHandle(Runnable runnable) {
         handleList.add(runnable);
+    }
+
+    public TalkingRoom getTalkingRoom() {
+        return talkingRoom;
     }
 }

@@ -12,6 +12,7 @@ import com.azazo1.online.client.tank.ClientTankGroup;
 import com.azazo1.online.client.wall.ClientWallGroup;
 import com.azazo1.online.msg.*;
 import com.azazo1.online.server.toclient.ClientHandler;
+import com.azazo1.online.server.toclient.TalkingRoom;
 import com.azazo1.util.MyFrameSetting;
 import com.azazo1.util.MyURL;
 import com.azazo1.util.Tools;
@@ -63,6 +64,9 @@ public class OnlineWaitingRoomPanel {
     private JButton registerButton;
     private JLabel inputNameTitle;
     private JButton resultButton;
+    private JList<TalkingRoom.TalkContent> talkingRoom;
+    private JLabel talkingRoomTitle;
+    private JButton talkButton;
     public ClientGameMap gameMap;
 
     /**
@@ -94,6 +98,10 @@ public class OnlineWaitingRoomPanel {
      * @see ClientGamePanel
      */
     private ClientGamePanel gamePanel;
+    /**
+     * 聊天记录
+     */
+    private final Vector<TalkingRoom.TalkContent> talkingContents = new Vector<>();
 
     /**
      * @param frame 本 panel 要被放置到的 JFrame 中,
@@ -143,6 +151,8 @@ public class OnlineWaitingRoomPanel {
 
         yourProfile = new JLabel();
 
+        talkingRoomTitle = new JLabel();
+
         cilentListTitle = new JLabel();
         playerListTitle = new JLabel();
         gameIntroEditTitle = new JLabel();
@@ -152,6 +162,7 @@ public class OnlineWaitingRoomPanel {
         players = new Vector<>();
         clientList = new JList<>(clients);
         playerList = new JList<>(players);
+        talkingRoom = new JList<>(); // 在这里把 talkContents 放进去会报 NullPointerException ....
 
         modeSelector = new JComboBox<String>(new Vector<>() {{
             add(Config.translation.playerMode);
@@ -216,6 +227,17 @@ public class OnlineWaitingRoomPanel {
         startGameButton = new JButton() {{
             addActionListener(e -> {
                 client.reqStartGame();
+            });
+        }};
+        talkButton = new JButton() {{
+            addActionListener(e -> {
+                String content = JOptionPane.showInputDialog(panel, Config.translation.talkInputHint, Config.translation.talkDialogTitle, JOptionPane.PLAIN_MESSAGE);
+                try {
+                    client.talk(content);
+                } catch (Exception ex) { // 可能因为内容太长而报错
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(panel, ex.getMessage(), Config.translation.failToTalk, JOptionPane.ERROR_MESSAGE);
+                }
             });
         }};
 
@@ -313,6 +335,10 @@ public class OnlineWaitingRoomPanel {
                         handleGameStartMsg(msg);
                     } else if (obj instanceof KickMsg) {
                         handleKickMsg();
+                    } else if (obj instanceof TalkMsg.TalkBroadcastMsg msg) {
+                        handleTalkBroadcastMsg(msg);
+                    } else if (obj instanceof TalkMsg.TalkResponseMsg msg) {
+                        handleTalkResponseMsg(msg);
                     }
                     Thread.sleep(1);// 需要比服务端处理速度快
                 }
@@ -328,6 +354,17 @@ public class OnlineWaitingRoomPanel {
                 dispose(); // 显示错误后关闭界面
             }
         }).start();
+    }
+
+    private void handleTalkBroadcastMsg(TalkMsg.@NotNull TalkBroadcastMsg msg) {
+        talkingContents.add(msg.content);
+        talkingRoom.setListData(talkingContents);
+    }
+
+    private void handleTalkResponseMsg(TalkMsg.@NotNull TalkResponseMsg msg) {
+        if (msg.code == 0) {
+            JOptionPane.showMessageDialog(panel, Config.translation.failToTalk);
+        }
     }
 
     private void handleKickMsg() {
@@ -463,6 +500,8 @@ public class OnlineWaitingRoomPanel {
             startGameButton.setText(Config.translation.startGameButtonText);
             connectionInfo.setText(Config.translation.connectionInfoFormat.formatted(addr, port));
             resultButton.setText(Config.translation.queryResultButtonText);
+            talkingRoomTitle.setText(Config.translation.talkingRoomTitle);
+            talkButton.setText(Config.translation.talkButtonText);
         }) {{
             setRepeats(false);
         }}.start();

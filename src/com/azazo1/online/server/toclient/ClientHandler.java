@@ -107,6 +107,8 @@ public class ClientHandler implements Closeable {
             Tools.logLn("Got Msg(From " + seq + "): " + shortClassName + ", created on: " + obj.createdTime + " (" + DateFormat.getInstance().format(obj.createdTime) + ")");
             if (obj instanceof QueryGameResultMsg) {
                 toBeSent = new QueryGameResultMsg.QueryGameResultResponseMsg(server.getGameResult());
+            } else if (obj instanceof TalkMsg msg) {
+                toBeSent = new TalkMsg.TalkResponseMsg(server.talkingRoom.talk(this, msg.content) ? 1 : 0);
             }
         }
         if (toBeSent != null) {
@@ -188,6 +190,8 @@ public class ClientHandler implements Closeable {
                 }
             } else if (obj instanceof QueryGameResultMsg) {
                 toBeSent = new QueryGameResultMsg.QueryGameResultResponseMsg(null);
+            } else if (obj instanceof TalkMsg msg) {
+                toBeSent = new TalkMsg.TalkResponseMsg(server.talkingRoom.talk(this, msg.content) ? 1 : 0);
             }
         }
         if (toBeSent != null) {

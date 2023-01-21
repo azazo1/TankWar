@@ -154,6 +154,13 @@ public class Client implements Closeable {
     }
 
     /**
+     * 尝试说话
+     */
+    public void talk(String content) {
+        dataTransfer.sendObject(new TalkMsg(content));
+    }
+
+    /**
      * 向服务器请求开火
      */
     public void fire() {
