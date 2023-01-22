@@ -455,7 +455,7 @@ public class Server implements Closeable, SingleInstance {
      */
     protected void initGameConfig() {
         intro = new ServerGameSessionIntro();
-        intro.setWallMapFile("wallmap/WallMap.mwal");
+        intro.setWallMapFile("wallmap/TidyMap.mwal");
     }
 
     /**

@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class BulletBase implements CharWithRectangle {
-    protected final static AtomicInteger existingTime = new AtomicInteger(5000); // 子弹飞行时长
+    protected final AtomicInteger existingTime = new AtomicInteger(5000); // 子弹飞行时长
     protected final static int MAX_REFLECTION_TIMES = 10; // 子弹最大反弹次数
     public static final String imgFile = "img/Bullet.png";
     protected volatile BufferedImage rawImg = Tools.loadImg(imgFile);

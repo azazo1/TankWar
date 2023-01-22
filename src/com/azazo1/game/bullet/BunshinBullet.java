@@ -8,7 +8,7 @@ import java.awt.*;
 import java.util.Random;
 
 /**
- * 分身子弹, 碰到墙有一定概率分身, 但所有分身都会在同一 较短 时间消失(除非有的分身撞墙太多了/击中坦克)
+ * 分身子弹, 碰到墙有一定概率分身, 但所有分身都会在同一时间消失(除非有的分身撞墙太多了/击中坦克)
  */
 public class BunshinBullet extends BulletBase {
     public static final String imgFile = "img/BunshinBullet.png";
@@ -18,7 +18,7 @@ public class BunshinBullet extends BulletBase {
 
     {
         rawImg = Tools.loadImg(imgFile);
-        existingTime.set(1500);
+        existingTime.set(2000);
     }
 
     {

@@ -35,6 +35,12 @@ public class BulletGroup {
                 return;
             }
             for (BulletBase bullet : bullets) {
+                try {
+                    graphics.create();
+                } catch (NullPointerException e) {
+                    bullet.update(null);
+                    return;
+                }
                 bullet.update(graphics.create());
             }
         }

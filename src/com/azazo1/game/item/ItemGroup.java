@@ -20,9 +20,9 @@ public class ItemGroup {
     protected static final Vector<Class<? extends ItemBase>> itemTypes = new Vector<>() {{
         // 注册物品类型
         add(RecoverBulletItem.class);
-        add(FastBulletItem.class);
+//        add(FastBulletItem.class);
         add(BunshinBulletItem.class);
-        add(TeleportBulletItem.class);
+//        add(TeleportBulletItem.class);
     }};
 
     /**
