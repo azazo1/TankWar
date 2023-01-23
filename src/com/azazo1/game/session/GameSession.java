@@ -13,10 +13,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -24,11 +25,15 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 此类用于管理一局游戏
  */
 public abstract class GameSession implements SingleInstance {
-    protected static GameSession instance = null;
+    protected volatile static GameSession instance = null;
     protected volatile GameMap gameMap; // 只供子类初始化时更改
     protected final AtomicInteger totalTankNum = new AtomicInteger(0); // 总共的坦克数量
-    protected Timer timer;
-    protected FrameListener listener;
+    protected volatile Timer timer;
+    /**
+     * 游戏进程任务, 调用 {@link TimerTask#cancel()} 则游戏停止进行
+     */
+    protected volatile TimerTask gameProcessTask;
+    protected volatile FrameListener listener;
 
     protected GameSession() {
         checkInstance();
@@ -62,21 +67,25 @@ public abstract class GameSession implements SingleInstance {
      * 开启游戏事件调度
      */
     public void start() {
-        timer = new Timer(0, (e) -> {
-            gameMap.update(null);
-            if (listener != null) {
-                listener.tick(gameMap.getTankGroup().getTanksInfo(), gameMap.getBulletGroup().getBulletNum());
+        // 不用 swing 的 Timer, 这个 Timer 控制帧率更加准确(也许吧)
+        timer = new Timer("game_process", true);
+        gameProcessTask = new TimerTask() {
+            @Override
+            public void run() {
+                gameMap.update(null);
+                if (listener != null) {
+                    listener.tick(gameMap.getTankGroup().getTanksInfo(), gameMap.getBulletGroup().getBulletNum());
+                }
             }
-        });
-        timer.setRepeats(true);
-        timer.start();
+        };
+        timer.scheduleAtFixedRate(gameProcessTask, 0, (int) (1000.0 / Config.FPS));
     }
 
     /**
      * 停止游戏事件调度, 获得游戏信息
      */
     public GameMap.GameInfo stop() {
-        timer.stop();
+        gameProcessTask.cancel();
         GameMap.GameInfo rst = gameMap.getInfo();
         gameMap.dispose();
         return rst;
@@ -101,7 +110,7 @@ public abstract class GameSession implements SingleInstance {
          *
          * @param tanks     现存坦克信息
          * @param bulletNum 现在的子弹数量
-         * @apiNote 记得调用 {@link Tools#tickFrame()} 来推动游戏进程和控制游戏帧率
+         * @apiNote 记得调用 {@link Tools#tickFrame()} 来推动游戏进程, 不用手动控制游戏帧率
          */
         void tick(Vector<TankBase.TankInfo> tanks, int bulletNum);
     }

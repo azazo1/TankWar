@@ -97,6 +97,7 @@ class QNode {
 
     /**
      * 选择包含指定坐标的叶节点
+     * @return 若指定坐标不在本节点内则返回 null
      */
     @Nullable
     public QNode switchLeave(Point pos) {

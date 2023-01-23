@@ -143,7 +143,7 @@ public class BulletBase implements CharWithRectangle {
         }
 
         public Rectangle getRect() {
-            return rect;
+            return new Rectangle(rect);
         }
 
         public long getCreatedTime() {

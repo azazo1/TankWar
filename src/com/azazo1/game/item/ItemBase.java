@@ -33,7 +33,7 @@ public class ItemBase implements CharWithRectangle {
 
     @Override
     public Rectangle getRect() {
-        return rect;
+        return new Rectangle(rect);
     }
 
     /**
@@ -118,7 +118,7 @@ public class ItemBase implements CharWithRectangle {
         protected final Class<? extends ItemBase> itemType;
 
         public Rectangle getRect() {
-            return rect;
+            return new Rectangle(rect);
         }
 
         public Class<? extends ItemBase> getItemType() {

@@ -471,13 +471,13 @@ public class OnlineWaitingRoomPanel {
     /**
      * 服务端在游戏阶段向客户端同步信息
      * 服务端每次同步就会调用 {@link Tools#tickFrame()}
-     * 因此客户端每次收到此消息就调用 {@link Tools#tickFrame(boolean)} 以同步帧时间
+     * 因此客户端每次收到此消息就调用 {@link Tools#tickFrame()} 以同步帧时间
      */
     private void handleGameStateMsg(@NotNull GameStateMsg msg) {
         if (gameMap == null) {
             return; // 若 gameMap 为 null 则暂时不处理
         }
-        Tools.tickFrame(false);
+        Tools.tickFrame();
         ClientTankGroup tankGroup = (ClientTankGroup) gameMap.getTankGroup();
         ClientBulletGroup bulletGroup = (ClientBulletGroup) gameMap.getBulletGroup();
         ClientItemGroup itemGroup = (ClientItemGroup) gameMap.getItemGroup();

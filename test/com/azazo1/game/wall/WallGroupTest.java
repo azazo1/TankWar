@@ -22,8 +22,9 @@ class WallGroupTest {
     
     @Test
     void setAlpha() {
+        // 设置墙图对应的四叉树深度
         try {
-            File file = new File("D:\\Program_Projects\\Java_Projects\\TankWar\\res\\wallmap\\TidyMap.mwal"); // 这里不修改 Jar 内文件, 不用 Tools.getFileURL
+            File file = new File("D:\\Program_Projects\\Java_Projects\\TankWar\\res\\wallmap\\TestMap.mwal"); // 这里不修改 Jar 内文件, 不用 Tools.getFileURL
             int depth = 3;
             WallGroup.setBitmapQTreeDepth(file, depth);
             

@@ -23,14 +23,14 @@ public class WallGroup {
     protected final Vector<Wall> wallsToDispatch = new Vector<>();
     protected QTreeWallStorage tree;
     protected GameMap map;
-    
+
     public WallGroup() {
     }
-    
+
     public WallGroup(int qTreeDepth) {
         this.qTreeDepth.set(qTreeDepth);
     }
-    
+
     /**
      * 将 0 1 \n 组成的字符串(墙图表达式)解析为 {@link WallGroup}
      * 如:
@@ -58,7 +58,7 @@ public class WallGroup {
             }
         }};
     }
-    
+
     /**
      * 将 墙图文件 解析为 {@link WallGroup}
      *
@@ -85,11 +85,11 @@ public class WallGroup {
             }
         }};
     }
-    
+
     public static @NotNull WallGroup parseFromBitmap(@NotNull BufferedImage image) {
         return parseFromBitmap(image, Config.MAP_WIDTH, Config.MAP_HEIGHT);
     }
-    
+
     /**
      * 将四叉树深度保存到墙图文件中<br>
      * 此方法会将墙图文件 (0,0) 像素 的 rgb 值不变, 修改其 alpha 值
@@ -102,7 +102,7 @@ public class WallGroup {
         img.setData(copiedData);
         ImageIO.write(img, "png", bitmapFile);
     }
-    
+
     /**
      * @param _throws             是否报错
      * @param wallExpressionLines 由读取的 wallExpression 将每行分割后形成的字符串组
@@ -131,10 +131,10 @@ public class WallGroup {
                 throw new IllegalArgumentException("Invalid com.azazo1.game.wall expression.");
             }
         }
-        
+
         return valid;
     }
-    
+
     /**
      * 扫描当前文件夹(或 Jar 内路径)下可用的游戏墙图文件
      */
@@ -145,14 +145,14 @@ public class WallGroup {
             return null;
         }
     }
-    
+
     /**
      * 从项目根目录查找
      */
     public static @Nullable Vector<MyURL> scanBinaryBitmapFiles() {
         return scanBinaryBitmapFiles("wallmap");
     }
-    
+
     /**
      * 不保证真的能从 map 中添加,本方法应由 {@link GameMap} 调用
      * <p>
@@ -166,7 +166,7 @@ public class WallGroup {
         }
         wallsToDispatch.clear();
     }
-    
+
     /**
      * 不保证真的能从 map 中去除,本方法应由 {@link GameMap} 调用
      */
@@ -175,7 +175,7 @@ public class WallGroup {
         tree.dispose();
         tree = null;
     }
-    
+
     /**
      * 将墙添加到列表和四叉树(尝试)中<br>
      * 如果未能成功添加到四叉树上则将墙加入等待列表 {@link #wallsToDispatch}
@@ -188,7 +188,7 @@ public class WallGroup {
             wallsToDispatch.add(wall);
         }
     }
-    
+
     public void update(Graphics graphics) {
         if (walls.isEmpty()) {
             return;
@@ -197,7 +197,7 @@ public class WallGroup {
             wall.update(graphics.create());
         }
     }
-    
+
     /**
      * 获得墙列表拷贝
      */
@@ -205,9 +205,27 @@ public class WallGroup {
     public Vector<Wall> getWalls() {
         return new Vector<>(walls);
     }
-    
+
+    /**
+     * 判断某个点是否在墙块内
+     */
+    public boolean inWall(int x, int y) {
+        Vector<Wall> walls = getWalls(x, y);
+        if (walls == null) {
+            throw new IllegalArgumentException("Invalid coordinates");
+        }
+        for (Wall wall : walls) {
+            if (wall.getRect().contains(x, y)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * 通过四叉树筛选出一部分墙，用于减少计算量
+     *
+     * @return 若指定坐标超出范围则返回 null
      */
     @Nullable
     public Vector<Wall> getWalls(int x, int y) {
@@ -222,7 +240,7 @@ public class WallGroup {
             throw new RuntimeException(e);
         }
     }
-    
+
     public int getQTreeDepth() {
         return qTreeDepth.get();
     }

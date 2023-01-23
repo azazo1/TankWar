@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.imageio.ImageIO;
+import javax.swing.Timer;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -18,10 +19,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.JarURLConnection;
 import java.net.URL;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Objects;
-import java.util.Vector;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.jar.JarEntry;
@@ -131,33 +129,10 @@ public final class Tools {
     }
 
     /**
-     * 累计帧数, 控制帧率
+     * 累计帧数, 并不控制帧率, 控制帧率建议用 {@link java.util.Timer#scheduleAtFixedRate(TimerTask, long, long)}
      */
     public static void tickFrame() {
-        tickFrame(true);
-    }
-
-    /**
-     * 累计帧数, 控制帧率
-     *
-     * @param controlFrameRate 是否调用{@link Thread#sleep(long)} 以控制帧率
-     */
-    public static void tickFrame(boolean controlFrameRate) {
         long nowTime = getRealTimeInMillis();
-        // 控制帧率
-        if (controlFrameRate && !lastTickTimes.isEmpty()) {
-            long lastTime = lastTickTimes.get(lastTickTimes.size() - 1);
-            double sleepTime = (1000.0 / Config.FPS);
-            while (nowTime - lastTime < sleepTime) { // 循环等待
-                nowTime = getRealTimeInMillis();
-                try {
-                    Thread.sleep(1); // 减少 cpu 占用
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-
-        }
         framesCounter.incrementAndGet();
         if (firstTickTime.get() < 0) {
             firstTickTime.set(nowTime);
@@ -302,9 +277,10 @@ public final class Tools {
             throw new RuntimeException(e);
         }
     }
+
     /**
      * 清除已加载图片, 释放内存
-     * */
+     */
     public static void clearLoadedImg() {
         loadedImg.clear();
     }

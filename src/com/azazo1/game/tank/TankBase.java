@@ -346,7 +346,7 @@ public class TankBase implements CharWithRectangle {
         }
 
         public Rectangle getRect() {
-            return rect;
+            return new Rectangle(rect);
         }
 
         public int getNowEndurance() {
@@ -698,7 +698,7 @@ public class TankBase implements CharWithRectangle {
         /**
          * 检测是否碰撞
          *
-         * @return 自身矩形和对方矩形的重叠区域中心点
+         * @return 自身矩形和对方矩形的重叠区域中心点, 若无碰撞则返回 null
          */
         @Nullable
         public Point detectCollision(Rectangle rect1) {

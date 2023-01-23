@@ -38,8 +38,10 @@ public class GamePanel extends MyPanel {
             stop();
         }
     };
-    ;
 
+    /**
+     * {@link GamePanel} 只需初始化即可设置为 {@link MyFrame} 的 contentPane, 不需要显式调用 {@link MyFrame#setContentPane(MyPanel)}
+     */
     public GamePanel(GameSession.LocalSession session) {
         mode = PlayingMode.LOCAL;
         this.session = session;
