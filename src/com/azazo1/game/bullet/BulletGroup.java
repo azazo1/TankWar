@@ -39,7 +39,7 @@ public class BulletGroup {
                     graphics.create();
                 } catch (NullPointerException e) {
                     bullet.update(null);
-                    return;
+                    continue;
                 }
                 bullet.update(graphics.create());
             }
