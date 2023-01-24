@@ -158,4 +158,13 @@ public class WayPoint {
         container.add(this);
         nearPoints.forEach((wayPoint -> wayPoint.extractReachableWayPoints(container)));
     }
+
+    @Override
+    public String toString() {
+        return "WayPoint{" +
+                "(" + x +
+                ", " + y +
+                "), nearPointsNumber=" + nearPoints.size() +
+                '}';
+    }
 }
