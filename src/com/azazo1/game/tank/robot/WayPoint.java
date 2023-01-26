@@ -16,26 +16,34 @@ public class WayPoint {
     protected static final Vector<WayPoint> allPoints = new Vector<>();
 
     private WayPoint(int x, int y) {
-        this.x = x;
-        this.y = y;
-        allPoints.add(this);
+        synchronized (allPoints) {
+            this.x = x;
+            this.y = y;
+            allPoints.add(this);
+        }
     }
 
 
     private WayPoint(double x, double y) {
-        this.x = (int) x;
-        this.y = (int) y;
-        allPoints.add(this);
+        synchronized (allPoints) {
+            this.x = (int) x;
+            this.y = (int) y;
+            allPoints.add(this);
+        }
     }
 
     public static void clearWayPoint() {
-        allPoints.clear();
+        synchronized (allPoints) {
+            allPoints.clear();
+        }
     }
 
     public static @NotNull WayPoint getInstance(int x, int y) {
-        for (WayPoint p : allPoints) { // 若此点已创建过则返回该点
-            if (p.x == x && p.y == y) {
-                return p;
+        synchronized (allPoints) {
+            for (WayPoint p : allPoints) { // 若此点已创建过则返回该点
+                if (p.x == x && p.y == y) {
+                    return p;
+                }
             }
         }
         return new WayPoint(x, y);
@@ -58,14 +66,16 @@ public class WayPoint {
      * @return true: 成功添加 / false: 该路径点已被添加过
      */
     public boolean addNearPoint(WayPoint wayPoint) {
-        if (nearPoints.contains(wayPoint)) {
-            return false;
-        } else if (this.equals(wayPoint)) {
-            return false;
+        synchronized (nearPoints) {
+            if (nearPoints.contains(wayPoint)) {
+                return false;
+            } else if (this.equals(wayPoint)) {
+                return false;
+            }
+            nearPoints.add(wayPoint);
+            wayPoint.addNearPoint(this);
+            return true;
         }
-        nearPoints.add(wayPoint);
-        wayPoint.addNearPoint(this);
-        return true;
     }
 
     /**
@@ -116,10 +126,12 @@ public class WayPoint {
      * @apiNote 本方法应由 {@link WayPoint#drawAll(Graphics)} 调用
      */
     protected void drawAll(@NotNull Graphics g, @NotNull HashSet<WayPoint> drawnPoints) {
-        if (!drawnPoints.contains(this)) {
-            draw(g);
-            drawnPoints.add(this);
-            nearPoints.forEach((p) -> p.drawAll(g, drawnPoints));
+        synchronized (nearPoints) {
+            if (!drawnPoints.contains(this)) {
+                draw(g);
+                drawnPoints.add(this);
+                nearPoints.forEach((p) -> p.drawAll(g, drawnPoints));
+            }
         }
     }
 

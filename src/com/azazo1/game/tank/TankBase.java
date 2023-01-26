@@ -507,8 +507,15 @@ public class TankBase implements CharWithRectangle {
             }
         }
 
+        /**
+         * 获取坦克所属方向, 返回值始终在 [0, 2 * pi], (0 向右,顺时针为正向)
+         */
         public double getOrientation() {
-            return orientation.get();
+            double v = orientation.get();
+            while (v < 0) { // 调整到正区间
+                v += Math.PI * 2;
+            }
+            return v % (Math.PI * 2);
         }
 
         public void setOrientation(double orientation) {

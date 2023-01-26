@@ -7,6 +7,7 @@ import com.azazo1.game.bullet.BulletGroup;
 import com.azazo1.game.item.ItemGroup;
 import com.azazo1.game.tank.TankBase;
 import com.azazo1.game.tank.TankGroup;
+import com.azazo1.game.tank.robot.RobotTank;
 import com.azazo1.game.wall.WallGroup;
 import com.azazo1.util.Tools;
 import org.jetbrains.annotations.NotNull;
@@ -124,10 +125,14 @@ public abstract class GameSession implements SingleInstance {
          * 创建一局本地游戏会话
          *
          * @param tankNum   坦克(玩家)数量
+         * @param robotNum  机器人(电脑)数量
          * @param tankNames 各个坦克名称, 但如果不为 null, 其长度要符合 tankNum
          * @param wallMap   游戏墙图文件输入流, 用于读取产生 {@link WallGroup}
          */
-        public static @NotNull LocalSession createLocalSession(int tankNum, @Nullable String[] tankNames, @NotNull InputStream wallMap) throws IOException {
+        public static @NotNull LocalSession createLocalSession(int tankNum, int robotNum, @Nullable String[] tankNames, @NotNull InputStream wallMap) throws IOException {
+            if (tankNum + robotNum < 2) {
+                throw new IllegalArgumentException("Total tank amount can't be less than 2");
+            }
             GameSession.clearInstance();
             LocalSession session = new LocalSession();
 
@@ -141,11 +146,19 @@ public abstract class GameSession implements SingleInstance {
 
             TankGroup tankG = new TankGroup();
             session.gameMap.setTankGroup(tankG);
-            session.totalTankNum.set(tankNum);
+            session.totalTankNum.set(tankNum + robotNum);
             for (int i = 0; i < tankNum; i++) {
                 TankBase tank = new TankBase();
                 if (tankNames != null) {
                     tank.setName(tankNames[i]);
+                }
+                tankG.addTank(tank);
+                tank.randomlyTeleport(); // 要在其他内容都设置完毕后调用
+            }
+            for (int i = 0; i < robotNum; i++) {
+                TankBase tank = new RobotTank();
+                if (tankNames != null) {
+                    tank.setName("Robot");
                 }
                 tankG.addTank(tank);
                 tank.randomlyTeleport(); // 要在其他内容都设置完毕后调用

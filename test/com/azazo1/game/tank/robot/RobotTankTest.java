@@ -21,7 +21,7 @@ class RobotTankTest {
         TankBase tank = new TankBase();
         MyFrame frame = new MyFrame();
         GameSession.LocalSession gameSession = GameSession.LocalSession.createLocalSession(
-                2, new String[]{"a", "b"}, Tools.getFileURL("wallmap/TidyMap.mwal").url().openStream());
+                2,0, new String[]{"a", "b"}, Tools.getFileURL("wallmap/TidyMap.mwal").url().openStream());
 
         // 设置为只有 TWR 和 另外一个目标坦克
         TankGroup tankGroup = gameSession.getGameMap().getTankGroup();

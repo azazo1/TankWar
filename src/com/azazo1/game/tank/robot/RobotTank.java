@@ -1,17 +1,46 @@
 package com.azazo1.game.tank.robot;
 
 import com.azazo1.game.tank.TankBase;
+import com.azazo1.game.tank.robot.action.Action;
+import com.azazo1.game.tank.robot.action.ChangeOrientationAction;
+import com.azazo1.game.tank.robot.action.GoingAction;
+import com.azazo1.game.tank.robot.action.MultipleFireAction;
 import com.azazo1.game.wall.Wall;
 import com.azazo1.game.wall.WallGroup;
+import com.azazo1.util.Tools;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
+import java.util.Random;
 import java.util.Vector;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class RobotTank extends TankBase {
+    /**
+     * <h3>"较近" 距离</h3>
+     * 此距离内 TWR 由寻路模式变为攻击模式 todo 说明
+     */
+    protected final double nearDistance = rect.width * 4;
+    /**
+     * <h3>"很近" 距离<h3/>
+     * 此距离下 TWR todo 说明
+     */
+    protected final double veryCloseDistance = rect.width * 2;
     protected volatile WayPoint startPoint;
     protected volatile TankBase targetTank;
+    /**
+     * 用于执行 TWR 各种长时间动作
+     */
+    protected final Vector<Action> actions = new Vector<>();
+    /**
+     * {@link RobotTank#calmness}∈[0,100], 越高表示 TWR 越冷静, 开火概率越小
+     */
+    protected final AtomicInteger calmness = new AtomicInteger(100);
+    /**
+     * TWR 很生气时连发子弹数
+     */
+    protected final int fireTimesWhileAngry = 3;
 
     @Override
     public void update(@NotNull Graphics g) {
@@ -33,10 +62,15 @@ public class RobotTank extends TankBase {
                 }
             }
         }
-        // 搜索到目标坦克最短路径 todo bug:不是最短
+        // 搜索到目标坦克最短路径 (建议广度优先, 快)
         Rectangle targetTankRect = targetTank.getRect();
         WayPoint targetPoint /* 距离目标坦克最近的路径点 */ = startPoint.getNearestWayPoint((int) targetTankRect.getCenterX(), (int) targetTankRect.getCenterY());
-        DFS.Route route = searchRouteTo(targetPoint);
+        Route route = searchRouteTo(targetPoint);
+
+        behave(targetPoint, route);
+
+        // 执行 Action
+        actions.removeIf(action -> action.take(this)); // 返回值为 true 则删除
         // 显示所有路径点
         Graphics g1 = g.create();
         g1.setColor(new Color(0xff00ff));
@@ -50,21 +84,99 @@ public class RobotTank extends TankBase {
         }
         // 突出显示离 TWR 最近的路径点
         g1.setColor(new Color(0xFF0000));
-        startPoint.getNearestWayPoint((int) rect.getCenterX(), (int) rect.getCenterY()).drawHighlight(g1);
+        route.getStartPoint().drawHighlight(g1);
+        // todo 显示冷静条
         super.update(g);
+    }
+
+    /**
+     * 进行 TWR 行为判断
+     */
+    protected void behave(@NotNull WayPoint targetPoint, @NotNull Route route) {
+        // 转向(长时间)
+        double cx = rect.getCenterX(), cy = rect.getCenterY();
+        route.resetCursor();
+        route.next();
+        WayPoint secondPoint = route.next(); // 找到第二个路径点
+        double angleToSecondPoint = Math.atan2(secondPoint.y - cy, secondPoint.x - cx);
+        double angleToTarget = Math.atan2(targetPoint.y - cy, targetPoint.x - cx);
+        if (targetPoint.distanceTo(route.getStartPoint()) < nearDistance + 5) {
+            // 与目标距离较近, 直接对准目标
+            putAction(new ChangeOrientationAction(angleToTarget), false, true);
+        } else {
+            // 对准第二个路径点
+            putAction(new ChangeOrientationAction(angleToSecondPoint), false, true);
+        }
+        // 前行(长时间) todo TWR 会卡墙角
+        putAction(new GoingAction(targetPoint, nearDistance), false, true);
+        // 较近时
+        if (targetPoint.distanceTo(route.getStartPoint()) < nearDistance + 5) {
+            becomeAngry(); // 不断变得冲动
+            // todo 全方位模拟子弹飞行, 寻找能打到敌人的方向, 转向后开火
+            if (calmnessJudge()) { // todo 模拟子弹飞行, 若打到自己则不发射
+                if (fireModule.fire()) /* 开火 (短时间) */ {  // 成功开火则进入冷静期
+                    calmDown(false); // 迅速变冷静
+                }
+            }
+        }
+        // 很近时
+        if (targetPoint.distanceTo(route.getStartPoint()) < veryCloseDistance + 5) {
+            if (Math.abs(orientationModule.getOrientation() - angleToTarget) < Math.PI / 7) { // 方向对准了
+                if (calmnessJudge()) {
+                    // 连发开火
+                    putAction(new MultipleFireAction(fireTimesWhileAngry), false, false);
+                    calmDown(true); // 迅速变非常冷静
+                }
+            }
+        }
+    }
+
+    public int getCalmness() {
+        Tools.logLn(calmness.get() + "");
+        return calmness.get();
+    }
+
+    /**
+     * 迅速让 TWR 冷静
+     */
+    protected void calmDown(boolean intense) {
+        if (intense) {
+            calmness.set(170);
+        } else {
+            calmness.set(120);
+        }
+    }
+
+    /**
+     * TWR 通过冷静值判断是否应该开火或做其他冲动行为
+     *
+     * @apiNote 越冷静越难为true
+     */
+    protected boolean calmnessJudge() {
+        return new Random().nextInt(101) > getCalmness();
+    }
+
+    /**
+     * 让 TWR 变暴躁
+     */
+    protected void becomeAngry() {
+        calmness.getAndAdd(-new Random().nextInt(0, 2));
+        if (calmness.get() < 0) {
+            calmness.set(0);
+        }
     }
 
     /**
      * 用 深度优先搜索 寻找到从 TWR最近的路径点 出发到 目标路径点 的最短路径
      */
-    protected DFS.Route searchRouteTo(WayPoint targetPoint) {
-        return new DFS(startPoint.getNearestWayPoint((int) rect.getCenterX(), (int) rect.getCenterY()), targetPoint).search();
+    protected Route searchRouteTo(WayPoint targetPoint) {
+        return new BFS(startPoint.getNearestWayPoint((int) rect.getCenterX(), (int) rect.getCenterY()), targetPoint).search();
     }
 
     /**
      * 初始化 路径点图, 并设定图中一个路径点的引用
      */
-    private void initStartPoint() {
+    protected void initStartPoint() {
         WallGroup wallGroup = tankGroup.getGameMap().getWallGroup();
         var walls = wallGroup.getWalls();
         if (!walls.isEmpty()) {
@@ -164,5 +276,49 @@ public class RobotTank extends TankBase {
             }
         }
         return expanded;
+    }
+
+    /**
+     * 设置坦克转向状态
+     */
+    public void setTurningKeys(boolean left, boolean right) {
+        leftTurningKeyPressed.set(left);
+        rightTurningKeyPressed.set(right);
+    }
+
+    /**
+     * 设置坦克前进状态
+     */
+    public void setGoingKeys(boolean forward, boolean backward) {
+        forwardGoingKeyPressed.set(forward);
+        backwardGoingKeyPressed.set(backward);
+    }
+
+    /**
+     * 添加 {@link Action}
+     *
+     * @param multipleInSameClass 若为 false 则一个 {@link Action} 类型只能存一个
+     * @param override            当 multipleInSameClass 为 false 时生效, override 为 true 时, 新 {@link Action} 会覆盖原有 {@link Action},
+     *                            override 为 false 时, 旧 {@link Action} 会被保留而新 {@link Action} 被忽视; 当 multipleInSameClass 为 true 时,
+     *                            override 的值将被忽视
+     */
+    public void putAction(@NotNull Action action, boolean multipleInSameClass, boolean override) {
+        if (!multipleInSameClass) {
+            var clazz = action.getClass();
+            if (override) {
+                actions.removeIf((action1) -> action1.getClass().equals(clazz)); // 移除同类
+                actions.add(action);
+            } else {
+                for (Action action1 : actions) {
+                    if (action1.getClass().equals(clazz)) {
+                        return;
+                    }
+                }
+                actions.add(action); // 没有同类, 可以添加
+            }
+        } else {
+            actions.add(action);
+
+        }
     }
 }

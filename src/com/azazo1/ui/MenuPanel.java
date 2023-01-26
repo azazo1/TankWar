@@ -37,6 +37,7 @@ public class MenuPanel extends MyPanel {
     private JComboBox<MyURL> wallMapFilesComboBox;
     private JRadioButtonGroup buttonGroup;
     private JComboBox<Integer> playerNumComboBox;
+    private JComboBox<Integer> robotNumComboBox;
     private Box localPlayerNamesBox;
     private JTextField serverPortTextField;
     private JTextField serverIPTextField;
@@ -51,6 +52,7 @@ public class MenuPanel extends MyPanel {
                 @SuppressWarnings("ConstantConditions")
                 GameSession.LocalSession session = GameSession.LocalSession.createLocalSession(
                         (Integer) playerNumComboBox.getSelectedItem(),
+                        (Integer) robotNumComboBox.getSelectedItem(),
                         getLocalPlayerNames(),
                         ((MyURL) wallMapFilesComboBox.getSelectedItem()).url().openStream());
                 // 切换到GamePanel
@@ -118,7 +120,8 @@ public class MenuPanel extends MyPanel {
         Box verticalBox = Box.createVerticalBox();
         JPanel localPlayingPanel = new JPanel();
         localPlayerNamesBox = Box.createVerticalBox();
-        playerNumComboBox = new JComboBox<>(new Integer[]{2, 3, 4});
+        playerNumComboBox = new JComboBox<>(new Integer[]{0, 1, 2, 3, 4});
+        robotNumComboBox = new JComboBox<>(new Integer[]{0, 1, 2, 3, 4});
         wallMapFilesComboBox = new JComboBox<>(WallGroup.scanBinaryBitmapFiles());
         JRadioButton localPlayingRadioButton = new JRadioButton(PlayingMode.LOCAL);
         JPanel onlinePlayingPanel = new JPanel();
@@ -151,7 +154,11 @@ public class MenuPanel extends MyPanel {
                 new JLabel(Config.translation.playerNumLabelText),
                 playerNumComboBox
         ));
-        localPlayingPanel.add(MyPanel.createHBoxContainingPairComponent(// 选择地图
+        localPlayingPanel.add(MyPanel.createHBoxContainingPairComponent(
+                new JLabel(Config.translation.robotNumLabelText),
+                robotNumComboBox
+        ));
+        localPlayingPanel.add(MyPanel.createHBoxContainingPairComponent( // 选择地图
                 new JLabel(Config.translation.wallMapFilesComboLabelText),
                 wallMapFilesComboBox
         ));

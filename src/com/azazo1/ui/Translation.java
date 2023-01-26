@@ -7,7 +7,7 @@ public class Translation {
     public final String emptyBulletChar = "□";
     public String localPlayingPanelTitle = "Local Playing";
     public String launchButtonText = "Launch";
-    public String playerNumLabelText = "Player Number: ";
+    public String playerNumLabelText = "Player Amount: ";
     public String wallMapFilesComboLabelText = "Wall Maps: ";
     public String onlinePlayingPanelTitle = "Online Playing";
     public String typeIPAddressLabelText = "Server IP Address: ";
@@ -92,6 +92,7 @@ public class Translation {
     public String talkButtonText = "Talk";
     public String talkInputHint = "Talk something";
     public String talkDialogTitle = "Talk";
+    public String robotNumLabelText = "Robot Amount: ";
 
     public Translation() {
     }
@@ -187,6 +188,7 @@ public class Translation {
             talkButtonText = "说话";
             talkInputHint = "说点什么";
             talkDialogTitle = "说话";
+            robotNumLabelText = "机器人数量: ";
         }
     }
 }
