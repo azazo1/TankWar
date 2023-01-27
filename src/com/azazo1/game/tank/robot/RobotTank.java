@@ -1,5 +1,6 @@
 package com.azazo1.game.tank.robot;
 
+import com.azazo1.Config;
 import com.azazo1.game.tank.TankBase;
 import com.azazo1.game.tank.TankGroup;
 import com.azazo1.game.tank.robot.action.Action;
@@ -61,7 +62,13 @@ public class RobotTank extends TankBase {
     /**
      * 全方位子弹模拟的角度间隔 ([0, PI*2]), 越小模拟越精细, 越大模拟越迅速
      */
-    protected final double simulateIncrementStep = 22.5 / 180 * Math.PI;
+    protected final double simulateIncrementStep = 5.625 / 180 * Math.PI;
+
+    /**
+     * 进行全方向子弹模拟的间隔时间控制
+     */
+    protected final IntervalTicker allOrientationSimulatorTicker = new IntervalTicker(1000);
+
 
     { // 禁用按键
         setActionKeyMap(null);
@@ -114,7 +121,7 @@ public class RobotTank extends TankBase {
         // 突出显示离 TWR 最近的路径点
         g1.setColor(new Color(0xFF0000));
         route.getStartPoint().drawHighlight(g1);
-        // todo 显示冷静条
+        g1.drawString(Config.translation.calmnessText + getCalmness(), rect.x + rect.width, rect.y + rect.height);
         super.update(g);
     }
 
@@ -147,6 +154,7 @@ public class RobotTank extends TankBase {
         }
         if (targetPoint.distanceTo(route.getStartPoint()) > nearDistance + 5) { // 寻路时才转向至路径点
             putAction(new ChangeOrientationAction(angleToSecondPoint), false, true); // 对准第二个路径点, 用于前进
+            calmDown(false); // 变得冷静
         }
 
         // 前行(长时间) todo TWR 会卡墙角
@@ -158,7 +166,7 @@ public class RobotTank extends TankBase {
             becomeAngry(); // 变得冲动
             if (calmnessJudge()) {
                 if (fireModule.fire()) /* 开火 (短时间) */ {  // 成功开火则进入冷静期
-                    calmDown(false); // 迅速变冷静
+                    calmDown(false); // 变冷静
                 }
             }
         }
@@ -166,15 +174,20 @@ public class RobotTank extends TankBase {
         // 较近时
         if (targetPoint.distanceTo(route.getStartPoint()) < nearDistance + 5) {
             becomeAngry(); // 不断变得冲动
-            // 全方位模拟子弹飞行, 寻找能打到敌人的方向, 转向后开火
-            double hitAngle = bulletSimulator.simulateInAllOrientation(this, simulateIncrementStep);
-            if (hitAngle >= 0) {
-                // 转向 (长时间)
-                putAction(new ChangeOrientationAction(hitAngle), false, true);
+
+            if (allOrientationSimulatorTicker.judgeCanExecute()) {
+                EventQueue.invokeLater(() -> { // 在另一个线程进行, 防止其降低帧率
+                    // 全方位模拟子弹飞行, 寻找能打到敌人的方向, 转向后开火
+                    double hitAngle = bulletSimulator.simulateInAllOrientation(this, simulateIncrementStep);
+                    if (hitAngle >= 0) {
+                        // 转向 (长时间)
+                        putAction(new ChangeOrientationAction(hitAngle), false, true);
+                    }
+                });
             }
             if (bulletSimulator.simulate(this) && calmnessJudge() // 模拟能否击中 + 冷静判断
                     && fireModule.fire()) /* 开火 (短时间) */ {  // 成功开火则进入冷静期
-                calmDown(false); // 迅速变冷静
+                calmDown(false); // 变冷静
             }
         }
         // 很近时
@@ -183,7 +196,7 @@ public class RobotTank extends TankBase {
                     && calmnessJudge()) {
                 // 连发开火 (长时间)
                 putAction(new MultipleFireAction(fireTimesWhileAngry), false, false);
-                calmDown(true); // 迅速变非常冷静
+                calmDown(true); // 变非常冷静
             }
         }
         // 隔一段时间尝试一次目标切换

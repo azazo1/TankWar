@@ -93,6 +93,7 @@ public class Translation {
     public String talkInputHint = "Talk something";
     public String talkDialogTitle = "Talk";
     public String robotNumLabelText = "Robot Amount: ";
+    public String calmnessText = "Calm:";
 
     public Translation() {
     }
@@ -189,6 +190,7 @@ public class Translation {
             talkInputHint = "说点什么";
             talkDialogTitle = "说话";
             robotNumLabelText = "机器人数量: ";
+            calmnessText = "冷静值:";
         }
     }
 }
