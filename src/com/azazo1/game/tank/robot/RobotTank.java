@@ -65,6 +65,15 @@ public class RobotTank extends TankBase {
 
     { // 禁用按键
         setActionKeyMap(null);
+        enduranceModule = new EnduranceModule() {
+            @Override
+            public boolean makeAttack(int damage) {
+                if (damage > 0) {
+                    becomeAngry(true); // 受伤后迅速生气
+                }
+                return super.makeAttack(damage);
+            }
+        };
     }
 
     @Override
@@ -160,7 +169,7 @@ public class RobotTank extends TankBase {
             // 全方位模拟子弹飞行, 寻找能打到敌人的方向, 转向后开火
             double hitAngle = bulletSimulator.simulateInAllOrientation(this, simulateIncrementStep);
             if (hitAngle >= 0) {
-                // 转向
+                // 转向 (长时间)
                 putAction(new ChangeOrientationAction(hitAngle), false, true);
             }
             if (bulletSimulator.simulate(this) && calmnessJudge() // 模拟能否击中 + 冷静判断
@@ -170,9 +179,9 @@ public class RobotTank extends TankBase {
         }
         // 很近时
         if (targetPoint.distanceTo(route.getStartPoint()) < veryCloseDistance + 5) {
-            if (bulletSimulator.simulate(this) /* 判断方向是否可打击到目标坦克 */
+            if (bulletSimulator.simulate(this) /* 判断方向是否可打击到目标坦克, 转向操作在 较近 判断中已经进行 */
                     && calmnessJudge()) {
-                // 连发开火
+                // 连发开火 (长时间)
                 putAction(new MultipleFireAction(fireTimesWhileAngry), false, false);
                 calmDown(true); // 迅速变非常冷静
             }
@@ -238,7 +247,16 @@ public class RobotTank extends TankBase {
      * 让 TWR 变暴躁
      */
     protected void becomeAngry() {
-        calmness.getAndAdd(-new Random().nextInt(0, 2));
+        becomeAngry(false);
+    }
+
+    /**
+     * 让 TWR 变暴躁
+     *
+     * @param intense 是否迅速变得暴躁
+     */
+    protected void becomeAngry(boolean intense) {
+        calmness.getAndAdd(-new Random().nextInt(0, intense ? 2 : 50));
         if (calmness.get() < 0) {
             calmness.set(0);
         }

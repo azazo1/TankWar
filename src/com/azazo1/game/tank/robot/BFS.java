@@ -9,6 +9,7 @@ import java.util.Vector;
 
 /**
  * 广度优先算法 寻找两个可互相到达的路径点之间的最短路径 (很快！)
+ * todo 躲子弹
  */
 public class BFS {
     protected final WayPoint startPoint;
