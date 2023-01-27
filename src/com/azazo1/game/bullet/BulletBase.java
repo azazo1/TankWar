@@ -33,6 +33,11 @@ public class BulletBase implements CharWithRectangle {
     protected final AtomicInteger damage = new AtomicInteger(1); // 对坦克造成的伤害
     protected volatile BulletGroup bulletGroup;
 
+    public LifeModule getLifeModule() {
+        return lifeModule;
+    }
+
+
     /**
      * 子代都应继承这个构造函数
      */
@@ -176,7 +181,6 @@ public class BulletBase implements CharWithRectangle {
 
     /**
      * 子弹（轨迹）反射模块
-     * todo 子弹反射有异常
      */
     protected class ReflectionModule {
         protected final AtomicInteger reflectionTimes = new AtomicInteger(0); // 发生发射次数
@@ -199,11 +203,12 @@ public class BulletBase implements CharWithRectangle {
             }
             Rectangle rst = null;
             for (Wall w : walls) {
-                if (rect.intersects(w.getRect())) {
+                Rectangle wRect = w.getRect();
+                if (rect.intersects(wRect)) {
                     if (rst == null) {
-                        rst = w.getRect();
-                    } else {
-                        rst.union(w.getRect());
+                        rst = wRect;
+                    } else if (rst.intersects(wRect)) {
+                        rst = rst.intersection(wRect);
                     }
                 }
             }

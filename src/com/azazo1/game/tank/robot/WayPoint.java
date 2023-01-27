@@ -3,7 +3,9 @@ package com.azazo1.game.tank.robot;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
+import java.util.ConcurrentModificationException;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Vector;
 
 /**
@@ -163,12 +165,15 @@ public class WayPoint {
      *
      * @param container 结果输出容器
      */
-    public void extractReachableWayPoints(@NotNull HashSet<WayPoint> container) {
-        if (container.contains(this)) {
-            return;
+    public void extractReachableWayPoints(@NotNull HashSet<WayPoint> container) { // 这里用 synchronized 会死锁
+        try {
+            if (container.contains(this)) {
+                return;
+            }
+            container.add(this);
+            nearPoints.forEach((wayPoint -> wayPoint.extractReachableWayPoints(container)));
+        } catch (ConcurrentModificationException ignore) { // 似乎只有游戏开始时拓展路径点才会报此错, 过后便不报此错
         }
-        container.add(this);
-        nearPoints.forEach((wayPoint -> wayPoint.extractReachableWayPoints(container)));
     }
 
     @Override
@@ -178,5 +183,26 @@ public class WayPoint {
                 ", " + y +
                 "), nearPointsNumber=" + nearPoints.size() +
                 '}';
+    }
+
+    /**
+     * 在图中与 (x, y) 距离 大于 minDistance 且 小于 maxDistance 的路径点中选取一个路径点
+     *
+     * @return null: 该范围内无符合条件的路径点
+     */
+    public WayPoint getOneNearPointRandomly(int x, int y, double minDistance, double maxDistance) {
+        HashSet<WayPoint> container = new HashSet<>();
+        extractReachableWayPoints(container);
+        Vector<WayPoint> consider = new Vector<>(); // 可考虑的路径点
+        for (WayPoint point : container) {
+            double distance = point.distanceTo(x, y);
+            if (minDistance < distance && distance < maxDistance) {
+                consider.add(point);
+            }
+        }
+        if (consider.isEmpty()) {
+            return null;
+        }
+        return consider.get(new Random().nextInt(consider.size())); // 随机选取一点
     }
 }

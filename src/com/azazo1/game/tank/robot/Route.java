@@ -2,7 +2,6 @@ package com.azazo1.game.tank.robot;
 
 import com.azazo1.util.AtomicDouble;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
 import java.util.Vector;
@@ -92,14 +91,9 @@ public class Route implements Iterator<WayPoint> {
 
     /**
      * 获得路径上的最后一点
-     *
-     * @return null: 路径上没点
      */
-    public @Nullable WayPoint getLastPoint() {
-        if (!pointSequence.isEmpty()) {
-            return pointSequence.get(pointSequence.size() - 1);
-        }
-        return null;
+    public WayPoint getLastPoint() {
+        return pointSequence.get(pointSequence.size() - 1);
     }
 
     public boolean contains(WayPoint point) {

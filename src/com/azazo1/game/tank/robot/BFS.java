@@ -79,7 +79,11 @@ public class BFS {
         if (explored.contains(point)) { // 探索过了
             return null;
         }
-        WayPoint lastPoint = route.getLastPoint();
+        WayPoint lastPoint = null;
+        try {
+            lastPoint = route.getLastPoint();
+        } catch (ArrayIndexOutOfBoundsException ignore) {
+        }
         explored.add(point);
         route.setNextWayPoint(point); // 延长路径
         for (WayPoint nearPoint : point.getNearPoints()) {

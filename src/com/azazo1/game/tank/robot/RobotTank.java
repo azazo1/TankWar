@@ -1,13 +1,14 @@
 package com.azazo1.game.tank.robot;
 
 import com.azazo1.game.tank.TankBase;
+import com.azazo1.game.tank.TankGroup;
 import com.azazo1.game.tank.robot.action.Action;
 import com.azazo1.game.tank.robot.action.ChangeOrientationAction;
 import com.azazo1.game.tank.robot.action.GoingAction;
 import com.azazo1.game.tank.robot.action.MultipleFireAction;
 import com.azazo1.game.wall.Wall;
 import com.azazo1.game.wall.WallGroup;
-import com.azazo1.util.Tools;
+import com.azazo1.util.IntervalTicker;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -41,6 +42,30 @@ public class RobotTank extends TankBase {
      * TWR 很生气时连发子弹数
      */
     protected final int fireTimesWhileAngry = 3;
+    /**
+     * 用于判断什么时候进行目标切换
+     */
+    protected final IntervalTicker targetChangeTicker = new IntervalTicker(3000);
+    /**
+     * 检测到最近的坦克不是目标坦克的检测次数
+     */
+    protected final AtomicInteger differentTargetTimes = new AtomicInteger(0);
+    /**
+     * TWR 行进路线
+     */
+    protected volatile Route route = null;
+    /**
+     * 子弹飞行模拟器
+     */
+    protected final BulletSimulator bulletSimulator = new BulletSimulator();
+    /**
+     * 全方位子弹模拟的角度间隔 ([0, PI*2]), 越小模拟越精细, 越大模拟越迅速
+     */
+    protected final double simulateIncrementStep = 22.5 / 180 * Math.PI;
+
+    { // 禁用按键
+        setActionKeyMap(null);
+    }
 
     @Override
     public void update(@NotNull Graphics g) {
@@ -62,12 +87,7 @@ public class RobotTank extends TankBase {
                 }
             }
         }
-        // 搜索到目标坦克最短路径 (建议广度优先, 快)
-        Rectangle targetTankRect = targetTank.getRect();
-        WayPoint targetPoint /* 距离目标坦克最近的路径点 */ = startPoint.getNearestWayPoint((int) targetTankRect.getCenterX(), (int) targetTankRect.getCenterY());
-        Route route = searchRouteTo(targetPoint);
-
-        behave(targetPoint, route);
+        behave();
 
         // 执行 Action
         actions.removeIf(action -> action.take(this)); // 返回值为 true 则删除
@@ -92,47 +112,105 @@ public class RobotTank extends TankBase {
     /**
      * 进行 TWR 行为判断
      */
-    protected void behave(@NotNull WayPoint targetPoint, @NotNull Route route) {
-        // 转向(长时间)
+    protected void behave() {
         double cx = rect.getCenterX(), cy = rect.getCenterY();
+        // 搜索到目标坦克最短路径 (建议广度优先, 快)
+        Rectangle targetTankRect = targetTank.getRect();
+        WayPoint targetPoint /* 距离目标坦克最近的路径点, 不一定为 route 终点 */ = startPoint.getNearestWayPoint((int) targetTankRect.getCenterX(), (int) targetTankRect.getCenterY());
+        route = searchRouteTo(targetPoint);
+
+        // 转向(长时间)
         route.resetCursor();
         route.next();
-        WayPoint secondPoint = route.next(); // 找到第二个路径点
-        double angleToSecondPoint = Math.atan2(secondPoint.y - cy, secondPoint.x - cx);
-        double angleToTarget = Math.atan2(targetPoint.y - cy, targetPoint.x - cx);
-        if (targetPoint.distanceTo(route.getStartPoint()) < nearDistance + 5) {
-            // 与目标距离较近, 直接对准目标
-            putAction(new ChangeOrientationAction(angleToTarget), false, true);
-        } else {
-            // 对准第二个路径点
-            putAction(new ChangeOrientationAction(angleToSecondPoint), false, true);
+        WayPoint secondPoint;
+        try {
+            secondPoint = route.next(); // 找到第二个路径点
+        } catch (ArrayIndexOutOfBoundsException e) { // 起始点和终点在同一路径点
+            secondPoint = route.getLastPoint();
         }
+        double angleToSecondPoint = Math.atan2(secondPoint.y - cy, secondPoint.x - cx);
+        while (angleToSecondPoint < 0) { // 调整到正数区间
+            angleToSecondPoint += Math.PI * 2;
+        }
+        double angleToTarget = Math.atan2(targetPoint.y - cy, targetPoint.x - cx);
+        while (angleToTarget < 0) { // 调整到正数区间
+            angleToTarget += Math.PI * 2;
+        }
+        if (targetPoint.distanceTo(route.getStartPoint()) > nearDistance + 5) { // 寻路时才转向至路径点
+            putAction(new ChangeOrientationAction(angleToSecondPoint), false, true); // 对准第二个路径点, 用于前进
+        }
+
         // 前行(长时间) todo TWR 会卡墙角
-        putAction(new GoingAction(targetPoint, nearDistance), false, true);
-        // 较近时
-        if (targetPoint.distanceTo(route.getStartPoint()) < nearDistance + 5) {
-            becomeAngry(); // 不断变得冲动
-            // todo 全方位模拟子弹飞行, 寻找能打到敌人的方向, 转向后开火
-            if (calmnessJudge()) { // todo 模拟子弹飞行, 若打到自己则不发射
+        putAction(new GoingAction(route.getLastPoint(), nearDistance - 5), false, true);
+
+        // 寻路行进时若发射方向上能打击到坦克则发射
+        if (targetPoint.distanceTo(route.getStartPoint()) > nearDistance + 5
+                && bulletSimulator.simulate(this)) { // 模拟子弹飞行, 若打到自己则不发射
+            becomeAngry(); // 变得冲动
+            if (calmnessJudge()) {
                 if (fireModule.fire()) /* 开火 (短时间) */ {  // 成功开火则进入冷静期
                     calmDown(false); // 迅速变冷静
                 }
             }
         }
+
+        // 较近时
+        if (targetPoint.distanceTo(route.getStartPoint()) < nearDistance + 5) {
+            becomeAngry(); // 不断变得冲动
+            // 全方位模拟子弹飞行, 寻找能打到敌人的方向, 转向后开火
+            double hitAngle = bulletSimulator.simulateInAllOrientation(this, simulateIncrementStep);
+            if (hitAngle >= 0) {
+                // 转向
+                putAction(new ChangeOrientationAction(hitAngle), false, true);
+            }
+            if (bulletSimulator.simulate(this) && calmnessJudge() // 模拟能否击中 + 冷静判断
+                    && fireModule.fire()) /* 开火 (短时间) */ {  // 成功开火则进入冷静期
+                calmDown(false); // 迅速变冷静
+            }
+        }
         // 很近时
         if (targetPoint.distanceTo(route.getStartPoint()) < veryCloseDistance + 5) {
-            if (Math.abs(orientationModule.getOrientation() - angleToTarget) < Math.PI / 7) { // 方向对准了
-                if (calmnessJudge()) {
-                    // 连发开火
-                    putAction(new MultipleFireAction(fireTimesWhileAngry), false, false);
-                    calmDown(true); // 迅速变非常冷静
+            if (bulletSimulator.simulate(this) /* 判断方向是否可打击到目标坦克 */
+                    && calmnessJudge()) {
+                // 连发开火
+                putAction(new MultipleFireAction(fireTimesWhileAngry), false, false);
+                calmDown(true); // 迅速变非常冷静
+            }
+        }
+        // 隔一段时间尝试一次目标切换
+        if (targetChangeTicker.judgeCanExecute()) {
+            TankBase t = getNearestTank();
+            if (t.getSeq() != targetTank.getSeq()) {
+                if (differentTargetTimes.getAndIncrement() > 0) { // 连续两次检测时, 最近坦克都不同于目标坦克
+                    differentTargetTimes.set(0);
+                    targetTank = t;
                 }
+            } else {
+                differentTargetTimes.set(0);
             }
         }
     }
 
+    /**
+     * 找到距离本 TWR 最近的异己坦克
+     */
+    private TankBase getNearestTank() {
+        double minDistance2 = Double.MAX_VALUE;
+        TankBase rst = null;
+        for (TankBase tank : tankGroup.getLivingTanks()) {
+            if (tank.getSeq() == getSeq()) {
+                continue;
+            }
+            double distance2 = Math.pow(tank.getRect().getCenterX() - rect.getCenterX(), 2) + Math.pow(tank.getRect().getCenterY() - rect.getCenterY(), 2);
+            if (distance2 < minDistance2) {
+                rst = tank;
+                minDistance2 = distance2;
+            }
+        }
+        return rst;
+    }
+
     public int getCalmness() {
-        Tools.logLn(calmness.get() + "");
         return calmness.get();
     }
 
@@ -148,7 +226,7 @@ public class RobotTank extends TankBase {
     }
 
     /**
-     * TWR 通过冷静值判断是否应该开火或做其他冲动行为
+     * TWR 通过冷静值判断是否应该开火或做其他<u>冲动</u>行为
      *
      * @apiNote 越冷静越难为true
      */
@@ -320,5 +398,9 @@ public class RobotTank extends TankBase {
             actions.add(action);
 
         }
+    }
+
+    public TankGroup getTankGroup() {
+        return tankGroup;
     }
 }

@@ -10,15 +10,21 @@ import java.util.concurrent.atomic.AtomicLong;
 public class IntervalTicker {
     public final long minIntervalTime;
     public final long maxIntervalTime;
-    public final AtomicLong nextIntervalTime = new AtomicLong(0);
-    public final AtomicLong lastExecutionTime = new AtomicLong(0);
+    protected final AtomicLong nextIntervalTime = new AtomicLong(0);
+    protected final AtomicLong lastExecutionTime = new AtomicLong(0);
 
+    /**
+     * 间隔时间固定
+     */
     public IntervalTicker(long intervalTime) {
         this.minIntervalTime = intervalTime;
         this.maxIntervalTime = intervalTime;
         resetNextIntervalTime();
     }
 
+    /**
+     * 间隔时间随机在一个区间
+     */
     public IntervalTicker(long minIntervalTime, long maxIntervalTime) {
         this.minIntervalTime = minIntervalTime;
         this.maxIntervalTime = maxIntervalTime;
@@ -36,6 +42,14 @@ public class IntervalTicker {
             return true;
         }
         return false;
+    }
+
+    /**
+     * 无视时间间隔直接执行一次, 并重置下一次时间间隔
+     */
+    public void executeDirectly() {
+        lastExecutionTime.set(Tools.getRealTimeInMillis());
+        resetNextIntervalTime();
     }
 
     private void resetNextIntervalTime() {
