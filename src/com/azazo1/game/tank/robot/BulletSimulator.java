@@ -7,7 +7,6 @@ import com.azazo1.game.tank.TankBase;
 import com.azazo1.game.tank.TankGroup;
 import com.azazo1.game.wall.Wall;
 import com.azazo1.game.wall.WallGroup;
-import com.azazo1.util.Tools;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -130,18 +129,12 @@ public class BulletSimulator {
      * @return 能够成功射击到别的坦克的方向; -1: 无法找到能打击到别的坦克的方向
      */
     public double simulateInAllOrientation(@NotNull RobotTank twr, double incrementStep) {
-        long t1 = Tools.getRealTimeInMillis();
-
         double angle = 0;
-        int count = 0;
         while (angle >= 0 && angle <= Math.PI * 2) {
             if (simulate(twr, angle)) {
-                long t2 = Tools.getRealTimeInMillis();// todo delete
-                Tools.logLn((t2 - t1) + ", " + count);
                 return angle;
             }
             angle += incrementStep;
-            count++;
         }
         return -1;
     }

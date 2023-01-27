@@ -66,6 +66,9 @@ public class GameMap extends Canvas {
 
     @Override
     public void paint(Graphics g) {
+        if (!Thread.currentThread().getName().equals(Config.GAME_THREAD_NAME)) {
+            return;
+        }
         boolean doPaint = this.doPaint.get();
         if (doPaint) {
             Image buffer = createImage(getWidth(), getHeight()); // 二级缓冲
@@ -111,16 +114,19 @@ public class GameMap extends Canvas {
         this.tankGroup = tankGroup;
         tankGroup.setGameMap(this);
     }
-    public void setItemGroup(@NotNull ItemGroup itemGroup){
+
+    public void setItemGroup(@NotNull ItemGroup itemGroup) {
         if (this.itemGroup != null && itemGroup != this.itemGroup) {
             this.itemGroup.clearGameMap();
         }
         this.itemGroup = itemGroup;
         itemGroup.setGameMap(this);
     }
+
     public ItemGroup getItemGroup() {
         return itemGroup;
     }
+
     public WallGroup getWallGroup() {
         return wallGroup;
     }

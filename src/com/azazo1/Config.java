@@ -135,6 +135,10 @@ public final class Config {
      * 临时文件夹, 应用运行时会放一些临时文件, 每次启动应用都会被清空
      */
     public static final String TEMP_DIR = "temp";
+    /**
+     * 游戏线程名字
+     */
+    public static final String GAME_THREAD_NAME = "GameProcess";
 
     private Config() {
     }

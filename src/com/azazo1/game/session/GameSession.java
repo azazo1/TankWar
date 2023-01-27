@@ -69,7 +69,7 @@ public abstract class GameSession implements SingleInstance {
      */
     public void start() {
         // 不用 swing 的 Timer, 这个 Timer 控制帧率更加准确(也许吧)
-        timer = new Timer("game_process", true);
+        timer = new Timer(Config.GAME_THREAD_NAME, true);
         gameProcessTask = new TimerTask() {
             @Override
             public void run() {

@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
 import java.util.Vector;
+import java.util.function.Predicate;
 
 /**
  * 广度优先算法 寻找两个可互相到达的路径点之间的最短路径 (很快！)
@@ -18,6 +19,7 @@ public class BFS {
      * 已经探索过的路径点
      */
     protected final HashSet<WayPoint> explored = new HashSet<>();
+    protected final @Nullable Predicate<WayPoint> pointPredicate;
     /**
      * 等待被探索的路径点
      */
@@ -51,10 +53,13 @@ public class BFS {
     protected volatile Route shortestRoute = null;
 
     /**
-     * @param startPoint 起始点
-     * @param endPoint   目标点
+     * @param startPoint  起始点
+     * @param endPoint    目标点
+     * @param pointFilter 路径点过滤器, {@link Predicate<WayPoint>#test(WayPoint)} 返回 true 则该点可被探索, 返回 false 则该点不可被探索
+     *                    用于躲子弹, 躲坦克
      */
-    public BFS(@NotNull WayPoint startPoint, @NotNull WayPoint endPoint) {
+    public BFS(@NotNull WayPoint startPoint, @NotNull WayPoint endPoint, @Nullable Predicate<WayPoint> pointFilter) {
+        this.pointPredicate = pointFilter;
         this.startPoint = startPoint;
         this.endPoint = endPoint;
         HashSet<WayPoint> all = new HashSet<>();
@@ -69,8 +74,8 @@ public class BFS {
      *
      * @param point 要探索的路径点
      * @param route 本次探索前的路径
-     * @return null: 参数 point 已被探索过
-     * @apiNote 本方法应由 {@link DFS#search()} 启动
+     * @return null: 参数 point 已被探索过, 或不可被探索
+     * @apiNote 本方法应由 {@link BFS#search()} 启动
      */
     protected @Nullable Route explore(@NotNull WayPoint point, @NotNull Route route) {
         if (point.equals(endPoint)) {
@@ -78,6 +83,10 @@ public class BFS {
             return route;
         }
         if (explored.contains(point)) { // 探索过了
+            return null;
+        }
+        if (pointPredicate != null && !pointPredicate.test(point)) { // 不可被探索
+            explored.add(point);
             return null;
         }
         WayPoint lastPoint = null;

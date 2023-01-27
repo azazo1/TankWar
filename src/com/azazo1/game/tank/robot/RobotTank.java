@@ -1,6 +1,7 @@
 package com.azazo1.game.tank.robot;
 
 import com.azazo1.Config;
+import com.azazo1.game.bullet.BulletBase;
 import com.azazo1.game.tank.TankBase;
 import com.azazo1.game.tank.TankGroup;
 import com.azazo1.game.tank.robot.action.Action;
@@ -20,15 +21,19 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class RobotTank extends TankBase {
     /**
-     * <h3>"较近" 距离</h3>
+     * <h3>"较近" 距离(指路径长度而不是直线距离)</h3>
      * 此距离内 TWR 由寻路模式变为攻击模式 todo 说明
      */
-    protected final double nearDistance = rect.width * 4;
+    protected final double nearDistance = rect.width * 5;
     /**
-     * <h3>"很近" 距离<h3/>
+     * <h3>"很近" 距离(指路径长度而不是直线距离)<h3/>
      * 此距离下 TWR todo 说明
      */
     protected final double veryCloseDistance = rect.width * 2;
+    /**
+     * 可探索路径点距离子弹的最小距离, 路径点与子弹距离小于此值将会被标记为不可探索,
+     */
+    protected final double bulletDistance = rect.width * 3;
     protected volatile WayPoint startPoint;
     protected volatile TankBase targetTank;
     /**
@@ -62,7 +67,7 @@ public class RobotTank extends TankBase {
     /**
      * 全方位子弹模拟的角度间隔 ([0, PI*2]), 越小模拟越精细, 越大模拟越迅速
      */
-    protected final double simulateIncrementStep = 5.625 / 180 * Math.PI;
+    protected final double simulateIncrementStep = 5.0 / 180 * Math.PI;
 
     /**
      * 进行全方向子弹模拟的间隔时间控制
@@ -70,7 +75,8 @@ public class RobotTank extends TankBase {
     protected final IntervalTicker allOrientationSimulatorTicker = new IntervalTicker(1000);
 
 
-    { // 禁用按键
+    {
+        // 禁用按键
         setActionKeyMap(null);
         enduranceModule = new EnduranceModule() {
             @Override
@@ -78,7 +84,16 @@ public class RobotTank extends TankBase {
                 if (damage > 0) {
                     becomeAngry(true); // 受伤后迅速生气
                 }
-                return super.makeAttack(damage);
+                boolean b = super.makeAttack(damage);
+                if (endurance.get() <= 0) { // 死亡时清空路径点缓存
+                    WayPoint.clearWayPoint(); // 已经被拓展过, 保存在 TWR 中的的路径点不受影响, 防止本图影响下一局游戏
+                }
+                return b;
+            }
+        };
+        orientationModule = new OrientationModule() {
+            @Override
+            public void adjust() { // 不调整方向到坐标轴
             }
         };
     }
@@ -134,7 +149,20 @@ public class RobotTank extends TankBase {
         Rectangle targetTankRect = targetTank.getRect();
         WayPoint targetPoint /* 距离目标坦克最近的路径点, 不一定为 route 终点 */ = startPoint.getNearestWayPoint((int) targetTankRect.getCenterX(), (int) targetTankRect.getCenterY());
         route = searchRouteTo(targetPoint);
-
+        if (route == null || isNearBullets()) { // 到目标坦克路线不存在或距离子弹较近, 取消寻路到目标坦克
+            route = null;
+            int tryTimes = 3; // 躲避子弹式寻找路径尝试次数
+            while (route == null) {
+                // 随机取一个较远路径点, todo 躲子弹算法有待优化
+                WayPoint randomWayPoint = startPoint.getOneNearPointRandomly((int) rect.getCenterX(), (int) rect.getCenterY(), nearDistance, Config.MAP_WIDTH);
+                if (tryTimes-- > 0) {
+                    route = searchRouteTo(randomWayPoint);
+                } else {
+                    // 始终找不到路径, 不躲子弹了直接寻找路径
+                    route = searchRouteTo(randomWayPoint, false);
+                }
+            }
+        }
         // 转向(长时间)
         route.resetCursor();
         route.next();
@@ -152,16 +180,16 @@ public class RobotTank extends TankBase {
         while (angleToTarget < 0) { // 调整到正数区间
             angleToTarget += Math.PI * 2;
         }
-        if (targetPoint.distanceTo(route.getStartPoint()) > nearDistance + 5) { // 寻路时才转向至路径点
+        if (route.getTotalDistance() > nearDistance + 5) { // 寻路时才转向至路径点
             putAction(new ChangeOrientationAction(angleToSecondPoint), false, true); // 对准第二个路径点, 用于前进
             calmDown(false); // 变得冷静
         }
-
-        // 前行(长时间) todo TWR 会卡墙角
-        putAction(new GoingAction(route.getLastPoint(), nearDistance - 5), false, true);
+        // todo TWR 卡墙
+        // 前行(长时间) 前行到路径只剩一定长度 emmm 我感觉这里优化的话可以不用 GoingAction 类, 直接修改按键情况即可
+        putAction(new GoingAction(nearDistance - 5), false, true);
 
         // 寻路行进时若发射方向上能打击到坦克则发射
-        if (targetPoint.distanceTo(route.getStartPoint()) > nearDistance + 5
+        if (route.getTotalDistance() > nearDistance + 5
                 && bulletSimulator.simulate(this)) { // 模拟子弹飞行, 若打到自己则不发射
             becomeAngry(); // 变得冲动
             if (calmnessJudge()) {
@@ -172,16 +200,26 @@ public class RobotTank extends TankBase {
         }
 
         // 较近时
-        if (targetPoint.distanceTo(route.getStartPoint()) < nearDistance + 5) {
+        if (route.getTotalDistance() < nearDistance + 5) {
             becomeAngry(); // 不断变得冲动
 
             if (allOrientationSimulatorTicker.judgeCanExecute()) {
                 EventQueue.invokeLater(() -> { // 在另一个线程进行, 防止其降低帧率
-                    // 全方位模拟子弹飞行, 寻找能打到敌人的方向, 转向后开火
-                    double hitAngle = bulletSimulator.simulateInAllOrientation(this, simulateIncrementStep);
-                    if (hitAngle >= 0) {
-                        // 转向 (长时间)
-                        putAction(new ChangeOrientationAction(hitAngle), false, true);
+                    try {
+                        // 全方位模拟子弹飞行, 寻找能打到敌人的方向, 转向后开火
+                        double hitAngle = bulletSimulator.simulateInAllOrientation(this, simulateIncrementStep);
+                        if (hitAngle >= 0) {
+                            // 转向 (长时间)
+                            putAction(new ChangeOrientationAction(hitAngle), false, true);
+                        } else {
+                            // 无角度可打到敌人, 尝试继续前进
+                            putAction(new GoingAction(veryCloseDistance), false, true);
+                        }
+                    } catch (NullPointerException e) {
+                        if (tankGroup.getGameMap() == null) {
+                            return; // 游戏结束了
+                        }
+                        throw new RuntimeException(e);
                     }
                 });
             }
@@ -191,7 +229,7 @@ public class RobotTank extends TankBase {
             }
         }
         // 很近时
-        if (targetPoint.distanceTo(route.getStartPoint()) < veryCloseDistance + 5) {
+        if (route.getTotalDistance() < veryCloseDistance + 5) {
             if (bulletSimulator.simulate(this) /* 判断方向是否可打击到目标坦克, 转向操作在 较近 判断中已经进行 */
                     && calmnessJudge()) {
                 // 连发开火 (长时间)
@@ -241,9 +279,9 @@ public class RobotTank extends TankBase {
      */
     protected void calmDown(boolean intense) {
         if (intense) {
-            calmness.set(170);
+            calmness.set(500);
         } else {
-            calmness.set(120);
+            calmness.set(300);
         }
     }
 
@@ -276,16 +314,43 @@ public class RobotTank extends TankBase {
     }
 
     /**
-     * 用 深度优先搜索 寻找到从 TWR最近的路径点 出发到 目标路径点 的最短路径
+     * 用 广度优先搜索 寻找到从 TWR最近的路径点 出发到 目标路径点 的最短路径
+     *
+     * @param doFilter 是否筛掉距离子弹较近的路径点
+     */
+    protected Route searchRouteTo(WayPoint targetPoint, boolean doFilter) {
+        return new BFS(
+                startPoint.getNearestWayPoint((int) rect.getCenterX(), (int) rect.getCenterY()),
+                targetPoint,
+                doFilter ? point -> {
+                    // 躲避子弹
+                    Vector<BulletBase> bullets = tankGroup.getGameMap().getBulletGroup().getBullets();
+                    for (BulletBase bullet : bullets) {
+                        Rectangle bulletRect = bullet.getRect();
+                        if (point.distanceTo((int) bulletRect.getCenterX(), (int) bulletRect.getCenterY()) < bulletDistance) {
+                            return false;
+                        }
+                    }
+                    return true;
+                } : null
+        ).search();
+    }
+
+    /**
+     * 筛选掉距离子弹过近的点
+     *
+     * @see RobotTank#searchRouteTo(WayPoint, boolean)
      */
     protected Route searchRouteTo(WayPoint targetPoint) {
-        return new BFS(startPoint.getNearestWayPoint((int) rect.getCenterX(), (int) rect.getCenterY()), targetPoint).search();
+        return searchRouteTo(targetPoint, true);
     }
 
     /**
      * 初始化 路径点图, 并设定图中一个路径点的引用
      */
     protected void initStartPoint() {
+        // 若此方法被其他 TWR 调用过则会自动使用已生成的图, 注意当所有 TWR 死亡后, 要清空 WayPoint allPoints
+        // 否则该图会影响下一局游戏
         WallGroup wallGroup = tankGroup.getGameMap().getWallGroup();
         var walls = wallGroup.getWalls();
         if (!walls.isEmpty()) {
@@ -433,5 +498,23 @@ public class RobotTank extends TankBase {
 
     public TankGroup getTankGroup() {
         return tankGroup;
+    }
+
+    /**
+     * 检测 TWR 是否离子弹过近
+     */
+    public boolean isNearBullets() {
+        for (BulletBase bullet : tankGroup.getGameMap().getBulletGroup().getBullets()) {
+            Rectangle bulletRect = bullet.getRect();
+            if (Math.pow(bulletDistance, 2) > Math.pow(rect.getCenterX() - bulletRect.getCenterX(), 2) + Math.pow(rect.getCenterY() - bulletRect.getCenterY(), 2)) {
+                // 离子弹过近
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public Route getRoute() {
+        return route;
     }
 }

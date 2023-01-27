@@ -19,7 +19,7 @@ public class ChangeOrientationAction extends Action {
     @Override
     public boolean take(@NotNull RobotTank twr) {
         double delta = targetOrientation - twr.orientationModule.getOrientation();
-        if (Math.abs(delta) < 5.0 / 180 * Math.PI) {
+        if (Math.abs(delta) < 1.0 / 180 * Math.PI) {
             twr.setTurningKeys(false, false);
             return true;
         }
