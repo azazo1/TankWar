@@ -3,7 +3,7 @@ package com.azazo1.game.session;
 import com.azazo1.Config;
 import com.azazo1.online.server.ServerGameMap;
 import com.azazo1.online.server.bullet.ServerBulletGroup;
-import com.azazo1.online.server.tank.ServerTank;
+import com.azazo1.online.server.tank.ServerPlayerTank;
 import com.azazo1.online.server.tank.ServerTankGroup;
 import com.azazo1.online.server.toclient.Server;
 import com.azazo1.online.server.wall.ServerWallGroup;
@@ -45,7 +45,7 @@ public class ServerSession extends GameSession {
         HashMap<Integer, String> tanks = config.getTanks();
         session.totalTankNum.set(tanks.size());
         for (int seq : tanks.keySet()) {
-            ServerTank tank = new ServerTank(seq);
+            ServerPlayerTank tank = new ServerPlayerTank(seq);
             tank.setName(tanks.get(seq));
             tankG.addTank(tank);
             tank.randomlyTeleport(); // 要在其他内容都设置完毕后调用

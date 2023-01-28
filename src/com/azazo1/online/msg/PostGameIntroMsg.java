@@ -22,6 +22,10 @@ public final class PostGameIntroMsg extends MsgBase {
      * 更改游戏配置结果: 失败, 不是房主
      */
     public static final int POST_GAME_INTRO_NOT_HOST = 2;
+    /**
+     * 更改游戏配置结果: 失败. 机器人数量小于零
+     * */
+    public static final int ILLEGAL_ROBOT_AMOUNT = 3;
     public final ServerGameSessionIntro intro;
 
     public PostGameIntroMsg(ServerGameSessionIntro intro) {
@@ -30,7 +34,7 @@ public final class PostGameIntroMsg extends MsgBase {
     }
 
     public static final class PostGameIntroResponseMsg extends MsgBase {
-        @MagicConstant(intValues = {POST_GAME_INTRO_SUCCESSFULLY, POST_GAME_INTRO_INCORRECT_STATE, POST_GAME_INTRO_NOT_HOST})
+        @MagicConstant(intValues = {POST_GAME_INTRO_SUCCESSFULLY, POST_GAME_INTRO_INCORRECT_STATE, POST_GAME_INTRO_NOT_HOST,ILLEGAL_ROBOT_AMOUNT})
         public final int rst;
 
         public PostGameIntroResponseMsg(int rst) {

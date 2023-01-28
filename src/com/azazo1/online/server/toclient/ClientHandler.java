@@ -2,7 +2,7 @@ package com.azazo1.online.server.toclient;
 
 import com.azazo1.Config;
 import com.azazo1.online.msg.*;
-import com.azazo1.online.server.tank.ServerTank;
+import com.azazo1.online.server.tank.ServerPlayerTank;
 import com.azazo1.util.SeqModule;
 import com.azazo1.util.Tools;
 import org.jetbrains.annotations.NotNull;
@@ -130,7 +130,7 @@ public class ClientHandler implements Closeable {
             } else if (obj instanceof KeyPressChangeMsg msg) {
                 if (isPlayer().get()) {
                     server.letMeHandle(() -> {
-                        ServerTank tank = (ServerTank) server.gameMap.getTankGroup().getTank(seq);
+                        ServerPlayerTank tank = (ServerPlayerTank) server.gameMap.getTankGroup().getTank(seq);
                         tank.keyChange(msg.leftTurningKeyPressed, msg.rightTurningKeyPressed, msg.forwardGoingKeyPressed, msg.backwardGoingKeyPressed);
                     });
                 }

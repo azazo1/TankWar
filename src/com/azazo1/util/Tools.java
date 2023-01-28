@@ -9,7 +9,6 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.imageio.ImageIO;
 import javax.swing.Timer;
-import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
@@ -183,9 +182,9 @@ public final class Tools {
     }
 
     /**
-     * 尝试重置 {@link JFrame} 大小使内容得到全部显示, 不断尝试直到成功一次
+     * 尝试重置 一个窗口 大小使内容得到全部显示, 不断尝试直到成功一次
      */
-    public static void resizeFrame(JFrame frame, int width, int height) {
+    public static void resizeWindow(Window frame, int width, int height) {
         Timer timer = new Timer((int) (1000.0 / Config.FPS), null);
         timer.addActionListener((action) -> {
             if (frame == null) {

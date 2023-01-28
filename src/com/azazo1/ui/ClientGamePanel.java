@@ -97,7 +97,7 @@ public class ClientGamePanel {
                 }
             }
             gameMapContainer.add(gameMap);
-            Timer updater = new Timer("gameMapUpdater", true);
+            Timer updater = new Timer(Config.GAME_THREAD_NAME, true);
             updater.scheduleAtFixedRate(new TimerTask() {
                 @Override
                 public void run() {

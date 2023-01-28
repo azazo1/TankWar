@@ -9,7 +9,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 
-import static com.azazo1.util.Tools.resizeFrame;
+import static com.azazo1.util.Tools.resizeWindow;
 
 public class MyFrame extends JFrame implements SingleInstance {
     protected static MyFrame instance;
@@ -27,7 +27,7 @@ public class MyFrame extends JFrame implements SingleInstance {
                 add(new JLabel(Config.translation.loading, SwingConstants.CENTER), BorderLayout.CENTER);
             }
         });
-        resizeFrame(this, Config.WINDOW_WIDTH, Config.WINDOW_HEIGHT);
+        resizeWindow(this, Config.WINDOW_WIDTH, Config.WINDOW_HEIGHT);
         consumeFontLoadingTime();
     }
 

@@ -8,6 +8,7 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 服务端一局游戏的配置, 由 {@link Server} 管理
@@ -17,6 +18,10 @@ public class ServerGameSessionIntro implements Serializable {
      * 游戏画布尺寸 (只会用到宽和高)
      */
     private final Rectangle mapSize = new Rectangle(0, 0, Config.MAP_WIDTH, Config.MAP_HEIGHT);
+    /**
+     * 机器人 (TWR) 数量
+     */
+    private final AtomicInteger robotAmount = new AtomicInteger(0);
     /**
      * 坦克的:
      * seq -> name
@@ -43,6 +48,7 @@ public class ServerGameSessionIntro implements Serializable {
     public void copyFrom(@NotNull ServerGameSessionIntro intro) {
         tanks.clear();
         tanks.putAll(intro.getTanks());
+        setRobotAmount(intro.getRobotAmount());
         wallMapFile = intro.getWallMapFile();
         setMapSize(intro.mapSize);
     }
@@ -57,6 +63,17 @@ public class ServerGameSessionIntro implements Serializable {
 
     public Rectangle getMapSize() {
         return mapSize;
+    }
+
+    public void setRobotAmount(int amount) {
+        if (amount < 0) {
+            throw new IllegalArgumentException("Amount can't be less than 0");
+        }
+        robotAmount.set(amount);
+    }
+
+    public int getRobotAmount() {
+        return robotAmount.get();
     }
 
     public HashMap<Integer, String> getTanks() {
@@ -101,7 +118,8 @@ public class ServerGameSessionIntro implements Serializable {
     @Override
     public String toString() {
         return "ServerGameSessionIntro{" +
-                "mapSize=(" + mapSize.width + ", " + mapSize.height + ")" +
+                "mapSize=" + mapSize +
+                ", robotAmount=" + robotAmount +
                 ", tanks=" + tanks +
                 ", wallMapFile='" + wallMapFile + '\'' +
                 '}';

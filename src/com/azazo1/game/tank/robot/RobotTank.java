@@ -12,6 +12,7 @@ import com.azazo1.game.wall.Wall;
 import com.azazo1.game.wall.WallGroup;
 import com.azazo1.util.IntervalTicker;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.util.Random;
@@ -82,7 +83,7 @@ public class RobotTank extends TankBase {
             @Override
             public boolean makeAttack(int damage) {
                 if (damage > 0) {
-                    becomeAngry(true); // 受伤后迅速生气
+                    becomeAngry(true); // 碰到子弹迅速生气
                 }
                 boolean b = super.makeAttack(damage);
                 if (endurance.get() <= 0) { // 死亡时清空路径点缓存
@@ -98,8 +99,16 @@ public class RobotTank extends TankBase {
         };
     }
 
+    public RobotTank(int seq) {
+        super(seq);
+    }
+
+    public RobotTank() {
+        super();
+    }
+
     @Override
-    public void update(@NotNull Graphics g) {
+    public void update(@Nullable Graphics g) {
         if (startPoint == null) { // 仅在游戏开始时构建一次路径点
             initStartPoint();
         }
@@ -122,21 +131,23 @@ public class RobotTank extends TankBase {
 
         // 执行 Action
         actions.removeIf(action -> action.take(this)); // 返回值为 true 则删除
-        // 显示所有路径点
-        Graphics g1 = g.create();
-        g1.setColor(new Color(0xff00ff));
-        startPoint.drawAll(g1);
-        // 显示路径
-        g1.setColor(new Color(0x0000ff));
-        route.resetCursor();
-        while (route.hasNext()) {
-            WayPoint point = route.next();
-            point.drawHighlight(g1);
+        if (g != null) {
+            // 显示所有路径点
+            Graphics g1 = g.create();
+            g1.setColor(new Color(0xff00ff));
+            startPoint.drawAll(g1);
+            // 显示路径
+            g1.setColor(new Color(0x0000ff));
+            route.resetCursor();
+            while (route.hasNext()) {
+                WayPoint point = route.next();
+                point.drawHighlight(g1);
+            }
+            // 突出显示离 TWR 最近的路径点
+            g1.setColor(new Color(0xFF0000));
+            route.getStartPoint().drawHighlight(g1);
+            g1.drawString(Config.translation.calmnessText + getCalmness(), rect.x + rect.width, rect.y + rect.height);
         }
-        // 突出显示离 TWR 最近的路径点
-        g1.setColor(new Color(0xFF0000));
-        route.getStartPoint().drawHighlight(g1);
-        g1.drawString(Config.translation.calmnessText + getCalmness(), rect.x + rect.width, rect.y + rect.height);
         super.update(g);
     }
 

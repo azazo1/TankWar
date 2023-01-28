@@ -137,12 +137,13 @@ public class Client implements Closeable {
 
     /**
      * 向服务器提交编辑本剧游戏配置的请求(仅房主可完成, 仅在{@link Server#WAITING} 时可用)
-     * 服务器只会读取intro内的部分内容,不会更改游戏玩家列表
+     * 服务器只会读取intro内的部分内容, 不会更改游戏玩家列表
      */
-    public void editGameIntro(String wallMap, Rectangle mapSize) {
+    public void editGameIntro(String wallMap, Rectangle mapSize, int robotAmount) {
         ServerGameSessionIntro intro = new ServerGameSessionIntro();
         intro.setWallMapFile(wallMap);
         intro.setMapSize(mapSize);
+        intro.setRobotAmount(robotAmount);
         dataTransfer.sendObject(new PostGameIntroMsg(intro));
     }
 

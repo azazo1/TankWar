@@ -39,7 +39,7 @@ import static com.azazo1.online.msg.RegisterMsg.RegisterResponseMsg.*;
 import static com.azazo1.online.msg.ReqGameStartMsg.*;
 import static com.azazo1.online.server.toclient.Server.GAMING;
 import static com.azazo1.online.server.toclient.Server.WAITING;
-import static com.azazo1.util.Tools.resizeFrame;
+import static com.azazo1.util.Tools.resizeWindow;
 
 /**
  * 用户选择了服务器地址和端口但仍未开始连接, 本Panel实现连接服务器, 等待大厅（玩家详情）, 房主选择墙图, 房主开始游戏的功能
@@ -129,7 +129,7 @@ public class OnlineWaitingRoomPanel {
         frame.setContentPane(this.panel);
         frame.setResizable(false);
         frame.setTitle(Config.translation.connectedFrameTitle);
-        resizeFrame(frame, 850, 500);
+        resizeWindow(frame, 850, 500);
         frame.setVisible(true);
         frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         // 点击窗口关闭按钮, 调用 dispose 方法
@@ -180,14 +180,21 @@ public class OnlineWaitingRoomPanel {
             addActionListener(e -> {
                 // 打开编辑游戏配置的窗口
                 JDialog selectDialog = new JDialog();
+                resizeWindow(selectDialog, 220, 130);
                 selectDialog.setModal(true);
                 selectDialog.setLayout(new FlowLayout());
-                JComboBox<String> selector = new JComboBox<>(maps);
+                JComboBox<String> mapSelector = new JComboBox<>(maps);
+                mapSelector.setSelectedItem(gameIntro.getWallMapFile());
                 JTextField textField = new JTextField("%dx%d".formatted(gameIntro.getMapSize().width, gameIntro.getMapSize().height));
+                JComboBox<Integer> robotAmountSelector = new JComboBox<>(new Integer[]{0, 1, 2});
+                robotAmountSelector.setSelectedItem(gameIntro.getRobotAmount());
                 selectDialog.setTitle(Config.translation.gameIntroEditTitle);
                 selectDialog.add(new JLabel(Config.translation.mapSizeEditTitle));
                 selectDialog.add(textField);
-                selectDialog.add(selector);
+                selectDialog.add(new JLabel(Config.translation.wallMapFilesComboLabelText));
+                selectDialog.add(mapSelector);
+                selectDialog.add(new JLabel(Config.translation.robotAmountLabelText));
+                selectDialog.add(robotAmountSelector);
                 selectDialog.add(new JButton(Config.translation.confirmButtonText) {{
                     addActionListener(e1 -> {
                         // 解析输入
@@ -210,7 +217,7 @@ public class OnlineWaitingRoomPanel {
                             }
                         }
                         try {
-                            client.editGameIntro((String) selector.getSelectedItem(), new Rectangle(width, height));
+                            client.editGameIntro((String) mapSelector.getSelectedItem(), new Rectangle(width, height), (int) robotAmountSelector.getSelectedItem());
                         } catch (Exception ex) {
                             ex.printStackTrace();
                             JOptionPane.showMessageDialog(panel,
@@ -428,7 +435,7 @@ public class OnlineWaitingRoomPanel {
         // 处理所有玩家信息, 改变墙图设置, 改变画布大小
         gameIntro.copyFrom(msg.intro);
         gameIntroEditTitle.setText(Config.translation.gameIntroEditTitleFormat.formatted(
-                msg.intro.getMapSize().width, msg.intro.getMapSize().height
+                msg.intro.getMapSize().width, msg.intro.getMapSize().height, msg.intro.getRobotAmount()
         ));
         wallMapSelector.setSelectedItem(gameIntro.getWallMapFile());
         HashMap<Integer, String> tanks = gameIntro.getTanks();
@@ -496,7 +503,7 @@ public class OnlineWaitingRoomPanel {
             yourProfile.setText(Config.translation.yourProfileFormat.formatted("None", -1, "None", "None"));
             cilentListTitle.setText(Config.translation.onlineClientListTitle);
             playerListTitle.setText(Config.translation.onlinePlayerListTitle);
-            gameIntroEditTitle.setText(Config.translation.gameIntroEditTitleFormat.formatted(gameIntro.getMapSize().width, gameIntro.getMapSize().height));
+            gameIntroEditTitle.setText(Config.translation.gameIntroEditTitleFormat.formatted(gameIntro.getMapSize().width, gameIntro.getMapSize().height, gameIntro.getRobotAmount()));
             inputNameTitle.setText(Config.translation.nicknameInputTitle);
             modeSelectorTitle.setText(Config.translation.gameModeSelectorTitle);
             registerButton.setText(Config.translation.registerButtonText);

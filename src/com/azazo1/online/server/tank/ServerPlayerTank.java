@@ -13,7 +13,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Random;
 
-public class ServerTank extends TankBase {
+public class ServerPlayerTank extends TankBase {
     {
         doPaint.set(false);
     }
@@ -61,7 +61,7 @@ public class ServerTank extends TankBase {
         backwardGoingKeyPressed.set(backward);
     }
 
-    public ServerTank(int seq) {
+    public ServerPlayerTank(int seq) {
         super(seq);
         setActionKeyMap(null);
         enduranceModule = new EnduranceModule() {
@@ -75,11 +75,11 @@ public class ServerTank extends TankBase {
                     if (damage > 0) {
                         // 广播坦克受伤事件
                         Server.instance.broadcast(new GlobalEventMsg(GlobalEventMsg.Events.TANK_ATTACKED), false);
+                        if (endurance.get() <= 0) {
+                            makeDie();
+                        }
                     }
                     return true;
-                }
-                if (endurance.get() <= 0) {
-                    makeDie();
                 }
                 return false;
             }

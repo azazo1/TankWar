@@ -45,7 +45,8 @@ public class Translation {
     public String gameIntroEditTitleFormat = """
             <html>
             Edit Game Config:<br>
-            &emsp;&emsp;GameMap Size (%dx%d)
+            &emsp;&emsp;GameMap Size (%dx%d)<br>
+            &emsp;&emsp;Robot Amount: %d
             </html>
             """;
     public String gameIntroEditTitle = "Edit Game Config";
@@ -92,7 +93,7 @@ public class Translation {
     public String talkButtonText = "Talk";
     public String talkInputHint = "Talk something";
     public String talkDialogTitle = "Talk";
-    public String robotNumLabelText = "Robot Amount: ";
+    public String robotAmountLabelText = "Robot Amount: ";
     public String calmnessText = "Calm:";
 
     public Translation() {
@@ -142,7 +143,8 @@ public class Translation {
             gameIntroEditTitleFormat = """
                     <html>
                     编辑本局游戏配置:<br>
-                    &emsp;&emsp;游戏画布大小 (%dx%d)
+                    &emsp;&emsp;游戏画布大小 (%dx%d)<br>
+                    &emsp;&emsp;机器人数量: %d
                     </html>
                     """;
             gameIntroEditTitle = "编辑本局游戏配置";
@@ -189,7 +191,7 @@ public class Translation {
             talkButtonText = "说话";
             talkInputHint = "说点什么";
             talkDialogTitle = "说话";
-            robotNumLabelText = "机器人数量: ";
+            robotAmountLabelText = "机器人数量: ";
             calmnessText = "冷静值:";
         }
     }

@@ -10,7 +10,8 @@ import com.azazo1.online.msg.*;
 import com.azazo1.online.server.GameState;
 import com.azazo1.online.server.ServerGameMap;
 import com.azazo1.online.server.bullet.ServerBulletGroup;
-import com.azazo1.online.server.tank.ServerTank;
+import com.azazo1.online.server.tank.ServerPlayerTank;
+import com.azazo1.online.server.tank.ServerRobotTank;
 import com.azazo1.online.server.tank.ServerTankGroup;
 import com.azazo1.online.server.wall.ServerWallGroup;
 import com.azazo1.util.IntervalTicker;
@@ -32,8 +33,7 @@ import java.util.TimerTask;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.azazo1.online.msg.PostGameIntroMsg.POST_GAME_INTRO_INCORRECT_STATE;
-import static com.azazo1.online.msg.PostGameIntroMsg.POST_GAME_INTRO_SUCCESSFULLY;
+import static com.azazo1.online.msg.PostGameIntroMsg.*;
 import static com.azazo1.online.msg.RegisterMsg.RegisterResponseMsg.*;
 import static com.azazo1.online.msg.ReqGameStartMsg.*;
 
@@ -79,6 +79,8 @@ public class Server implements Closeable, SingleInstance {
      * <ol>
      *     <li>控制游戏开始</li>
      *     <li>todo 踢出玩家</li>
+     *     <li>控制游戏画布尺寸</li>
+     *     <li>设置机器人数量</li>
      *     <li>选择游戏墙图</li>
      * </ol>
      */
@@ -175,7 +177,7 @@ public class Server implements Closeable, SingleInstance {
         if (serverHandler != null) {
             serverHandler.cancel();
         }
-        serverHandler = new Timer("serverHandler", true);
+        serverHandler = new Timer(Config.GAME_THREAD_NAME, true);
         // 不用 schedule, 防止处理过慢
         serverHandler.scheduleAtFixedRate(new TimerTask() {
             @Override
@@ -192,7 +194,8 @@ public class Server implements Closeable, SingleInstance {
                                     gameMap.getItemGroup().getItemInfos()
                             )), false);
                         }
-                        if (gameMap.getTankGroup().getLivingTankNum() <= 1) { // 游戏结束
+                        if (gameMap.getTankGroup().getLivingTankNum() <= 1
+                                || ((ServerTankGroup) gameMap.getTankGroup()).getLivingPlayerAmount() <= 0) { // 游戏结束
                             Tools.logLn("Game Over.");
                             gameResult = gameMap.getInfo();
                             broadcast(new GameOverMsg(gameResult), false);
@@ -224,14 +227,14 @@ public class Server implements Closeable, SingleInstance {
                         handleList.remove(0).run();
                     }
                     // 检查客户端状态
+                    if (clients.size() == 0 && currentState.equals(OVER)) { // 游戏结束，所有用户退出，服务段生命走到尽头
+                        close();
+                    }
                     for (int i = 0; i < clients.size(); i++) {
                         ClientHandler client = clients.get(i);
                         if (!client.handle()) {
                             removeClient(i);
                             i--; // 该元素被移除了后来的元素顶替该位置
-                            if (clients.size() == 0 && currentState.equals(OVER)) { // 游戏结束，所有用户退出，服务段生命走到尽头
-                                close();
-                            }
                         }
                     }
                 }
@@ -308,11 +311,16 @@ public class Server implements Closeable, SingleInstance {
         gameMap.setWallGroup(ServerWallGroup.parseFromBitmap(ImageIO.read(Tools.getFileURL(intro.getWallMapFile()).url())));
         HashMap<Integer, String> tanks = intro.getTanks();
         tanks.forEach((seq, name) -> {
-            ServerTank tank = new ServerTank(seq);
+            ServerPlayerTank tank = new ServerPlayerTank(seq);
             tank.setName(name);
             serverTankGroup.addTank(tank);
             tank.randomlyTeleport();
         });
+        for (int i = 0; i < intro.getRobotAmount(); i++) {
+            ServerRobotTank robotTank = new ServerRobotTank();
+            serverTankGroup.addTank(robotTank);
+            robotTank.randomlyTeleport();
+        }
     }
 
     /**
@@ -402,6 +410,11 @@ public class Server implements Closeable, SingleInstance {
         }
         this.intro.setWallMapFile(intro.getWallMapFile());
         this.intro.setMapSize(intro.getMapSize());
+        try {
+            this.intro.setRobotAmount(intro.getRobotAmount());
+        } catch (IllegalArgumentException e) {
+            return ILLEGAL_ROBOT_AMOUNT;
+        }
         // 以后可能还有其他配置
         return POST_GAME_INTRO_SUCCESSFULLY;
     }
@@ -467,7 +480,7 @@ public class Server implements Closeable, SingleInstance {
             if (!currentState.equals(WAITING)) {
                 return START_GAME_INCORRECT_STATE;
             }
-            if (intro.getTanks().size() <= 1) {
+            if (intro.getTanks().size() + intro.getRobotAmount() <= 1) {
                 return START_GAME_NOT_ENOUGH_PLAYER;
             }
             removeUnregisteredClient();

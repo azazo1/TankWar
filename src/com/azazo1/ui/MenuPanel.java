@@ -121,7 +121,7 @@ public class MenuPanel extends MyPanel {
         JPanel localPlayingPanel = new JPanel();
         localPlayerNamesBox = Box.createVerticalBox();
         playerNumComboBox = new JComboBox<>(new Integer[]{0, 1, 2, 3, 4});
-        robotNumComboBox = new JComboBox<>(new Integer[]{0, 1, 2, 3, 4});
+        robotNumComboBox = new JComboBox<>(new Integer[]{0, 1, 2});
         wallMapFilesComboBox = new JComboBox<>(WallGroup.scanBinaryBitmapFiles());
         JRadioButton localPlayingRadioButton = new JRadioButton(PlayingMode.LOCAL);
         JPanel onlinePlayingPanel = new JPanel();
@@ -155,7 +155,7 @@ public class MenuPanel extends MyPanel {
                 playerNumComboBox
         ));
         localPlayingPanel.add(MyPanel.createHBoxContainingPairComponent(
-                new JLabel(Config.translation.robotNumLabelText),
+                new JLabel(Config.translation.robotAmountLabelText),
                 robotNumComboBox
         ));
         localPlayingPanel.add(MyPanel.createHBoxContainingPairComponent( // 选择地图

@@ -11,7 +11,7 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.io.IOException;
 
-import static com.azazo1.util.Tools.resizeFrame;
+import static com.azazo1.util.Tools.resizeWindow;
 
 class BulletTest {
     public static void main(String[] args) {
@@ -58,7 +58,7 @@ class BulletTest {
         t.setRepeats(true);
         t.start();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        resizeFrame(frame, Config.WINDOW_WIDTH, Config.WINDOW_HEIGHT);
+        resizeWindow(frame, Config.WINDOW_WIDTH, Config.WINDOW_HEIGHT);
         map.requestFocus();
         frame.setVisible(true);
     }

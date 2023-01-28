@@ -436,11 +436,11 @@ public class TankBase implements CharWithRectangle {
                 if (damage > 0 && !(TankBase.this instanceof ClientTank)) {
                     // 播放受伤音效
                     Tools.playSound(Tools.getFileURL(Config.ATTACKED_SOUND).url());
+                    if (endurance.get() <= 0) {
+                        makeDie();
+                    }
                 }
                 return true;
-            }
-            if (endurance.get() <= 0) {
-                makeDie();
             }
             return false;
         }
