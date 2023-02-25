@@ -15,6 +15,7 @@ import com.azazo1.online.server.tank.ServerRobotTank;
 import com.azazo1.online.server.tank.ServerTankGroup;
 import com.azazo1.online.server.wall.ServerWallGroup;
 import com.azazo1.util.IntervalTicker;
+import com.azazo1.util.Timer;
 import com.azazo1.util.Tools;
 import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.NotNull;
@@ -28,8 +29,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.HashMap;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -177,9 +176,8 @@ public class Server implements Closeable, SingleInstance {
         if (serverHandler != null) {
             serverHandler.cancel();
         }
-        serverHandler = new Timer(Config.GAME_THREAD_NAME, true);
-        // 不用 schedule, 防止处理过慢
-        serverHandler.scheduleAtFixedRate(new TimerTask() {
+        serverHandler = new Timer(Config.GAME_THREAD_NAME);
+        serverHandler.scheduleAtFixedRate(new Timer.TimerTask() {
             @Override
             public void run() {
                 if (alive.get()) {
@@ -216,9 +214,9 @@ public class Server implements Closeable, SingleInstance {
         if (clientHandler != null) {
             clientHandler.cancel();
         }
-        clientHandler = new Timer("clientHandler", true);
+        clientHandler = new Timer("clientHandler");
         // 不用 schedule, 防止处理过慢
-        clientHandler.scheduleAtFixedRate(new TimerTask() {
+        clientHandler.scheduleAtFixedRate(new Timer.TimerTask() {
             @Override
             public void run() {
                 if (alive.get()) {
@@ -340,8 +338,8 @@ public class Server implements Closeable, SingleInstance {
         if (acceptor != null) {
             acceptor.cancel();
         }
-        acceptor = new Timer("acceptor", true);
-        acceptor.schedule(new TimerTask() {
+        acceptor = new Timer("acceptor");
+        acceptor.schedule(new Timer.TimerTask() {
             @Override
             public void run() {
                 try {

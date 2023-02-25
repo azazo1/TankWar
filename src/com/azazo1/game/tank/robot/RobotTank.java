@@ -34,7 +34,7 @@ public class RobotTank extends TankBase {
     /**
      * 可探索路径点距离子弹的最小距离, 路径点与子弹距离小于此值将会被标记为不可探索,
      */
-    protected final double bulletDistance = rect.width * 3;
+    protected final double bulletDistance = rect.width;
     protected volatile WayPoint startPoint;
     protected volatile TankBase targetTank;
     /**
@@ -131,7 +131,7 @@ public class RobotTank extends TankBase {
 
         // 执行 Action
         actions.removeIf(action -> action.take(this)); // 返回值为 true 则删除
-        if (g != null) {
+        if (g != null && true) { // 测试时才启用
             // 显示所有路径点
             Graphics g1 = g.create();
             g1.setColor(new Color(0xff00ff));

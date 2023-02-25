@@ -10,6 +10,7 @@ import com.azazo1.online.client.bullet.ClientBulletGroup;
 import com.azazo1.online.client.tank.ClientTankGroup;
 import com.azazo1.online.msg.MsgBase;
 import com.azazo1.util.MyFrameSetting;
+import com.azazo1.util.Timer;
 import com.azazo1.util.Tools;
 import org.jetbrains.annotations.NotNull;
 
@@ -17,8 +18,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.Timer;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -97,8 +99,8 @@ public class ClientGamePanel {
                 }
             }
             gameMapContainer.add(gameMap);
-            Timer updater = new Timer(Config.GAME_THREAD_NAME, true);
-            updater.scheduleAtFixedRate(new TimerTask() {
+            Timer updater = new Timer(Config.GAME_THREAD_NAME);
+            updater.scheduleAtFixedRate(new Timer.TimerTask() {
                 @Override
                 public void run() {
                     if (alive.get()) {

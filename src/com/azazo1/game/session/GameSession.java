@@ -9,6 +9,7 @@ import com.azazo1.game.tank.TankBase;
 import com.azazo1.game.tank.TankGroup;
 import com.azazo1.game.tank.robot.RobotTank;
 import com.azazo1.game.wall.WallGroup;
+import com.azazo1.util.Timer;
 import com.azazo1.util.Tools;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -17,8 +18,6 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -31,9 +30,9 @@ public abstract class GameSession implements SingleInstance {
     protected final AtomicInteger totalTankNum = new AtomicInteger(0); // 总共的坦克数量
     protected volatile Timer timer;
     /**
-     * 游戏进程任务, 调用 {@link TimerTask#cancel()} 则游戏停止进行
+     * 游戏进程任务, 调用 {@link Timer.TimerTask#cancel()} 则游戏停止进行
      */
-    protected volatile TimerTask gameProcessTask;
+    protected volatile Timer.TimerTask gameProcessTask;
     protected volatile FrameListener listener;
 
     protected GameSession() {
@@ -68,9 +67,8 @@ public abstract class GameSession implements SingleInstance {
      * 开启游戏事件调度
      */
     public void start() {
-        // 不用 swing 的 Timer, 这个 Timer 控制帧率更加准确(也许吧)
-        timer = new Timer(Config.GAME_THREAD_NAME, true);
-        gameProcessTask = new TimerTask() {
+        timer = new Timer(Config.GAME_THREAD_NAME);
+        gameProcessTask = new Timer.TimerTask() {
             @Override
             public void run() {
                 gameMap.update(null);

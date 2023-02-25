@@ -55,6 +55,9 @@ public class Route implements Iterator<WayPoint> {
         return pointSequence.get(0);
     }
 
+    public WayPoint getPoint(int index) {
+        return pointSequence.get(index);
+    }
     @Override
     public boolean hasNext() {
         return cursor.get() < pointSequence.size();
