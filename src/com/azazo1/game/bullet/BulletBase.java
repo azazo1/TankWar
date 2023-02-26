@@ -51,6 +51,7 @@ public class BulletBase implements CharWithRectangle {
      * @implNote 当为 Online 模式时, 客户端子类无 seq 参构造函数要禁用, 因为 seq 由服务端控制
      * @deprecated 速度不作为初始化参数
      */
+    @Deprecated
     public BulletBase(int centerX, int centerY, double orientation, int speed) {
         this(centerX, centerY, orientation);
         setSpeed(speed);

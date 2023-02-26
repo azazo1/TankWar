@@ -232,6 +232,7 @@ public final class Tools {
      */
     public static void init() throws IOException {
         TankBase.getSeqModule().init();
+        MyEventQueue.cancel();
         Tools.clearFrameData();
         loadedImg.clear();
         // 初始化(清空) temp 目录

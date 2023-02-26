@@ -11,6 +11,7 @@ import com.azazo1.game.tank.robot.action.MultipleFireAction;
 import com.azazo1.game.wall.Wall;
 import com.azazo1.game.wall.WallGroup;
 import com.azazo1.util.IntervalTicker;
+import com.azazo1.util.MyEventQueue;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -131,7 +132,7 @@ public class RobotTank extends TankBase {
 
         // 执行 Action
         actions.removeIf(action -> action.take(this)); // 返回值为 true 则删除
-        if (g != null && true) { // 测试时才启用
+        if (g != null && false) { // 测试时才启用
             // 显示所有路径点
             Graphics g1 = g.create();
             g1.setColor(new Color(0xff00ff));
@@ -164,7 +165,7 @@ public class RobotTank extends TankBase {
             route = null;
             int tryTimes = 3; // 躲避子弹式寻找路径尝试次数
             while (route == null) {
-                // 随机取一个较远路径点, todo 躲子弹算法有待优化
+                // 随机取一个较远路径点
                 WayPoint randomWayPoint = startPoint.getOneNearPointRandomly((int) rect.getCenterX(), (int) rect.getCenterY(), nearDistance, Config.MAP_WIDTH);
                 if (tryTimes-- > 0) {
                     route = searchRouteTo(randomWayPoint);
@@ -215,7 +216,7 @@ public class RobotTank extends TankBase {
             becomeAngry(); // 不断变得冲动
 
             if (allOrientationSimulatorTicker.judgeCanExecute()) {
-                EventQueue.invokeLater(() -> { // 在另一个线程进行, 防止其降低帧率
+                MyEventQueue.invokeLater("BulletSimulator", () -> { // 在另一个线程进行, 防止其降低帧率
                     try {
                         // 全方位模拟子弹飞行, 寻找能打到敌人的方向, 转向后开火
                         double hitAngle = bulletSimulator.simulateInAllOrientation(this, simulateIncrementStep);
